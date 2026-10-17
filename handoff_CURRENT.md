@@ -1,114 +1,77 @@
 # Current handoff — 17 October 2026
 
-## Delivery state
+## Local delivery state
 
-Work in `/home/vladimir/wp-website`; runtime/core/DB/uploads remain under
-`/home/vladimir/wp`. `wp_app` mounts the website plugins/theme/receiver.
-**Audit code release `9985528` is committed, pushed to GitHub and deployed to
-staging** (17 October, 13:04 UTC). The following documentation receipt records
-verification; local and staging synchronize it through GitHub `main` as well.
-The release was code-only: no DB migration, content import or uploads artifact.
-Staging's newer content and private recovery were preserved.
+Website work belongs in `/home/vladimir/wp-website`. `wp_app` mounts that
+checkout's plugins/theme; runtime/core/DB/uploads remain under `/home/vladimir/wp`.
+Release authorized: commit and sync the editor refinements, gesture-treatment/CSS
+consolidation and landing-preview recovery through GitHub to staging. Pre-release
+inspection found local HEAD `4e4dbc0`, GitHub/staging `4239654`, a clean staging
+checkout and healthy services. Deployment verification is pending in this code
+checkpoint; a follow-up receipt will record the final synchronized state.
 
-## Current local design changes
-
-The requested editor design simplification is **committed locally, unpushed and
-undeployed**, one commit beyond `4239654` (the current GitHub/staging receipt).
-The user requested commit and exit; no further release action was taken.
-The canvas has no duplicate section editing menus: only a thin selection outline
-and neutral label. One muted contextual help button follows the sidebar panel;
-segmented top navigation stays active in the inspector, with underline secondary
-tabs and labelled previous/next selection. Native text editors auto-grow; the
-icon toolbar keeps colour/highlight/removal actions under **⋯**. A browser-found
-native link-dialog focus issue is fixed in the existing workspace inert handling.
-
-- Passed: 101 DOM tests, scoped JS/CSS lint and diff checks. Signed-in Chrome:
-  long editor grows to 1,410px, single toolbar row, contextual help, navigation,
-  highlighting/link selection, canvas Enter/Escape, phone preview and native
-  Save Draft/reload. The saved fixture retained every other section/field and
-  cleared recovery. Browser coverage here is Chrome desktop and phone preview;
-  actual narrow-window/short-height and Firefox UAT remain separate.
-- Disposable project 39298, revisions and Set 724 removed. All 15,502 posts,
-  239,205 non-lock metadata rows, 193 epochs and 269 states match full baseline
-  hashes. Evidence: `var/editorial-design-20261017/` (ignored).
-- Code/admin presentation only: no paired DB migration or uploads artifact.
-  Refresh the local editor for review. Staging still runs the prior release.
-
-## Released audit
-
-H1–H3, M1–M8 and L1–L10 are resolved; L3 intentionally retains the existing
-canvas enablement boundary. Remaining consumer controls use owner declarations;
-pickers are extracted, album imports page completely, preview caches are derived
-transport data, schema versions are explicit, and purge/native-save boundaries
-are enforced server-side. Legacy import commands now live with `iss-content`.
-Plugin version is 0.2.0 (PHP 8.1 / WordPress 6.4 minimums).
-Details: [audit](docs/project/json-editor-audit-2026-10-16.md) and
-[platform contract](docs/architecture/editorial-platform.md).
+The consolidated local work is complete: compact section selector and full-width
+admin toolbar with system typography; registered quote/chapter/gallery treatments
+with contextual choices and legacy adapters; distinct exhibition presentations;
+portable semantic colours and explicit event skin precedence; retired quote CSS
+and render branches; conditional timeline ownership and theme preset aliases.
+The edited public CSS is 42,748 source bytes smaller. The
+[delivery contract](docs/project/gesture-treatment-consolidation-plan.md)
+records the exact scope, treatment matrix, drain decisions and compatibility.
 
 ## Verified and preserved
 
-- Final checks: 99 editor DOM, 43 completion, 545 storage, 363 lossiness,
-  334 validation, 237 retention, 42 revision, 319 version-token, 243 Place
-  atomicity, 101 Place native-save, 74 Projects-only access and 14,126 renderer
-  checks passed; M6 contracts, degraded mode and format cache passed too.
-  PHP syntax/PHPCS/PHPStan and scoped JS/CSS lint passed.
-- Signed-in Chrome passed Project restore/edit/recovery, media/Set pickers,
-  native Save Draft/reload and phone previews; tour route panel/map shortcut
-  and native save retained the relations owner's data. Disposable posts
-  39282/39284, history and Set 722 were removed.
-- All 180 canonical raw JSON values and all 180 public render hashes match
-  baseline. Thirty-two normalized documents lose only derived preview cache
-  fields. `validate-all`: 180 valid; registry: nine formats, zero errors.
-- Final hashes match every baseline post and non-lock metadata row: 15,502
-  posts and 239,205 metadata rows. All 193 epochs and 269 states are unchanged.
-  Schöneweide 13251, Führungen 13301 and private Familienrallye autosave 26723
-  remain intact. No existing content/history was migrated or bulk-pruned.
-- Verified backup, final receipt, slice diff and comparison/test evidence:
-  `var/editorial-audit-completion-20261017/` (ignored). Earlier slice evidence
-  remains available via the audit. The final completion preserved twenty
-  unrelated prior paths, including the already-deleted legacy asset; all reviewed
-  audit files are now included in the release.
+- Passed: 14,680 registry/renderer, 334 validation, 363 lossiness, 554 storage
+  (including all 180 existing documents), 42 native revision, 108 editor DOM
+  checks and 3 CSS ownership gates. PHP syntax/PHPCS/PHPStan and JS/CSS lint pass;
+  PHPStan excludes test scripts, which execute through WP-CLI.
+- Chrome: public project/exhibition/dark-event fixtures at 390/768/1280 px and
+  767/769 px; no horizontal overflow. Existing Kinder im Werk quotations retain
+  source images/captions, including the two-image station. Timeline computed
+  styles match the pre-move check; unrelated pages omit its stylesheet.
+- Actual editor treatment switch retains text, attribution and media, keeps
+  focus and reaches a saved preview. At 900×560 and 1280×620 the header uses the
+  full width, compact section navigation works and controls use system fonts.
+  Browser viewport override reset; fixtures 40842/40844/40846, their revisions,
+  private recovery and empty Set 739 removed.
+- Full baseline comparison: all 180 raw documents, 15,502 post rows and 238,933
+  metadata rows unchanged (native `_edit_lock` / `_edit_last` excluded), with
+  no added/removed rows. Three inspected template authorities unchanged,
+  including the custom `single-ausstellung` override. No live content migration.
+- Evidence and pre-change copies: `var/gesture-consolidation-20261017/` (ignored).
+  `before.patch` and `working-before/` preserve the initial dirty-work boundary.
+  Roll back this change's code delta without reverting the earlier UI work.
+- Landing preview recovery fix: an unfinished recovered draft now shows the
+  authenticated saved page without canvas editing when no previous valid frame
+  exists. Führungen's empty link in section 6 remains in its private draft;
+  completing/removing it restores the current preview. All 108 editor DOM checks
+  and scoped JS lint pass. Chrome verified Führungen's fallback (about 4 seconds),
+  Home/Schöneweide/About and an event editor, including phone preview. The original
+  Führungen tab now displays the fallback. Four saved and three private draft
+  documents are unchanged; evidence: `var/landing-preview-20261017/` (ignored).
 
-## Staging release verified
+Code-only delivery: existing schema, content and uploads need no paired artifact.
+Move the plugin/theme changes together for this release. Unknown treatments
+stay recoverable and use a rendering fallback; validation blocks canonical writes
+until the choice is resolved. Existing scoped timeline promo compatibility is
+retained for 16 stored revisions. Other audit candidates are not implicitly dead.
 
-- Clean staging checkout fast-forwarded from `d9c4d79` to `9985528`; bind-mounted
-  source loaded without restart. Active `iss-editorial` reports 0.2.0.
-- Fresh verified rollback bundle:
-  `/srv/industriesalon/stage/backups/iss-backup-20261017T130015Z/`:
-  119-table DB, uploads, intake, code and runtime/config archives; hashes and
-  archive readability verified. Code baseline is `d9c4d79`.
-- Target checks: 180 valid documents, nine registries without errors, all 180
-  public document render hashes identical before/after. Eleven HTTP routes
-  passed with noindex; restricted Projects login/editor, unrelated-screen 403s
-  and five exact served editor assets passed. Services healthy; no new PHP or
-  nginx errors in release checks.
-- All 15,504 staging posts and 239,197 non-lock metadata rows retain full and
-  per-record hashes, including private drafts. All 193 epochs and 269 states
-  retain their hashes. No revision purge or content/data sync was run.
-- Read-only target probes: Futura registry builds 4 → 1; twenty ticket lookups
-  sanitize 20 → 1 with identical output; larger reference reads 30 → 4 and
-  50 → 2 queries. These are function probes, not Query Monitor/browser timings.
-- Local receipt and verification: `var/editorial-release-20261017/` (ignored).
-  Baseline/after public HTTP timings are recorded there; three-request samples
-  are diagnostic, not a latency guarantee.
+## Next action and release boundary
 
-## Remaining acceptance
+Complete the authorized code-only staging deployment and record its verification.
+All 180 canonical staging documents passed preflight validation. No SQL/content/
+uploads transfer is needed; retain target UAT/private drafts. Human cross-browser
+acceptance remains separate. Existing editors should reload for changed assets.
 
-No audit implementation or requested release work remains. Human/cross-browser
-UAT and interactive Query Monitor/editor-cadence acceptance remain separate.
-**Reload already-open editors once** after the token changes; private recovery
-remains readable. Later saves can prune normal revisions above the cap; preserve
-the current backup because code rollback cannot recover pruned history. See the
-[retention runbook](docs/runbooks/deployment.md#editorial-revision-retention).
-Queue/cron/graph work and the closed Führungen content task remain outside scope.
-
-Local CLI uses Compose project `wp`, both `/home/vladimir/wp/docker-compose.yml`
-and `var/refactoring-20261008/website-code.yml`, with a read-only mount of
-`tests/e2e/bin` at `/tests`. Use disposable records for further regressions.
+Local WP-CLI uses Compose project `wp`, `/home/vladimir/wp/docker-compose.yml`
+and `var/refactoring-20261008/website-code.yml`, mounting `tests/e2e/bin` read-only
+at `/tests`. Run `npm run lint:css` for style lint plus the new ownership gate,
+and `node --test tests/e2e/bin/editorial-ui.cjs` for editor interactions.
+Use disposable fixtures for runtime checks. No notification/mail was sent.
 
 ## Preserve UAT and deployment state
 
-- Current verified staging code release: audit `9985528`; earlier editor help
+- Last recorded staging code release: audit `9985528`; earlier editor help
   `71318ad` remains included. German guide, contextual popovers and prominent
   Hilfe are deployed; WordPress owns saving.
 - Futura **30743**, `/projekte/futura-biennale-2027-2/`, is the UAT project.
@@ -128,7 +91,8 @@ and `var/refactoring-20261008/website-code.yml`, with a read-only mount of
   use can diverge; preserve newer UAT work. Detailed receipt: `d9c4d79` and private
   `var/help-release-20261016/`. GitHub carries code/docs only; SQL/media stay private.
 - Staging checkout: `/srv/industriesalon/stage/repo` on `iss-prod-01`, via
-  `vladimir@staging.industriesalon.info`. The current rollback bundle is above.
+  `vladimir@staging.industriesalon.info`. The last verified rollback bundle is
+  `backups/iss-backup-20261017T130015Z/` (pre-release code `d9c4d79`).
   Earlier full-refresh backup
   `backups/iss-backup-20261016T133026Z/` (code `69396de`) and private receipts
   `backups/help-release-20261016/` remain historical recovery evidence.

@@ -4,40 +4,13 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Review the local JSON editor design simplification: canvas menus removed,
-  contextual help consolidated, tab hierarchy clarified and text editors
-  auto-growing. Implementation and Chrome checks are complete; changes remain
-  committed locally, unpushed and undeployed. See [current handoff](handoff_CURRENT.md).
-- Restore "one shared gesture, many skins" per the proposed
-  [skin contract ADR](docs/architecture/skin-contract-adr.md). Gate first:
-  on staging, check whether Frauen im Werk (quellenbuehne), Kinder im Werk
-  (objektalbum) and a Chronik Rückblick now render their sections in the
-  landing look (static analysis: 172 of 237 Ausstellung skin rules target
-  markup no longer emitted since `9eab967`). If confirmed, accept the ADR and
-  run its migration: skin role tokens, renderer reads roles and emits
-  `.iss-skin-{slug}` / `iss-gesture--*` classes, port Quellenbühne first,
-  single skin authority (event entity skin becomes the document default),
-  skin branches to features, field switches to registered treatments, one
-  skin registry, then delete stranded skin code. This supersedes the skin
-  steps in the CSS audit item below.
-- Work through the [CSS system audit](docs/project/css-system-audit-2026-10-16.md)
-  in its fix order. First: define or replace the 24 undefined `--iss-*`
-  variables (visible bug: `--iss-event-ink` in `single-event.css` drops the
-  event download accent border) and raise `--iss-surface-subtle` to pass
-  WCAG AA; then add type/spacing/ink-alpha tokens aliasing theme.json; then
-  emit one `.iss-gesture--{slug}` contract class from every renderer and port
-  quote, gallery and facts into `gestures.css`; then make skins value sets on
-  one `.iss-skin-{slug}` hook (typografisch first) so portable gestures take
-  the host skin. Later: split `patterns.css` out of the global payload,
-  collapse the three timeline layers, fix breakpoints to four constants, add
-  a dev-only CSS lint in `tools/`. Check unreferenced classes against stored
-  `post_content` before deleting them.
-- Complete human and cross-browser UAT for the deployed
-  [JSON editor audit](docs/project/json-editor-audit-2026-10-16.md), including
-  interactive Query Monitor/editor-cadence review. Code `9985528` is deployed;
-  target registry/document checks, public render parity, restricted-editor HTTP
-  checks and read-only performance probes passed. Existing editors must reload
-  after the token changes. See [current handoff](handoff_CURRENT.md).
+- Complete human and cross-browser UAT for the
+  [JSON editor audit](docs/project/json-editor-audit-2026-10-16.md) and
+  [gesture-treatment consolidation](docs/project/gesture-treatment-consolidation-plan.md#implementation-receipt):
+  compact section navigation, full-width toolbar, curated treatments, preserved
+  exhibition differences and unfinished-draft preview recovery. Include interactive
+  Query Monitor/editor-cadence review. See [current handoff](handoff_CURRENT.md)
+  for the verified staging release; reload existing editors for changed assets.
 - Correct the archive landing quick-navigation grid at phone widths: its four
   columns overflow (409 px content / 375 px viewport). The shared archive cards
   already fit; fix the quick-navigation owner without changing their layout.
@@ -84,18 +57,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   insertion from the compact chooser, keyboard controls and the switching
   inspector before client handover. Restrict landing treatment controls to
   admins before client handover.
-- CSS layering follow-up during JSON gesture polish: migrate page-specific
-  landing/front-page rules into the new layer order gesture by gesture.
-  `statement.lead` / `statement.leitfrage` and the renamed
-  `feature.image-overlay` treatment are on renderer-treatment selectors; next
-  move `gateway` and remaining `feature` treatment styles toward
-  renderer-contract selectors before deleting front-page compatibility
-  selectors. Migrate `/salon-vermietung/` “Der Ort” from `iss-rental-story`
-  into `feature.media-text` with compact text / larger image ratio instead
-  of adding a rental-only 50/50 variant. Each touched legacy/page stylesheet
-  should be migration-positive:
-  drain reusable rules into the proper layer and remove obsolete selectors when
-  safe.
 - SuperSaaS/timeline follow-up: local occurrence/timeline code and data are now
   on staging. Verify current drift and `supersaas-audit` before scheduling any
   source refresh; do not replay older SQL over the full 16 October snapshot.
@@ -250,7 +211,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 - Editorial platform next slice: curator-review `Frauen im Werk für Fernmeldewesen` in the custom editor with the canonical `objektalbum` JSON skin enabled locally. Clean up gesture choices, kickers, section text, captions, archive-object choices, and source/source-link details, then verify preview/frontend output.
 - Apply/review `ops/sql/2026-06-23-roehren-republik-editorial-json.sql` on staging and curator-check the `Röhren für die Republik` facts, especially the derived Leningrad T2 tube totals, before production use.
 - Continue live-testing `typografisch` and `chronik` Ausstellung JSON skins against real archival-source exhibition candidates before treating them as production-ready.
-- Keep Ausstellung layout/gesture decisions out of editor controls while exposing only document skin assignment through `Darstellung`: editors add, edit, save, and reorder gesture sections; the theme renders each `gesture x skin` treatment through the universal section slots and dedicated skin CSS such as `themes/industriesalon/assets/css/skins/ausstellung-quellenbuehne.css` and `themes/industriesalon/assets/css/skins/ausstellung-objektalbum.css`.
 - Before transferring the `Frauen im Werk` / `Kinder im Werk` JSON state elsewhere, prefer the normalized artifact `ops/sql/2026-06-27-editorial-vocabulary-normalized-json.sql`; it contains the canonical `objektalbum` / `quellenbuehne` skin assignments and canonical gesture names.
 - After an authorized release, staff-review Place editing with Kino Spreehöfe,
   KAOS 93 and a sparse Place: facts/media permissions, optional epochs, preview,

@@ -11,7 +11,24 @@ per-file line counts against the ADR commit (`70e27aa`, 2026-07-01). Nothing
 was rendered. Contrast figures assume a white background and ignore large
 text. Unreferenced classes may still come from stored `post_content`.
 
-Status: findings only. Active follow-up lives in `TODO.md`.
+Status: findings only. The
+[consolidated delivery plan](gesture-treatment-consolidation-plan.md) supersedes
+the target/fix order below; `TODO.md` points to its immediate slice.
+
+Review qualification (2026-10-17): C1 overstates separate active rendering;
+portable gestures already delegate to the shared renderer. C3's assertion that
+no skin file contains `.iss-landing-*` selectors is incorrect even at `eb14e8b`:
+`editorial-skins.css` contains portable host-skin adapters. Verify their coverage
+and the retained legacy consumers. Counts below remain the original static audit
+baseline; intentional context-specific gesture treatments are not duplication
+merely because their structure differs.
+
+Local delivery receipt (2026-10-17): the consolidated plan now records implemented
+quote/chapter/gallery contracts, removal of obsolete quote renderers/selectors,
+event skin authority, conditional timeline ownership and preset aliases. The
+edited public CSS is 42,748 source bytes smaller. This does not turn every finding
+below into a closed item; retained consumers and verification are listed in the
+plan's drain record, rather than inferred from the original static counts.
 
 ## Verdict
 

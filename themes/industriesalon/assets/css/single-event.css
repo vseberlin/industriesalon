@@ -238,14 +238,12 @@
   gap: 1.15rem;
 }
 
-.iss-event-body__content > :where(p, ul, ol, h2, h3, h4, h5, h6, blockquote, pre, table, figure, .wp-block-image, .wp-block-gallery, .wp-block-buttons, .wp-block-file, .wp-block-separator, .wp-block-embed, .wp-block-video, .wp-block-audio),
-.iss-event-body__content > .wp-block-post-content > :where(p, ul, ol, h2, h3, h4, h5, h6, blockquote, pre, table, figure, .wp-block-image, .wp-block-gallery, .wp-block-buttons, .wp-block-file, .wp-block-separator, .wp-block-embed, .wp-block-video, .wp-block-audio) {
+.iss-event-body__content > :where(p, ul, ol, h2, h3, h4, h5, h6, blockquote, pre, table, figure, .wp-block-image, .wp-block-gallery, .wp-block-buttons, .wp-block-file, .wp-block-separator, .wp-block-embed, .wp-block-video, .wp-block-audio), .iss-event-body__content > .wp-block-post-content > :where(p, ul, ol, h2, h3, h4, h5, h6, blockquote, pre, table, figure, .wp-block-image, .wp-block-gallery, .wp-block-buttons, .wp-block-file, .wp-block-separator, .wp-block-embed, .wp-block-video, .wp-block-audio) {
   width: min(100%, var(--iss-event-measure));
   margin: 0;
 }
 
-.iss-event-body__content > :where(.wp-block-group, .wp-block-columns, .iss-event-program),
-.iss-event-body__content > .wp-block-post-content > :where(.wp-block-group, .wp-block-columns, .iss-event-program) {
+.iss-event-body__content > :where(.wp-block-group, .wp-block-columns, .iss-event-program), .iss-event-body__content > .wp-block-post-content > :where(.wp-block-group, .wp-block-columns, .iss-event-program) {
   width: 100%;
   max-width: none;
   margin-inline: 0;
@@ -386,10 +384,6 @@
   margin: 0;
 }
 
-.iss-event-structured__quote {
-  max-width: 48rem;
-}
-
 .iss-event-structured__items {
   display: grid;
   gap: 0;
@@ -406,14 +400,6 @@
 
 .iss-event-structured__items li:first-child {
   border-top-color: var(--iss-event-rule-strong);
-}
-
-.iss-event-structured__quote cite {
-  display: block;
-  margin-top: 0.75rem;
-  color: var(--iss-surface-subtle);
-  font-size: 0.92rem;
-  font-style: normal;
 }
 
 .iss-event-structured__dynamic-refs,
@@ -478,7 +464,7 @@
 
 .iss-event-downloads__title {
   margin: 0;
-  color: var(--iss-event-ink);
+  color: var(--iss-surface-fg);
   font-size: 0.74rem;
   font-weight: 850;
   letter-spacing: 0.1em;
@@ -503,16 +489,16 @@
   min-height: 100%;
   padding: 0.9rem 1rem;
   border: 1px solid var(--iss-event-rule);
-  border-left: 0.28rem solid var(--iss-event-ink);
-  background: var(--iss-white);
-  color: var(--iss-event-ink);
+  border-left: 0.28rem solid var(--iss-surface-fg);
+  background: var(--iss-surface-bg);
+  color: var(--iss-surface-fg);
   text-decoration: none;
 }
 
 .iss-event-file__link:hover,
 .iss-event-file__link:focus-visible {
-  border-color: var(--iss-event-ink);
-  color: var(--iss-event-ink);
+  border-color: var(--iss-surface-fg);
+  color: var(--iss-surface-fg);
 }
 
 .iss-event-file__title {
@@ -599,10 +585,10 @@
 }
 
 .iss-event-upload-intake {
-  --iss-upload-intake-accent: var(--iss-event-ink);
+  --iss-upload-intake-accent: var(--iss-surface-fg);
   --iss-upload-intake-background: transparent;
   --iss-upload-intake-border: 0;
-  --iss-upload-intake-button-fg: var(--iss-event-paper);
+  --iss-upload-intake-button-fg: var(--iss-surface-bg);
   --iss-upload-intake-button-min-height: 2.9rem;
   --iss-upload-intake-button-padding: 0 1.15rem;
   --iss-upload-intake-margin: 0;
@@ -900,12 +886,7 @@
   color: var(--iss-surface-fg);
 }
 
-.iss-event-skin-buehne .iss-event-body__content :where(p, li),
-.iss-event-skin-buehne .iss-event-structured__body,
-.iss-event-skin-buehne .iss-event-structured__quote,
-.iss-event-skin-buehne .iss-event-structured__items li,
-.iss-event-skin-buehne .iss-event-structured__object-title,
-.iss-event-skin-buehne .iss-event-structured__dynamic-value {
+.iss-event-skin-buehne .iss-event-body__content :where(p, li), .iss-event-skin-buehne .iss-event-structured__body, .iss-event-skin-buehne .iss-event-structured__items li, .iss-event-skin-buehne .iss-event-structured__object-title, .iss-event-skin-buehne .iss-event-structured__dynamic-value {
   color: var(--iss-surface-muted);
 }
 

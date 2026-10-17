@@ -15,14 +15,14 @@
 
 :root {
   /* Core colors - mapped to theme.json presets. */
-  --iss-red: #e81d25;
-  --iss-white: #f9f9fa;
-  --iss-black: #1e1e1e;
-  --iss-grey: #c0b8b5;
-  --iss-green: #579e7d;
-  --iss-blue: #869fba;
-  --iss-yellow: #ebbc1e;
-  --iss-brown: #753a18;
+  --iss-red: var(--wp--preset--color--scarlet-red);
+  --iss-white: var(--wp--preset--color--vaporous-white);
+  --iss-black: var(--wp--preset--color--eerie-black);
+  --iss-grey: var(--wp--preset--color--cerebral-grey);
+  --iss-green: var(--wp--preset--color--turtle-green);
+  --iss-blue: var(--wp--preset--color--pale-rock-blue);
+  --iss-yellow: var(--wp--preset--color--sunrise-yellow);
+  --iss-brown: var(--wp--preset--color--russet-brown);
   --iss-accent: var(--iss-red);
   --iss-accent-rgb: 232, 29, 37;
   --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
@@ -33,12 +33,12 @@
   --iss-container-pad: 1.25rem;
   --iss-gap: 1.35rem;
   --iss-header-height: 5.5rem;
-  --iss-space-2xs: 0.35rem;
-  --iss-space-xs: 0.5rem;
-  --iss-space-sm: 0.75rem;
-  --iss-space-md: 1rem;
-  --iss-space-lg: 1.5rem;
-  --iss-space-xl: 2.5rem;
+  --iss-space-2xs: var(--wp--preset--spacing--xs);
+  --iss-space-xs: var(--wp--preset--spacing--s);
+  --iss-space-sm: var(--wp--preset--spacing--m);
+  --iss-space-md: var(--wp--preset--spacing--l);
+  --iss-space-lg: var(--wp--preset--spacing--xl);
+  --iss-space-xl: var(--wp--preset--spacing--2xl);
   --iss-space-2xl: 4rem;
   --iss-section-pad-y: clamp(1.75rem, 3.4vw, 3.5rem);
   --iss-section-pad-y-tight: clamp(1rem, 2.2vw, 2rem);

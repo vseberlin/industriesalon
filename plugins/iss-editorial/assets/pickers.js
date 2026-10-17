@@ -113,7 +113,7 @@
     }
 
     function sectionUsesViewportGallery(section) {
-      return section.gallery_layout === 'viewport' || Object.keys(sections).some(function (type) {
+      return options.presentationValue(section, 'gallery_layout') === 'viewport' || Object.keys(sections).some(function (type) {
         return ((sections[type].legacy_types || {})[section.type] || {}).gallery_layout === 'viewport';
       });
     }

@@ -153,15 +153,21 @@ function industriesalon_render_structured_veranstaltung_gallery(string $media_ht
 
 function industriesalon_structured_veranstaltung_skin(array $document): string
 {
+    $allowed = industriesalon_editorial_skin_slugs('veranstaltung');
+    $explicit = sanitize_key((string) ($document['skin'] ?? ''));
+    if (in_array($explicit, $allowed, true)) {
+        return $explicit;
+    }
     $entity_key = function_exists('iss_content_model_sanitize_veranstaltung_entity_key')
         ? iss_content_model_sanitize_veranstaltung_entity_key((string) ($document['entity_key'] ?? ''))
         : sanitize_key((string) ($document['entity_key'] ?? ''));
 
     if ($entity_key === '' || !function_exists('iss_content_model_veranstaltung_entity_default_skin')) {
-        return '';
+        return 'standard';
     }
 
-    return sanitize_html_class(iss_content_model_veranstaltung_entity_default_skin($entity_key));
+    $default = iss_content_model_veranstaltung_entity_default_skin($entity_key);
+    return in_array($default, $allowed, true) ? $default : 'standard';
 }
 
 function industriesalon_structured_veranstaltung_section_uses_flow_media(array $section, string $skin): bool
@@ -291,8 +297,6 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
-    $quote = trim((string) ($section['quote'] ?? ''));
-    $attribution = trim((string) ($section['attribution'] ?? ''));
     $items = array_values(array_filter(array_map('trim', (array) ($section['items'] ?? []))));
     $upload_intake_html = '';
     if ($type === 'upload_intake') {
@@ -335,7 +339,7 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
         }
     }
 
-    if ($kicker === '' && $title === '' && $body === '' && $quote === '' && !$items && $media_html === '' && $downloads_html === '' && $links_html === '' && $refs_html === '' && $dynamic_html === '' && $upload_intake_html === '') {
+    if ($kicker === '' && $title === '' && $body === '' && !$items && $media_html === '' && $downloads_html === '' && $links_html === '' && $refs_html === '' && $dynamic_html === '' && $upload_intake_html === '') {
         return '';
     }
 
@@ -382,14 +386,7 @@ function industriesalon_render_structured_veranstaltung_section(array $section, 
         <?php elseif ($body !== '') : ?>
             <div class="iss-event-structured__body"><?php echo wp_kses_post(wpautop($body)); ?></div>
         <?php endif; ?>
-        <?php if ($quote !== '') : ?>
-            <blockquote class="iss-event-structured__quote">
-                <?php echo wp_kses_post(wpautop($quote)); ?>
-                <?php if ($attribution !== '') : ?>
-                    <cite><?php echo esc_html($attribution); ?></cite>
-                <?php endif; ?>
-            </blockquote>
-        <?php endif; ?>
+
         <?php if ($items) : ?>
             <ul class="iss-event-structured__items">
                 <?php foreach ($items as $item) : ?>

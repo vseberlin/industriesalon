@@ -49,9 +49,10 @@ function industriesalon_editorial_landing_prefer_autosave(int $post_id): bool
 
 function industriesalon_editorial_landing_treatment_slug(array $section): string
 {
+    if (isset($section['_resolved_treatment'])) { return $section['_resolved_treatment']; }
     $format = iss_editorial_get_format('landing');
     $type = sanitize_key((string) ($section['type'] ?? 'gateway'));
-    return iss_editorial_resolve_treatment((string) ($section['treatment'] ?? ''), $format['sections'][$type] ?? []);
+    return iss_editorial_resolve_section_treatment($section, $format['sections'][$type] ?? []);
 }
 
 function industriesalon_editorial_landing_class_slug(string $value): string
@@ -91,7 +92,7 @@ function industriesalon_editorial_landing_section_classes(array $section, string
 {
     $type = sanitize_key((string) ($section['type'] ?? 'section'));
     $slot_key = sanitize_key((string) ($section['slot_key'] ?? ''));
-    $treatment = $type === 'galerie' ? '' : industriesalon_editorial_landing_treatment_slug($section);
+    $treatment = industriesalon_editorial_landing_treatment_slug($section);
     $classes = [
         'iss-section',
         'iss-landing-section',
@@ -109,17 +110,11 @@ function industriesalon_editorial_landing_section_classes(array $section, string
     if (in_array($surface, ['soft', 'dark', 'accent'], true)) {
         $classes[] = 'iss-landing-section--surface-' . $surface;
     }
-    if (($section['section_treatment'] ?? '') === 'disclosure') {
-        $classes[] = 'iss-landing-section--disclosure';
-    }
     if (!empty($section['_opening'])) {
         $classes[] = 'iss-landing-section--opening';
     }
     if ($treatment !== '') {
         $classes[] = 'iss-landing-section--treatment-' . industriesalon_editorial_landing_class_slug($treatment);
-    }
-    if ($type === 'galerie') {
-        $classes[] = 'iss-landing-section--layout-' . sanitize_html_class(industriesalon_editorial_landing_gallery_layout($section));
     }
 
     if ($item_count > 0) {
@@ -154,7 +149,7 @@ function industriesalon_editorial_landing_section_classes(array $section, string
 function industriesalon_editorial_landing_section_attrs(array $section, string $skin, int $item_count = 0): string
 {
     $type = sanitize_key((string) ($section['type'] ?? 'section'));
-    $treatment = $type === 'galerie' ? '' : industriesalon_editorial_landing_treatment_slug($section);
+    $treatment = industriesalon_editorial_landing_treatment_slug($section);
     $anchor = sanitize_title((string) ($section['anchor'] ?? ''));
     $attrs = 'class="' . esc_attr(implode(' ', industriesalon_editorial_landing_section_classes($section, $skin, $item_count))) . '"';
     if ($anchor !== '') {
@@ -781,13 +776,13 @@ function industriesalon_render_editorial_landing_quote(array $section, string $s
     $media = industriesalon_render_editorial_landing_references($section);
     if ($copy === '' && $quote === '' && $attribution === '' && $media === '') { return ''; }
 
-    $classes = 'iss-landing-quote';
+    $classes = 'iss-editorial-quote';
     if (($section['quote_treatment'] ?? 'pull') === 'source' && $media !== '') {
-        $classes .= ' iss-landing-quote--source';
-        if (($section['orientation'] ?? '') === 'media-right') { $classes .= ' iss-landing-quote--media-right'; }
+        $classes .= ' iss-editorial-quote--source';
+        if (($section['orientation'] ?? '') === 'media-right') { $classes .= ' iss-editorial-quote--media-right'; }
     }
     $html = '<section ' . industriesalon_editorial_landing_section_attrs($section, $skin) . '>';
-    $html .= '<div class="iss-container ' . esc_attr($classes) . '"><div class="iss-landing-quote__copy">' . $copy;
+    $html .= '<div class="iss-container ' . esc_attr($classes) . '"><div class="iss-editorial-quote__copy">' . $copy;
     if ($quote !== '' || $attribution !== '') {
         $html .= '<blockquote class="iss-quote">';
         if ($quote !== '') { $html .= '<div class="iss-quote__text">' . wp_kses_post(wpautop($quote)) . '</div>'; }
@@ -795,7 +790,7 @@ function industriesalon_render_editorial_landing_quote(array $section, string $s
         $html .= '</blockquote>';
     }
     $html .= '</div>';
-    if ($media !== '') { $html .= '<div class="iss-landing-quote__media iss-landing-gallery__track iss-landing-reference-grid">' . $media . '</div>'; }
+    if ($media !== '') { $html .= '<div class="iss-editorial-quote__media iss-landing-reference-grid">' . $media . '</div>'; }
     return $html . '</div></section>';
 }
 
@@ -1549,6 +1544,10 @@ function industriesalon_render_editorial_landing_atlas_map(array $section, int $
 
 function industriesalon_render_editorial_landing_section(array $section, int $rendered_index, string $skin): string
 {
+    if (!isset($section['_resolved_treatment'])) {
+        $definition = iss_editorial_get_format('landing')['sections'][$section['type'] ?? ''] ?? [];
+        $section = iss_editorial_section_presentation($section, $definition, $skin);
+    }
     $type = sanitize_key((string) ($section['type'] ?? ''));
     if ($type === 'objektfokus') {
         return industriesalon_render_editorial_landing_objects($section, $skin);
@@ -1593,7 +1592,7 @@ function industriesalon_render_editorial_landing_section(array $section, int $re
     return '';
 }
 
-function industriesalon_editorial_landing_render_document(array $document, int $offset = 0, int $limit = 0): string
+function industriesalon_editorial_landing_render_document(array $document, int $offset = 0, int $limit = 0, string $format_slug = 'landing'): string
 {
     $sections = is_array($document['sections'] ?? null) ? $document['sections'] : [];
     if (!$sections) {
@@ -1615,6 +1614,8 @@ function industriesalon_editorial_landing_render_document(array $document, int $
         $section['_canvas_edit'] = ($document['schema_version'] ?? 1) >= 2 && ($section['type'] ?? '') !== 'dynamic_slot' && function_exists('iss_editorial_embedded_preview') && !empty(iss_editorial_embedded_preview()['canvas']);
         $section['_text_version'] = (int) ($document['schema_version'] ?? 1);
         $section['_opening'] = $source_index === 0 && is_front_page() && industriesalon_landing_has_opening($document);
+        $definition = iss_editorial_get_format($format_slug)['sections'][$section['type'] ?? ''] ?? [];
+        $section = iss_editorial_section_presentation($section, $definition, $skin);
         $section_html = industriesalon_render_editorial_landing_section($section, $rendered_index, $skin);
         if ($section_html !== '' && function_exists('iss_editorial_embedded_preview') && iss_editorial_embedded_preview()) {
             $html_tags = new WP_HTML_Tag_Processor($section_html);
@@ -1649,7 +1650,7 @@ function industriesalon_render_editorial_landing_content(string $content): strin
 
     $prefer_autosave = industriesalon_editorial_landing_prefer_autosave((int) $post_id);
     $document = iss_editorial_get_read_model((int) $post_id, iss_editorial_get_format_for_post($post_id)['slug'], $prefer_autosave);
-    $html = industriesalon_editorial_landing_render_document($document);
+    $html = industriesalon_editorial_landing_render_document($document, 0, 0, iss_editorial_get_format_for_post($post_id)['slug']);
     if (trim($html) === '') {
         return $content;
     }
@@ -1743,7 +1744,7 @@ function industriesalon_render_editorial_landing_block(array $attributes = []): 
 
     $prefer_autosave = industriesalon_editorial_landing_prefer_autosave($post_id);
     $document = iss_editorial_get_read_model($post_id, iss_editorial_get_format_for_post($post_id)['slug'], $prefer_autosave);
-    return industriesalon_editorial_landing_render_document($document, absint($attributes['offset'] ?? 0), absint($attributes['limit'] ?? 0));
+    return industriesalon_editorial_landing_render_document($document, absint($attributes['offset'] ?? 0), absint($attributes['limit'] ?? 0), iss_editorial_get_format_for_post($post_id)['slug']);
 }
 
 function industriesalon_register_editorial_landing_block(): void

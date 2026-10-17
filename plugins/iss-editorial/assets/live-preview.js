@@ -47,7 +47,7 @@
       waitingActions.push(action); tell({ type: 'iss-preview-field-finish' });
     }
     function position() {
-      if (shown && !editing) {
+      if (shown && !editing && !(shown.issSnapshot && shown.issSnapshot.readOnly)) {
         var index = sectionRef && shown.issSnapshot ? shown.issSnapshot.refs.indexOf(sectionRef) : section;
         var label = shown.issSnapshot && shown.issSnapshot.labels ? shown.issSnapshot.labels[index] : '';
         shown.contentWindow.postMessage({ type: 'iss-preview-position', token: shown.dataset.token, section: index, label: label, scroll: scroll }, window.location.origin);
@@ -64,11 +64,12 @@
     }
     function receive(event) {
       if (destroyed || event.origin !== window.location.origin || !event.data) { return; }
+      var interactive = shown && !(shown.issSnapshot && shown.issSnapshot.readOnly);
       if (shown && event.source === shown.contentWindow && event.data.token === shown.dataset.token) {
         if (['iss-preview-scroll', 'iss-preview-select'].indexOf(event.data.type) !== -1 && Number.isFinite(event.data.scroll)) { scroll = event.data.scroll; }
-        if (event.data.type === 'iss-preview-select' && Number.isInteger(event.data.section) && event.data.section >= 0 && onSelectSection) { onSelectSection(event.data.section, shown.issSnapshot); }
+        if (interactive && event.data.type === 'iss-preview-select' && Number.isInteger(event.data.section) && event.data.section >= 0 && onSelectSection) { onSelectSection(event.data.section, shown.issSnapshot); }
       }
-      if (shown && event.source === shown.contentWindow && event.data.token === shown.dataset.token && options.field && /^iss-preview-field-(start|change|end)$/.test(event.data.type)) {
+      if (interactive && event.source === shown.contentWindow && event.data.token === shown.dataset.token && options.field && /^iss-preview-field-(start|change|end)$/.test(event.data.type)) {
         var response = options.field(event.data, shown.issSnapshot);
         if (event.data.type === 'iss-preview-field-start' && response.accepted) { editing = true; cancelPending(); }
         tell(Object.assign({ type: 'iss-preview-field-ack', session: event.data.session, sequence: event.data.sequence || 0 }, response));
@@ -77,15 +78,15 @@
           var actions = waitingActions.splice(0); actions.forEach(function (action) { action(); });
         }
       }
-      if (shown && event.source === shown.contentWindow && event.data.token === shown.dataset.token && event.data.type === 'iss-preview-insert' && options.insert && Number.isInteger(event.data.section) && event.data.section >= 0 && event.data.section <= shown.issSnapshot.refs.length) { options.insert(event.data.section, shown.issSnapshot); }
-      if (shown && event.source === shown.contentWindow && event.data.token === shown.dataset.token && event.data.type === 'iss-preview-form' && options.form && Number.isInteger(event.data.section)) { options.form(event.data.section, shown.issSnapshot, event.data.message); }
+      if (interactive && event.source === shown.contentWindow && event.data.token === shown.dataset.token && event.data.type === 'iss-preview-insert' && options.insert && Number.isInteger(event.data.section) && event.data.section >= 0 && event.data.section <= shown.issSnapshot.refs.length) { options.insert(event.data.section, shown.issSnapshot); }
+      if (interactive && event.source === shown.contentWindow && event.data.token === shown.dataset.token && event.data.type === 'iss-preview-form' && options.form && Number.isInteger(event.data.section)) { options.form(event.data.section, shown.issSnapshot, event.data.message); }
       if (!pending || event.source !== pending.contentWindow || event.data.token !== currentToken || ['iss-preview-ready', 'iss-preview-stale'].indexOf(event.data.type) === -1) { return; }
       if (event.data.type === 'iss-preview-stale') { stale('Vorschau ist nicht mehr aktuell. Bitte Vorschau aktualisieren.'); return; }
       window.clearTimeout(timer);
       if (shown) { shown.remove(); }
       shown = pending; pending = null; shown.hidden = false;
       position();
-      previewStatus('Vorschau aktuell', 'ready');
+      previewStatus(shown.issSnapshot && shown.issSnapshot.notice || 'Vorschau aktuell', shown.issSnapshot && shown.issSnapshot.notice ? 'stale' : 'ready');
     }
     var sizing = document.createElement('style');
     pane.appendChild(sizing);
@@ -102,6 +103,14 @@
     window.addEventListener('message', receive);
     return {
       stale: stale,
+      fallback: function (url, token, message) {
+        if (shown) { stale(message); return; }
+        // A recovered unfinished draft has no previous frame in this session.
+        // Show the authenticated saved snapshot without mapping its sections onto the draft.
+        var snapshot = { readOnly: true, refs: [], values: [], labels: [], notice: message + ' Die Vorschau zeigt die gespeicherte Fassung. Bitte im Formular weiterbearbeiten.' };
+        this.update(url, token, snapshot);
+        if (pending) { pending.issSnapshot = snapshot; }
+      },
       reportSave: function (message) { tell({ type: 'iss-preview-save-status', message: message }); },
       selectSection: function (index, reveal, ref) {
         section = index; sectionRef = ref || null;
@@ -117,7 +126,7 @@
         var address = new URL(url, window.location.href);
         if (address.origin !== window.location.origin) { stale('Vorschau-Adresse gehört zu einer anderen Website.'); return; }
         address.searchParams.set('iss_editorial_embed', '1');
-        address.searchParams.set('iss_editorial_canvas', '1');
+        address.searchParams.set('iss_editorial_canvas', snapshot && snapshot.readOnly ? '0' : '1');
         address.searchParams.set('iss_editorial_snapshot', token);
         pending = element('iframe', 'iss-editorial-live-preview__frame');
         pending.issSnapshot = snapshot;

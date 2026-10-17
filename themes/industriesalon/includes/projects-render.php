@@ -343,6 +343,7 @@ function industriesalon_editorial_project_nav_items(array $sections, array $anch
         }
 
         $type = (string) ($section['type'] ?? '');
+        $section = iss_editorial_section_presentation($section, iss_editorial_get_format('projekt')['sections'][$type] ?? [], '');
         if (($section['treatment'] ?? '') === 'feature.opening' || ($section['section_treatment'] ?? '') === 'disclosure') { continue; }
         if (!in_array($type, ['kapitel', 'schluss'], true) && (!$all_headings || trim((string) ($section['title'] ?? '')) === '')) {
             continue;
@@ -798,6 +799,7 @@ function industriesalon_render_editorial_project_content(string $content): strin
         $section = $content_sections[$section_index] ?? null;
         if (is_array($section)) {
             $section['_text_version'] = (int) ($document['schema_version'] ?? 1);
+            $section = iss_editorial_section_presentation($section, iss_editorial_get_format('projekt')['sections'][$section['type'] ?? ''] ?? [], $skin);
             $next_section = $content_sections[$section_index + 1] ?? null;
             $is_dossier_spread = $skin === 'dossier'
                 && (string) ($section['type'] ?? '') === 'kapitel'

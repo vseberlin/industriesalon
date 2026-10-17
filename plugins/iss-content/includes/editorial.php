@@ -624,6 +624,9 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
                 ];
             }
             $section['treatments'] = (array) ($section['treatments'] ?? []);
+            if (!empty($section['legacy_treatment_field']) && in_array($section['legacy_treatment_field'], $section['supports'] ?? [], true)) {
+                $section['supports'] = array_values(array_unique(array_merge($section['supports'], ['treatment'])));
+            }
             foreach ($section['treatments'] as $treatment => &$choice) {
                 $choice = array_merge(['schematic' => $section['schematic']], is_array($choice) ? $choice : ['label' => $choice], $presentations[$treatment] ?? []);
             }

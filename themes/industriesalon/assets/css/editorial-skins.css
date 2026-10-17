@@ -17,19 +17,23 @@
 }
 
 .iss-landing-editorial--skin-chronik {
-  --iss-landing-surface: var(--iss-ausstellung-chronik-paper);
-  --iss-landing-ink: var(--iss-ausstellung-chronik-ink);
-  --iss-landing-rule: var(--iss-ausstellung-chronik-line);
+  --iss-editorial-quote-paper: var(--iss-ausstellung-chronik-board, var(--iss-surface-dark));
+  --iss-landing-surface: var(--iss-ausstellung-chronik-paper, var(--iss-surface-bg));
+  --iss-landing-ink: var(--iss-ausstellung-chronik-ink, var(--iss-surface-fg));
+  --iss-landing-rule: var(--iss-ausstellung-chronik-line, var(--iss-surface-rule));
 }
 
 .iss-landing-editorial--skin-quellenbuehne {
-  --iss-landing-surface: var(--iss-ausstellung-fiw-paper);
-  --iss-landing-rule: var(--iss-ausstellung-fiw-line);
+  --iss-landing-surface: var(--iss-ausstellung-fiw-paper, var(--iss-surface-bg));
+  --iss-landing-rule: var(--iss-ausstellung-fiw-line, var(--iss-surface-rule));
 }
 
 .iss-landing-editorial--skin-objektalbum {
-  --iss-landing-surface: var(--iss-ausstellung-kinder-paper);
-  --iss-landing-rule: var(--iss-ausstellung-kinder-line);
+  --iss-editorial-quote-paper: var(--iss-ausstellung-kinder-card, #fffaf3);
+  --iss-editorial-quote-ink: var(--iss-black);
+  --iss-editorial-quote-muted: var(--iss-surface-muted);
+  --iss-landing-surface: var(--iss-ausstellung-kinder-paper, var(--iss-surface-bg));
+  --iss-landing-rule: var(--iss-ausstellung-kinder-line, var(--iss-surface-rule));
 }
 
 .iss-landing-editorial--skin-quellenbuehne .iss-landing-section--gesture-objektfokus {
@@ -756,9 +760,9 @@
 }
 
 .iss-landing-editorial--skin-buehne {
-  --iss-landing-surface: var(--iss-project-paper);
-  --iss-landing-ink: var(--iss-project-ink);
-  --iss-landing-muted: #45454e;
+  --iss-landing-surface: var(--iss-project-paper, var(--iss-surface-bg));
+  --iss-landing-ink: var(--iss-project-ink, var(--iss-surface-fg));
+  --iss-landing-muted: color-mix(in srgb, var(--iss-landing-ink) 78%, transparent);
   --iss-landing-serif: var(--wp--preset--font-family--plex, sans-serif);
   --iss-landing-text-image-title-font-family: var(--iss-landing-serif);
   --iss-landing-text-image-columns: repeat(4, minmax(0, 1fr));
@@ -782,7 +786,7 @@
 
   padding: 1.25rem;
   border-top: 0.4rem solid var(--iss-project-card-colour);
-  background: color-mix(in srgb, var(--iss-project-card-colour) 12%, var(--iss-project-paper));
+  background: color-mix(in srgb, var(--iss-project-card-colour, var(--iss-accent)) 12%, var(--iss-landing-surface));
 }
 
 .iss-landing-editorial--skin-buehne :where(.iss-landing-section--treatment-text-bild-reihe-compact, .iss-landing-section--treatment-text-bild-reihe-chronology) .iss-landing-text-image-row__item:nth-child(4n + 2) {
@@ -922,7 +926,7 @@
   margin-top: 1.5rem;
 }
 
-.iss-landing-editorial--skin-buehne .iss-landing-section--disclosure {
+.iss-landing-editorial--skin-buehne .iss-landing-section--treatment-kapitel-disclosure {
   padding-block: 0.5rem;
   border-top: 0;
 }

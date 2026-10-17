@@ -114,7 +114,7 @@
       paste_preprocess: function (_plugin, args) { args.content = sanitize(args.content, profile); },
       toolbar1: 'undo redo | bold italic' + (profile === 'block' ? ' bullist numlist' : '') + (profile !== 'inline-card' ? ' isslink' : '') + ' issmore',
       toolbar2: '',
-      content_style: 'body{font-family:system-ui,sans-serif;font-size:16px;line-height:1.6;margin:12px}p{margin:0 0 .8em}a{text-decoration:underline}',
+      content_style: 'body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px;line-height:1.5;margin:12px}p{margin:0 0 .8em}a{text-decoration:underline}',
       setup: function (editor) {
         var registered = {};
         function register(kind, key) {

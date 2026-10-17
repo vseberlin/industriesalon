@@ -42,7 +42,11 @@ try {
     $assert(!is_wp_error($id) && $id > 0, 'Create fixture');
     foreach (iss_content_editorial_sets_service()->get_links_for_context('projekt', $id) as $link) { $sets[] = (int) $link['set_id']; }
     $doc = iss_editorial_get_empty_document('projekt');
-    $doc['sections'] = [['type' => 'kapitel', 'title' => 'Original JSON', 'body' => '<p>Über "quotes" and C:\\source</p>']];
+    $doc['sections'] = [
+        ['type' => 'kapitel', 'title' => 'Original JSON', 'body' => '<p>Über "quotes" and C:\\source</p>', 'treatment' => 'kapitel.disclosure', 'section_treatment' => 'standard'],
+        ['type' => 'zitat', 'quote' => 'Retained voice', 'attribution' => 'Retained source', 'treatment' => 'zitat.source', 'quote_treatment' => 'pull', 'orientation' => 'media-right'],
+        ['type' => 'galerie', 'title' => 'Retained sequence', 'treatment' => 'galerie.sequence', 'gallery_layout' => 'wall'],
+    ];
     $assert(iss_editorial_save_document($id, 'projekt', $doc, false, true), 'Initialize document and enablement');
     $original = $state($id);
     $next = $doc;

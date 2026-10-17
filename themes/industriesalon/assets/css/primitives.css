@@ -1009,9 +1009,10 @@
 .iss-quote__text {
   margin: 0;
   color: var(--iss-quote-text);
-  font-size: 1.04rem;
+  font-size: var(--iss-quote-font-size, 1.04rem);
+  font-family: var(--iss-quote-font-family, inherit);
   font-weight: 500;
-  line-height: 1.48;
+  line-height: var(--iss-quote-line-height, 1.48);
 }
 
 .iss-quote__text p {

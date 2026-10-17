@@ -39,11 +39,13 @@
     var preview = node('div', 'iss-editorial-studio__preview');
     var inspector = node('section', 'iss-editorial-studio__inspector'); inspector.setAttribute('aria-label', 'Abschnitt bearbeiten');
     var navigation = node('div', 'iss-editorial-studio__navigation');
-    var previous = button('← Vorheriger', function () { options.select(selected - 1); }); previous.setAttribute('aria-label', 'Vorherigen Abschnitt auswählen');
-    var next = button('Nächster →', function () { options.select(selected + 1); }); next.setAttribute('aria-label', 'Nächsten Abschnitt auswählen');
+    var previous = iconButton('Vorherigen Abschnitt auswählen', 'arrow-up-alt2', function () { options.select(selected - 1); });
+    var next = iconButton('Nächsten Abschnitt auswählen', 'arrow-down-alt2', function () { options.select(selected + 1); });
     var heading = node('h3');
     var guidance = node('p', 'iss-editorial-studio__guidance'); guidance.hidden = true;
-    var position = node('small', 'iss-editorial-studio__position');
+    var position = node('select', 'iss-editorial-studio__position');
+    position.setAttribute('aria-label', 'Abschnitt auswählen');
+    position.addEventListener('change', function () { options.select(Number(position.value)); });
     var inspectorTabs = node('nav', 'iss-editorial-studio__inspector-tabs'); inspectorTabs.setAttribute('aria-label', 'Abschnitt-Einstellungen');
     var body = node('div', 'iss-editorial-studio__fields');
     var note = node('p', 'iss-editorial-studio__notice'); note.hidden = true; note.setAttribute('role', 'status');
@@ -143,9 +145,8 @@
     settings.append(node('h3', '', 'Seiteneinstellungen'), ownerBody, button('Angaben & Beziehungen …', function () {
       options.afterEditing(function () { setExpanded(false); var native = document.getElementById('poststuff'); if (native) { native.scrollIntoView({ block: 'start' }); } });
     }));
-    var sectionNavigation = node('div', 'iss-editorial-studio__section-navigation'); sectionNavigation.setAttribute('role', 'group'); sectionNavigation.setAttribute('aria-label', 'Abschnitt auswählen');
-    sectionNavigation.append(previous, next);
-    navigation.append(position, finish); inspector.append(navigation, sectionNavigation, heading, guidance, inspectorTabs, note, body, remove);
+    navigation.setAttribute('role', 'group'); navigation.setAttribute('aria-label', 'Abschnitt-Navigation');
+    navigation.append(position, previous, next, finish); inspector.append(navigation, heading, guidance, inspectorTabs, note, body, remove);
     sidebar.append(panelHead, outline, palette, inspector, settings, undo);
     var saveGuidance = node('p', 'iss-editorial-studio__save-guidance', help.saveNotice);
     grid.append(preview, sidebar); root.append(head, saveGuidance, tabs, grid); mount.appendChild(root); setPanel('outline'); setView('preview'); setExpanded(true);
@@ -205,7 +206,7 @@
       Array.from(body.children).forEach(function (panel) { panel.hidden = panel.dataset.inspectorTab !== key; });
     }
     return {
-      root: root, help: help, body: body, menu: menu, ownerBody: ownerBody, previewMount: preview, previewTools: previewTools, previewStatus: statusMount, tools: tools, palette: palette, stage: stage, trashBody: trashBody,
+      root: root, help: help, body: body, inspector: inspector, menu: menu, ownerBody: ownerBody, previewMount: preview, previewTools: previewTools, previewStatus: statusMount, tools: tools, palette: palette, stage: stage, trashBody: trashBody,
       showView: setView,
       destroy: function () { help.destroy(); document.body.classList.remove('iss-editorial-workspace-screen'); setExpanded(false); statusAnchor.replaceWith(options.status, options.retry); },
       removed: function (label, restore) { restoreRemoved = restore; undoText.textContent = '„' + label + '“ im Papierkorb.'; undo.hidden = false; },
@@ -232,6 +233,7 @@
         var focusHandle = focusIndex && document.activeElement.classList.contains('iss-editorial-card__drag-handle');
         focusIndex = focusIndex ? Number(focusIndex.dataset.sectionIndex) : -1;
         stage.replaceChildren(); stage.dataset.sectionCount = String(sections.length);
+        position.replaceChildren();
         sections.forEach(function (section, i) {
           var definition = options.sections[section.type] || {};
           var row = node('div', 'iss-editorial-card iss-editorial-outline'); row.dataset.sectionIndex = String(i); row.draggable = true;
@@ -242,6 +244,8 @@
           var kind = node('small', '', (definition.label || section.type) + (treatment ? ' · ' + treatment : '')); kind.title = kind.textContent; kind.prepend(icon);
           var label = node('span', 'iss-editorial-outline__label');
           var sectionTitle = node('strong', '', section.title || treatment || definition.label || 'Abschnitt');
+          var choice = node('option', '', 'Abschnitt ' + (i + 1) + ' von ' + sections.length + ' · ' + sectionTitle.textContent);
+          choice.value = String(i); position.appendChild(choice);
           select.title = sectionTitle.textContent + ' · ' + kind.textContent;
           label.append(sectionTitle, kind);
           select.appendChild(label);
@@ -252,7 +256,9 @@
         if (focusIndex >= 0) { var restore = stage.querySelector('[data-section-index="' + focusIndex + '"] ' + (focusHandle ? '.iss-editorial-card__drag-handle' : '.iss-editorial-outline__select')); if (restore) { restore.focus(); } }
         previous.disabled = index <= 0; next.disabled = index >= sections.length - 1;
         remove.hidden = !sections.length;
-        position.textContent = sections.length ? 'Abschnitt ' + (index + 1) + ' von ' + sections.length : 'Keine Abschnitte';
+        if (!sections.length) { position.appendChild(node('option', '', 'Keine Abschnitte')); }
+        position.disabled = !sections.length; position.value = sections.length ? String(index) : 'Keine Abschnitte';
+        position.title = position.selectedOptions[0] ? position.selectedOptions[0].textContent : '';
         heading.textContent = sections[index] ? ((options.sections[sections[index].type] || {}).label || 'Abschnitt') : 'Abschnitt hinzufügen';
         guidance.textContent = sections[index] ? ((options.sections[sections[index].type] || {}).description || '') : '';
         guidance.hidden = !guidance.textContent;

@@ -34,7 +34,6 @@ body.iss-editorial-studio-open {
 .iss-editorial-studio__head,
 .iss-editorial-studio__tools,
 .iss-editorial-studio__navigation,
-.iss-editorial-studio__section-navigation,
 .iss-editorial-studio__panel-head,
 .iss-editorial-studio__inspector-tabs,
 .iss-editorial-studio__panel-tabs,
@@ -45,6 +44,7 @@ body.iss-editorial-studio-open {
 }
 
 .iss-editorial-studio__head {
+  flex: 0 0 auto;
   flex-wrap: wrap;
   padding: 8px 12px;
   min-height: 48px;
@@ -56,7 +56,6 @@ body.iss-editorial-studio-open {
 .iss-editorial-studio__breadcrumb {
   flex: 1 1 120px;
   min-width: 0;
-  max-width: 280px;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -376,19 +375,26 @@ body.iss-editorial-studio-open {
   font-size: 22px;
 }
 
-.iss-editorial-studio__section-navigation {
-  justify-content: space-between;
+.iss-editorial-studio__navigation {
+  position: sticky;
+  top: -12px;
+  z-index: 1;
+  flex: 0 0 auto;
   margin-bottom: 8px;
+  padding-block: 4px;
+  background: var(--iss-editor-surface);
 }
 
 .iss-editorial-studio__position {
   flex: 1;
-  color: var(--iss-editor-muted);
+  width: 0;
+  text-overflow: ellipsis;
 }
 
 .iss-editorial-studio__inspector h3,
 .iss-editorial-studio__settings h3 {
   font-size: 15px;
+  font-weight: 600;
   margin: 4px 0 12px;
 }
 
@@ -699,11 +705,16 @@ body.iss-editorial-studio-open {
 
   .iss-editorial-studio__status {
     flex: 1 1 100%;
-    order: 1;
+    order: 2;
   }
 
   .iss-editorial-studio__breadcrumb {
-    max-width: none;
+    flex-basis: calc(100% - 100px);
+  }
+
+  .iss-editorial-studio__preview-tools {
+    flex: 1 1 100%;
+    order: 1;
   }
 
   .iss-editorial-studio__preview {

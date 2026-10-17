@@ -14,7 +14,7 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         'fuehrung' => ['route-dossier', 'compact', 'standard'],
         'publication' => ['standard', 'bildmatrix', 'longread-poster'],
         'place' => ['standard', 'ortsdossier'],
-        'veranstaltung' => ['standard', 'typografisch'],
+        'veranstaltung' => ['standard', 'typografisch', 'buehne'],
     ];
     $labels = [
         'standard' => __('Standard', 'industriesalon'),
@@ -48,6 +48,24 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         $formats[$slug]['editor']['canvas'] = true;
         foreach ($formats[$slug]['sections'] as &$section) {
             if (!empty($section['portable'])) { $section['renderer'] = 'landing'; }
+            if (in_array($slug, ['ausstellung', 'rueckblick'], true) && ($section['family'] ?? '') === 'zitat') {
+                $section['treatments']['zitat.display'] = [
+                    'label' => __('Ausstellungsstimme', 'industriesalon'), 'schematic' => 'callout',
+                    'legacy_value' => 'pull', 'hint' => __('Eine Stimme als großen Lesemoment inszenieren.', 'industriesalon'),
+                ];
+                $section['treatments']['zitat.source-stage'] = [
+                    'label' => __('Quellenstation', 'industriesalon'), 'schematic' => 'split',
+                    'legacy_value' => 'source', 'hint' => __('Quelle und Stimme als zusammengehörige Station zeigen.', 'industriesalon'),
+                ];
+                foreach ($choices as $skin) {
+                    $exhibition = in_array($skin, ['quellenbuehne', 'objektalbum', 'chronik'], true);
+                    $section['treatment_contexts'][$skin] = [
+                        'allowed' => $exhibition ? ['zitat.pull', 'zitat.source', 'zitat.display', 'zitat.source-stage'] : ['zitat.pull', 'zitat.source'],
+                        'default' => $exhibition ? 'zitat.display' : 'zitat.pull',
+                        'legacy' => ['pull' => $exhibition ? 'zitat.display' : 'zitat.pull', 'source' => $exhibition ? 'zitat.source-stage' : 'zitat.source'],
+                    ];
+                }
+            }
         }
         unset($section);
         if (in_array($slug, ['landing', 'article'], true)) {
@@ -75,10 +93,10 @@ function industriesalon_render_editorial_portable_section(array $section, int $i
     if (!function_exists('iss_editorial_get_format')) { return null; }
     $definition = iss_editorial_get_format($format)['sections'][$section['type'] ?? ''] ?? [];
     if (($definition['renderer'] ?? '') !== 'landing') { return null; }
+    $section = iss_editorial_section_presentation($section, $definition, $skin);
     if ($anchor !== '') { $section['anchor'] = $anchor; }
     // Render retained identifiers through their family without rewriting stored JSON.
     if ($definition['family'] !== $section['type']) {
-        $section['treatment'] = iss_editorial_resolve_treatment((string) ($section['treatment'] ?? ''), $definition);
         $section['type'] = $definition['family'];
     }
     $section['_canvas_edit'] = ($section['_text_version'] ?? 1) >= 2 && isset($section['_editorial_index']) && !empty(iss_editorial_embedded_preview()['canvas']);

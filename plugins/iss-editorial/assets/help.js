@@ -58,7 +58,7 @@
       arrange: { title: 'Abschnitte hinzufügen und ordnen', short: 'Neue Abschnitte über „Hinzufügen“ wählen. Am Griff ziehen oder mit den Pfeiltasten verschieben.', paragraphs: [
         'Unter „Hinzufügen“ suchst du einen Abschnittstyp. Der Klick fügt ihn ein; danach füllst du seine Felder. Das Plus in der Vorschau fügt an der dort angezeigten Position ein.',
         'Unter „Abschnitte“ ziehst du einen Eintrag an die gewünschte Stelle. Mit der Tastatur: den Verschiebegriff fokussieren und Pfeil nach oben oder unten drücken.',
-        '„Vorheriger“ und „Nächster“ wechseln nur den ausgewählten Abschnitt. Sie ändern nicht die Reihenfolge.',
+        'Über „Abschnitt … von …“ springst du direkt zu einem Abschnitt. Die Pfeile daneben wählen den vorherigen oder nächsten Abschnitt aus. Die Reihenfolge bleibt dabei gleich.',
         'Für einen Seitenauftakt mit großem Bild muss der Auftakt an erster Stelle stehen. Prüfe nach dem Verschieben den Übergang zum nächsten Abschnitt.'
       ] },
       trash: { title: 'Entfernen und Wiederherstellen', short: 'Ganze Abschnitte bleiben im Papierkorb und können wiederhergestellt werden.', paragraphs: [

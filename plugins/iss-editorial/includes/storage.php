@@ -282,7 +282,10 @@ function iss_editorial_sanitize_section_treatment($treatment): string
 function iss_editorial_sanitize_registered_treatment($treatment, array $format, string $type): string
 {
     $section = is_array($format['sections'][$type] ?? null) ? $format['sections'][$type] : [];
-    return iss_editorial_resolve_treatment((string) $treatment, $section);
+    $value = iss_editorial_sanitize_treatment_slug((string) $treatment);
+    // Retain unknown choices for diagnosis; only the renderer applies a context fallback.
+    // Write validation below still rejects unregistered choices without touching stored data.
+    return $value !== '' ? (string) ($section['treatment_aliases'][$value] ?? $value) : (string) ($section['default_treatment'] ?? '');
 }
 
 function iss_editorial_sanitize_document_rail_feature($feature): array
@@ -514,7 +517,8 @@ function iss_editorial_sanitize_section(array $section, array $format, int $vers
         }
     }
 
-    if (iss_editorial_format_supports_section_field($format, $type, 'treatment')) {
+    if (iss_editorial_format_supports_section_field($format, $type, 'treatment')
+        && (empty($format['sections'][$type]['legacy_treatment_field']) || !empty($section['treatment']))) {
         $treatment = iss_editorial_sanitize_registered_treatment($section['treatment'] ?? '', $format, $type);
         if ($treatment !== '') {
             $sanitized['treatment'] = $treatment;
@@ -584,11 +588,13 @@ function iss_editorial_sanitize_section(array $section, array $format, int $vers
         $sanitized['media_layout'] = in_array($media_layout, array_column($layout['choices'], 'value'), true) ? $media_layout : $layout['default'];
     }
 
-    if (iss_editorial_format_supports_section_field($format, $type, 'gallery_layout')) {
+    if (iss_editorial_format_supports_section_field($format, $type, 'gallery_layout')
+        && (($format['sections'][$type]['legacy_treatment_field'] ?? '') !== 'gallery_layout' || isset($section['gallery_layout']))) {
         $sanitized['gallery_layout'] = iss_editorial_sanitize_gallery_layout($section['gallery_layout'] ?? 'grid');
     }
 
-    if (iss_editorial_format_supports_section_field($format, $type, 'quote_treatment')) {
+    if (iss_editorial_format_supports_section_field($format, $type, 'quote_treatment')
+        && (($format['sections'][$type]['legacy_treatment_field'] ?? '') !== 'quote_treatment' || isset($section['quote_treatment']))) {
         $sanitized['quote_treatment'] = iss_editorial_sanitize_quote_treatment($section['quote_treatment'] ?? 'pull');
     }
 
@@ -601,7 +607,8 @@ function iss_editorial_sanitize_section(array $section, array $format, int $vers
         $sanitized['surface'] = in_array($surface, ['default', 'soft', 'dark', 'accent'], true) ? $surface : 'default';
     }
 
-    if (iss_editorial_format_supports_section_field($format, $type, 'section_treatment')) {
+    if (iss_editorial_format_supports_section_field($format, $type, 'section_treatment')
+        && (($format['sections'][$type]['legacy_treatment_field'] ?? '') !== 'section_treatment' || isset($section['section_treatment']))) {
         $sanitized['section_treatment'] = iss_editorial_sanitize_section_treatment($section['section_treatment'] ?? 'standard');
     }
 
@@ -837,7 +844,8 @@ function iss_editorial_validate_document($value, string $format_slug)
                     return new WP_Error('editorial_incomplete_items', sprintf(__('Abschnitt %1$d: Bitte die Einträge unter „%2$s“ vervollständigen oder entfernen.', 'iss-editorial'), $index + 1, $key));
                 }
             }
-            if (!empty($section['treatment']) && ($normalized['treatment'] ?? '') !== $section['treatment']) {
+            if (!empty($section['treatment']) && (($normalized['treatment'] ?? '') !== $section['treatment']
+                || !in_array($normalized['treatment'], array_column($format['sections'][$type]['treatments'], 'slug'), true))) {
                 return new WP_Error('editorial_invalid_treatment', sprintf(__('Abschnitt %d: Bitte eine verfügbare Darstellung wählen.', 'iss-editorial'), $index + 1));
             }
             foreach (['image_fit', 'surface', 'gallery_layout', 'media_layout', 'quote_treatment', 'section_treatment', 'orientation', 'era_key', 'function_key', 'source_confidence', 'start_year', 'end_year'] as $key) {

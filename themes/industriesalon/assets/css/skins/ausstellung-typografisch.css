@@ -60,8 +60,7 @@
   line-height: 1.74;
 }
 
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__body > :last-child,
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-section__quote > :last-child {
+.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__body > :last-child {
   margin-bottom: 0;
 }
 
@@ -90,29 +89,6 @@
   padding-top: 0.35rem;
 }
 
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus > .iss-container,
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus-reverse > .iss-container {
-  display: grid;
-  grid-template-columns: minmax(0, 0.86fr) minmax(20rem, 1.14fr);
-  gap: clamp(1.5rem, 4vw, 4rem);
-  align-items: center;
-  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 86rem);
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus-reverse > .iss-container {
-  grid-template-columns: minmax(20rem, 1.14fr) minmax(0, 0.86fr);
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus .iss-ausstellung-section__media,
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus-reverse .iss-ausstellung-section__copy {
-  grid-column: 1;
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus .iss-ausstellung-section__copy,
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus-reverse .iss-ausstellung-section__media {
-  grid-column: 2;
-}
-
 .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__media-strip {
   display: grid;
   grid-template-columns: 1fr;
@@ -139,37 +115,6 @@
   color: var(--iss-ausstellung-type-muted);
   font-size: 0.84rem;
   line-height: 1.35;
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-quote {
-  display: grid;
-  align-items: center;
-  min-height: 56vh;
-  background: var(--iss-ausstellung-type-panel);
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__quote {
-  max-width: 18ch;
-  padding: 0;
-  border-left: 0;
-  background: transparent;
-  color: var(--iss-ausstellung-type-ink);
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.2rem, 4.8vw, 4.6rem);
-  font-style: italic;
-  line-height: 1.04;
-}
-
-.iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__quote cite {
-  display: inline-block;
-  margin-top: 1rem;
-  padding-top: 0.7rem;
-  border-top: 1px solid var(--iss-ausstellung-type-line);
-  color: var(--iss-ausstellung-type-muted);
-  font-family: var(--wp--preset--font-family--plex, "IBM Plex Sans", system-ui, sans-serif);
-  font-size: clamp(0.82rem, 0.25vw + 0.78rem, 0.96rem);
-  font-style: normal;
-  line-height: 1.45;
 }
 
 .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-album > .iss-container {
@@ -264,16 +209,10 @@
     padding-left: 1.25rem;
   }
 
-  .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus > .iss-container,
-  .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus-reverse > .iss-container,
   .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-album .iss-ausstellung-editorial__media-strip {
     grid-template-columns: 1fr;
   }
 
-  .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus .iss-ausstellung-section__media,
-  .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus .iss-ausstellung-section__copy,
-  .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus-reverse .iss-ausstellung-section__media,
-  .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-source-focus-reverse .iss-ausstellung-section__copy,
   .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-chapter > .iss-container::before,
   .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-chapter .iss-ausstellung-section__copy {
     grid-column: auto;
@@ -283,7 +222,6 @@
     grid-template-columns: 1fr;
   }
 
-  .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-quote,
   .iss-ausstellung-editorial--skin-typografisch .iss-ausstellung-editorial__section--layout-conclusion {
     min-height: auto;
   }

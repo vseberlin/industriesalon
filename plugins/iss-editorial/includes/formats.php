@@ -69,6 +69,7 @@ function iss_editorial_get_registered_formats(): array
                     'role' => is_array($treatment) ? sanitize_key($treatment['role'] ?? '') : '',
                     'min_version' => is_array($treatment) ? absint($treatment['min_version'] ?? 1) : 1,
                     'item_fields' => is_array($treatment) ? array_values(array_unique(array_filter(array_map('sanitize_key', (array) ($treatment['item_fields'] ?? []))))) : [],
+                    'legacy_value' => is_array($treatment) ? sanitize_key((string) ($treatment['legacy_value'] ?? '')) : '',
                 ];
             }
 
@@ -125,6 +126,8 @@ function iss_editorial_get_registered_formats(): array
                 'schematic' => sanitize_key($section['schematic'] ?? 'text'),
                 'default_treatment' => iss_editorial_sanitize_treatment_slug($section['default_treatment'] ?? (array_key_first($treatments) ?? '')),
                 'treatment_aliases' => (array) ($section['treatment_aliases'] ?? []),
+                'legacy_treatment_field' => sanitize_key((string) ($section['legacy_treatment_field'] ?? '')),
+                'treatment_contexts' => (array) ($section['treatment_contexts'] ?? []),
                 'legacy_types' => (array) ($section['legacy_types'] ?? []),
             ];
         }
@@ -175,6 +178,50 @@ function iss_editorial_resolve_treatment(string $value, array $section): string
     return in_array($value, $allowed, true) ? $value : (string) ($section['default_treatment'] ?? '');
 }
 
+/** Context limits new choices; retained authored treatments remain readable. */
+function iss_editorial_treatment_choices(array $definition, string $skin = ''): array
+{
+    $choices = (array) ($definition['treatments'] ?? []);
+    $allowed = $definition['treatment_contexts'][$skin]['allowed'] ?? null;
+    return is_array($allowed) ? array_values(array_filter($choices, static fn(array $choice): bool => in_array($choice['slug'], $allowed, true))) : $choices;
+}
+
+/** Resolve presentation without adding defaults or replacing choices in stored JSON. */
+function iss_editorial_resolve_section_treatment(array $section, array $definition, string $skin = ''): string
+{
+    $context = (array) ($definition['treatment_contexts'][$skin] ?? []);
+    $default = (string) ($context['default'] ?? $definition['default_treatment'] ?? '');
+    $choices = array_column((array) ($definition['treatments'] ?? []), null, 'slug');
+    $explicit = (string) ($section['treatment'] ?? '');
+    if ($explicit !== '') {
+        $explicit = (string) ($definition['treatment_aliases'][$explicit] ?? $explicit);
+        return isset($choices[$explicit]) ? $explicit : $default;
+    }
+    $field = (string) ($definition['legacy_treatment_field'] ?? '');
+    if ($field !== '' && isset($section[$field])) {
+        $legacy = (string) $section[$field];
+        if (isset($context['legacy'][$legacy])) { return (string) $context['legacy'][$legacy]; }
+        foreach ($choices as $choice) {
+            if (($choice['legacy_value'] ?? '') === $legacy) { return $choice['slug']; }
+        }
+    }
+    return $default;
+}
+
+/** A transient renderer view; legacy helpers consume the same effective choice. */
+function iss_editorial_section_presentation(array $section, array $definition, string $skin): array
+{
+    $section['_resolved_treatment'] = iss_editorial_resolve_section_treatment($section, $definition, $skin);
+    $field = (string) ($definition['legacy_treatment_field'] ?? '');
+    foreach ((array) ($definition['treatments'] ?? []) as $choice) {
+        if ($field !== '' && $choice['slug'] === $section['_resolved_treatment'] && ($choice['legacy_value'] ?? '') !== '') {
+            $section[$field] = $choice['legacy_value'];
+            break;
+        }
+    }
+    return $section;
+}
+
 /** Read-only diagnostics for the single effective contract supplied by its owners. */
 function iss_editorial_registry_errors(): array
 {
@@ -209,6 +256,18 @@ function iss_editorial_registry_errors(): array
                 if (empty($raw[$slug]['sections'][$type][$field])) { $errors[] = "$slug.$type: missing $field"; }
             }
             $treatments = array_column($section['treatments'], 'slug');
+            $legacy_field = $section['legacy_treatment_field'];
+            if ($legacy_field !== '' && (!in_array($legacy_field, $section['supports'], true) || !in_array('treatment', $section['supports'], true))) {
+                $errors[] = "$slug.$type: legacy treatment field must be supported alongside treatment";
+            }
+            foreach ($section['treatment_contexts'] as $skin => $context) {
+                $allowed = (array) ($context['allowed'] ?? $treatments);
+                if (!isset($format['skins'][$skin]) || !$allowed || array_diff($allowed, $treatments)
+                    || !in_array($context['default'] ?? $section['default_treatment'], $allowed, true)
+                    || array_diff((array) ($context['legacy'] ?? []), $allowed)) {
+                    $errors[] = "$slug.$type: invalid treatment context $skin";
+                }
+            }
             foreach (['era_key', 'function_key'] as $field) {
                 if (!in_array($field, $section['supports'], true)) { continue; }
                 $vocabulary = $section['vocabularies'][$field] ?? [];

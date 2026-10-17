@@ -2,6 +2,19 @@
 
 Date: 2026-06-27
 
+## Delivery status, 2026-10-17
+
+The [consolidated delivery plan](../project/gesture-treatment-consolidation-plan.md)
+now governs remaining implementation order and acceptance. This document retains
+the original vocabulary and migration mappings; its state descriptions are dated.
+Gesture skins are registered **treatments** with context-specific availability
+and defaults. Page skins are separate. Earlier proposals for universal availability
+or automatic skin-selected gallery layouts are not the current delivery contract.
+The local delivery now unifies quote/chapter/gallery treatment controls and
+resolution, preserves contextual exhibition treatments, reconciles event skin
+authority and drains the replaced CSS. Its verified scope and retained legacy
+consumers are recorded in that plan; this older document is not a pending queue.
+
 ## Purpose
 
 This document proposes a consolidated vocabulary for editorial **gestures**

@@ -59,8 +59,7 @@
   line-height: 1.7;
 }
 
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__body > :last-child,
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-section__quote > :last-child {
+.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__body > :last-child {
   margin-bottom: 0;
 }
 
@@ -88,29 +87,6 @@
 
 .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-chapter .iss-ausstellung-section__copy {
   padding-top: 0.35rem;
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus > .iss-container,
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus-reverse > .iss-container {
-  display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(20rem, 1.08fr);
-  gap: clamp(1.5rem, 4vw, 4rem);
-  align-items: center;
-  width: min(100% - (2 * var(--iss-ausstellung-pad-x)), 88rem);
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus-reverse > .iss-container {
-  grid-template-columns: minmax(20rem, 1.08fr) minmax(0, 0.92fr);
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus .iss-ausstellung-section__media,
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus-reverse .iss-ausstellung-section__copy {
-  grid-column: 1;
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus .iss-ausstellung-section__copy,
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus-reverse .iss-ausstellung-section__media {
-  grid-column: 2;
 }
 
 .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__media-strip {
@@ -141,42 +117,10 @@
   line-height: 1.35;
 }
 
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-quote {
-  background: var(--iss-ausstellung-chronik-board);
-  color: #f0e9d8;
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-quote .iss-ausstellung-section__title,
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-quote .iss-ausstellung-editorial__body {
-  color: inherit;
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-quote .iss-ausstellung-section__kicker {
-  --iss-kicker-color: var(--iss-ausstellung-chronik-accent-soft);
-  --iss-kicker-accent: var(--iss-ausstellung-chronik-accent-soft);
-}
-
 .iss-ausstellung-editorial--skin-chronik .iss-card__link,
 .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__archive-body a {
   color: inherit;
   text-decoration-color: rgba(201, 169, 110, 0.65);
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__quote {
-  max-width: 16ch;
-  padding: 1.2rem 0 0;
-  border-top: 3px solid var(--iss-ausstellung-chronik-accent-soft);
-  border-left: 0;
-  background: transparent;
-  color: inherit;
-  font-size: clamp(2rem, 4.6vw, 4rem);
-  line-height: 1.05;
-}
-
-.iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__quote cite {
-  color: rgba(240, 233, 216, 0.62);
-  font-size: clamp(0.82rem, 0.25vw + 0.78rem, 0.96rem);
-  font-style: normal;
 }
 
 .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-album > .iss-container {
@@ -282,23 +226,10 @@
     padding-left: 1.25rem;
   }
 
-  .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus > .iss-container,
-  .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus-reverse > .iss-container {
-    grid-template-columns: 1fr;
-  }
-
-  .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus .iss-ausstellung-section__media,
-  .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus .iss-ausstellung-section__copy,
-  .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus-reverse .iss-ausstellung-section__media,
-  .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-source-focus-reverse .iss-ausstellung-section__copy {
-    grid-column: auto;
-  }
-
   .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-chapter > .iss-container {
     grid-template-columns: 1fr;
   }
 
-  .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-quote,
   .iss-ausstellung-editorial--skin-chronik .iss-ausstellung-editorial__section--layout-conclusion {
     min-height: auto;
   }

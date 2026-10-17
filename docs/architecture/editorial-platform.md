@@ -171,6 +171,28 @@ The saved publication identifier `longread_quote` delegates to the quote
 contract and remains editable; it is hidden from new insertion to avoid a
 duplicate chooser item.
 
+Gesture skins are registered **treatments**; they are independent of the page
+skin. Kapitel, Zitat and Galerie now use the existing treatment chooser too.
+Definitions declare `legacy_treatment_field`, each choice's `legacy_value`, and
+optional `treatment_contexts[skin]` with `allowed`, `default` and `legacy` mappings.
+The effective host registry supplies those declarations to both the editor and
+the public/preview renderer. Explicit canonical choices win, followed by explicit
+legacy fields, context defaults and gesture defaults. Normalization does not
+materialize either presentation field when absent, so it cannot turn a default
+into an authored choice. Rendering uses a transient section view; storage keeps
+the original options and references.
+
+Exhibition contexts can offer `zitat.display` and `zitat.source-stage` in addition
+to `zitat.pull`/`zitat.source`. Orientation stays a bounded option. Known authored
+choices remain readable after a context switch; unavailable choices are explained
+in the inspector. Unknown IDs remain diagnosable and recoverable, render through
+the declared context fallback, and block canonical writes until resolved.
+Selecting a treatment refreshes its dependent controls while retaining keyboard
+focus. The CSS gate in `tests/e2e/bin/editorial-css.cjs` prevents retired quote
+hooks and global timeline rules from returning. See the
+[delivery contract and drain record](../project/gesture-treatment-consolidation-plan.md)
+for the treatment matrix, ownership and retained compatibility.
+
 Questions use `statement.leitfrage` under Überschrift & Intro in all eight
 formats. Saved event/exhibition/tour `leitfrage` identifiers remain registered
 and editable, hidden from insertion, with the same statement fields and editor
@@ -351,12 +373,20 @@ PDF, DOCX, PPTX, XLSX, ODT. The server verifies extension/MIME compatibility.
 
 Veranstaltungen use one theme-owned opening layout: title, excerpt and current
 occurrence facts alongside the featured image. The native `single-veranstaltung`
-template remains file-backed. Both skins share the layout; their colour and
+template remains file-backed. Standard, Typografisch and Bühne share the layout; their colour and
 content treatments remain distinct. Recurring detail dates read the same
 `iss-occurrences` query as the programme, including running appointments. If no
 current occurrence remains, the latest historical one is labelled accordingly;
 posts without projection retain their editorial dates and expire at their stated
 end (or end of the starting day). Detail pages are uncached.
+
+An explicit document skin takes precedence over the event entity's default.
+New and legacy documents without a stored skin use the entity default; the
+editor's Seite panel offers the three registered choices. The shell body class
+and portable sections resolve from the same effective read model, including
+authenticated recovery previews. Portable colours inherit the existing semantic
+surface roles, with scoped domain adapters; they do not require project-only
+variables on an event page. This does not change occurrence or booking authority.
 
 The opening has an optional `hero_kicker`, `hero_title`, `hero_subtitle` and
 `hero_image_fit` (`contain` or `cover`) in the same event JSON document. These
@@ -479,8 +509,14 @@ autosaves containing JSON changes. A narrowly scoped `pre_delete_post` filter
 retains those revisions on edit-screen GET requests; normal save and explicit
 draft discard keep their native deletion path.
 Draft recovery preserves unfinished entries, including a link whose address is
-still missing. Such a draft is secured with a diagnostic; preview and publication
-wait until the entries are completed or removed.
+still missing. Such a draft is secured with a diagnostic; its current preview
+and publication wait until the entries are completed or removed. The pane keeps
+the previous valid preview. When recovering into a new session with no previous
+frame, it loads the authenticated saved-page snapshot with a visible warning and
+canvas editing disabled. That snapshot cannot select or mutate recovered draft
+sections; sidebar editing remains available. A subsequent valid save restores
+the current interactive preview. Validation feedback must not cancel a pending
+fallback or misreport a successfully secured draft as an autosave failure.
 WordPress Update / Publish saves the permanent document and its enabled state.
 The canvas replaces classic autosave for these fields, while heartbeat keeps
 WordPress's post locking. Other fact and relation fields retain their existing
@@ -713,16 +749,18 @@ two-column chooser and document controls. **Abschnitte** stays active while its
 inspector is open; secondary **Inhalt / Darstellung / Links / Medien** tabs use
 underlines. One muted **?** in the panel header follows the selected panel/tab;
 the complete searchable guide remains under **Weitere Werkzeuge → Hilfe**.
-Selecting a section opens its inspector in the same panel. Labelled
-**Vorheriger / Nächster** buttons change selection; reordering belongs to the
-outline grips.
+Selecting a section opens its inspector in the same panel. One compact row holds
+the native **Abschnitt N von M** selector with section titles, accessible
+previous/next arrow buttons and **Fertig**. Selection never changes section
+order; reordering belongs to the outline grips. The row remains visible while
+scrolling fields, including at short window heights.
 **Fertig** secures the draft through the existing save queue and returns to the
 outline/preview; invalid or failed saves retain the inspector and recoverable
 input. It never publishes. Skins, project rails and tour route controls live under
 **Seite**; a selected route provides a direct entry. Route rows respond to panel
 width, including on wide screens. The preview has 1280/768/390px viewports.
 Narrow workspaces switch between preview and controls. The workspace starts
-expanded, with one compact top bar and separate
+expanded, with one full-width top bar, a flexible document title and separate
 acknowledgements for draft saving and preview freshness. Covered native controls
 are inert only while expanded; leaving restores their prior state. Publishing
 navigation focuses the native control without submitting. Searchable grouped
@@ -733,8 +771,11 @@ Angaben & Beziehungen** reveals native owner controls without replacing the
 workspace. The old section modal and its alternate preview layout are removed.
 
 Editor chrome uses the shared `--iss-editor-*` tokens for warm neutral panes,
-readable fields, focus and selection. Existing workspace, text-control and frame
-stylesheets own their respective surfaces; native media/link dialog adapters are
+readable fields, focus and selection. Controls use 13px system type, inputs and
+sidebar rich text 14px, secondary guidance 12px and section headings 15px.
+The page preview and in-place content retain the public theme's typography.
+Existing workspace, text-control and frame stylesheets own their respective
+surfaces; native media/link dialog adapters are
 scoped to the authoring screen. The public theme and authored content palette
 remain independent. See the [styling contract](../project/editor-workspace-plan.md#editor-styling)
 for responsive behavior and the limited WordPress compatibility exception.

@@ -35,14 +35,18 @@ new documents use the existing v3 schema. See the
   **Fertig** secures the draft and returns to the outline/preview. Validation or
   save failure retains the editing panel; publishing stays separate.
 - Workspace opens expanded to the viewport with outer scrolling locked. One top
-  bar holds device width, separate draft/preview status and native publishing
-  navigation. Pane switches appear only where panes cannot remain together.
+  bar uses the full width, with a flexible document title and device width,
+  separate draft/preview status and workspace controls aligned at the right.
+  Narrow screens wrap these groups into rows. Pane switches appear only where
+  panes cannot remain together.
   Collapsing or leaving restores native WordPress controls and keyboard access;
   the publishing navigation never submits the post by itself.
 - A segmented **Abschnitte / Hinzufügen / Seite** control sits above the
   underline inspector tabs. One muted contextual **?** lives in the panel header;
-  the complete guide is under **Weitere Werkzeuge → Hilfe**. Labelled
-  **Vorheriger / Nächster** controls select sections; outline grips reorder them.
+  the complete guide is under **Weitere Werkzeuge → Hilfe**. A native
+  **Abschnitt N von M** selector lists section titles; previous/next
+  arrows and **Fertig** share its row. This navigation remains visible during
+  field scrolling; outline grips alone reorder sections.
   The title and native rich-text fields grow with their content. Outline titles take at most two lines;
   untitled automatic sections use their registered treatment label. Treatment
   schematics include project notes, timeline, visit information and newsletter.
@@ -64,6 +68,9 @@ new documents use the existing v3 schema. See the
 
 The warm neutral panes, white fields, deep red actions, compact system type and
 dark canvas text toolbar adapt the supplied `admin-css.zip` to the current UI.
+Controls use 13px system type, inputs and sidebar rich text 14px, secondary
+guidance 12px and section headings 15px semibold. Preview content retains the
+theme typography, including during in-place editing.
 `editor-tokens.css` owns the existing `--iss-editor-*` contract; `workspace.css`
 owns panes and inspector layout, `text-controls.css` owns shared TinyMCE/colour
 controls and native link-dialog styling, and `preview-frame.css` owns canvas

@@ -838,13 +838,12 @@ function industriesalon_add_event_registry_body_classes(array $classes): array
             }
         }
 
-        if (function_exists('iss_content_model_veranstaltung_entity_default_skin')) {
-            $skin = iss_content_model_veranstaltung_entity_default_skin($entity_key);
-            if ($skin !== '') {
-                $classes[] = 'iss-event-skin-' . sanitize_html_class($skin);
-            }
-        }
     }
+
+    $document = function_exists('iss_editorial_get_read_model') && iss_editorial_document_is_enabled($post_id, 'veranstaltung')
+        ? iss_editorial_get_read_model($post_id, 'veranstaltung') : [];
+    $document['entity_key'] = $entity_key ?: ($document['entity_key'] ?? '');
+    $classes[] = 'iss-event-skin-' . industriesalon_structured_veranstaltung_skin($document);
 
     return $classes;
 }
@@ -1318,7 +1317,9 @@ function industriesalon_enqueue_timeline_skin(): void
     wp_enqueue_style(
         'industriesalon-timeline-skin',
         get_stylesheet_directory_uri() . $relative_path,
-        industriesalon_collect_skin_style_dependencies('iss-timeline'),
+        // The plugin may request assets before the theme enqueue callback runs.
+        // These always-present theme handles establish order independently of hook timing.
+        ['iss-timeline', 'industriesalon-gestures'],
         (string) filemtime($absolute_path)
     );
 }

@@ -4,8 +4,26 @@ Date: 2026-10-16
 
 ## Status
 
-Proposed. Becomes Accepted after the visual check in step 0 of the migration
-confirms the stranded-skin finding on staging.
+Proposed; not accepted. The
+[consolidated delivery plan](../project/gesture-treatment-consolidation-plan.md)
+now governs implementation order and acceptance. A visual check alone does not
+accept this ADR. Its page-skin role model remains input to that plan; its D1/D6
+and migration proposals need the following qualifications:
+
+- Gesture skins are registered treatments and may change structure. Contexts
+  declare their availability/defaults; treatments need not be offered everywhere.
+- Legacy field combinations require explicit adaptation; `treatment_aliases`
+  currently resolves only a treatment slug. Orientation need not become a second
+  treatment.
+- Inventory active and retained consumers before declaring skin rules dead.
+  Existing portable skins include typography/layout as well as colour adapters;
+  the context claims below are hypotheses requiring per-consumer verification.
+
+The original proposal follows as design evidence, not an executable migration.
+The consolidated plan's local implementation now supplies declared legacy-field
+adapters and context-filtered treatments, semantic portable colours and explicit
+event skin precedence. It does not accept the older proposal's requirement that
+all structural presentation be selected through page skin alone.
 
 Extends `css-layering-adr.md` (layers 3 and 4) and completes the skin half of
 `gesture-skin-consolidation.md`. Related audits:

@@ -395,6 +395,62 @@ test('Unfinished drafts are acknowledged as secured while publication remains bl
   } finally { e.dom.window.close(); }
 });
 
+test('Recovering an unfinished draft shows the saved page without editing the draft through that snapshot', async () => {
+  const recovered = {schema_version:1,skin:'standard',sections:[{type:'kapitel',title:'Recovered text',links:[{label:'',url:'',page_id:''}]}]};
+  const e = await editor('landing', {recovery:{base:'base',modified:'Today',title:'Draft title',excerpt:'',document:recovered}});
+  try {
+    e.setValidation('Abschnitt 1: Link-Adresse fehlt');
+    e.button('Entwurf weiterbearbeiten').click();
+    await e.settle();
+    const frame = readyFrame(e);
+    assert.match(frame.src, /iss_editorial_snapshot=saved%3Abase/);
+    assert.match(frame.src, /iss_editorial_canvas=0/);
+    assert.equal(frame.hidden, false);
+    assert.match(e.root.querySelector('.iss-editorial-live-preview__status').textContent, /Link-Adresse fehlt.*gespeicherte Fassung.*Formular/);
+    const document = JSON.stringify(e.value());
+    const count = e.requests.length;
+    for (const type of ['iss-preview-select','iss-preview-insert','iss-preview-field-start','iss-preview-field-change','iss-preview-form']) {
+      previewMessage(e, frame, {type,section:0,field:'title',session:'fallback',sequence:1,value:'Wrong snapshot'});
+    }
+    await e.settle();
+    assert.equal(JSON.stringify(e.value()), document, 'Saved preview cannot select, insert or edit recovered sections');
+    assert.equal(e.requests.length, count);
+    assert.deepEqual(e.value().sections[0].links, recovered.sections[0].links, 'Unfinished entries remain recoverable');
+    let submitted = false;
+    e.window.document.getElementById('post').requestSubmit = () => { submitted = true; };
+    e.button('Update').click();
+    await e.settle();
+    assert.equal(submitted, false);
+    assert.equal(frame.isConnected, true, 'Publication validation must not clear the fallback');
+    assert.equal(e.button('Erneut sichern').hidden, true, 'Validation is not a failed autosave');
+    e.setValidation('');
+    e.button('Links').click();
+    e.button('Entfernen', e.root.querySelector('.iss-editorial-field--links')).click();
+    await e.settle();
+    const updated = readyFrame(e);
+    assert.notEqual(updated, frame);
+    assert.match(updated.src, /iss_editorial_canvas=1/);
+    assert.match(updated.src, /iss_editorial_snapshot=draft-/);
+    assert.equal(e.root.querySelector('.iss-editorial-live-preview__status').textContent, 'Vorschau aktuell');
+  } finally { e.dom.window.close(); }
+});
+
+test('Explicit refresh of an unfinished recovered draft keeps the pending saved preview alive', async () => {
+  const e = await editor('landing', {recovery:{base:'base',modified:'Today',title:'Draft',excerpt:'',document:{schema_version:1,skin:'standard',sections:[{type:'kapitel',links:[{label:'Only a label'}]}]}}});
+  try {
+    e.setValidation('Link-Adresse fehlt');
+    e.button('Entwurf weiterbearbeiten').click();
+    await e.settle();
+    const pending = e.root.querySelector('iframe[hidden]');
+    e.root.querySelector('[aria-label="Vorschau aktualisieren"]').click();
+    await e.settle();
+    assert.equal(pending.isConnected, true, 'Validation feedback must not cancel the fallback before its ready message');
+    assert.equal(readyFrame(e), pending);
+    assert.match(e.root.querySelector('.iss-editorial-live-preview__status').textContent, /gespeicherte Fassung/);
+    assert.equal(e.button('Erneut sichern').hidden, true);
+  } finally { e.dom.window.close(); }
+});
+
 
 test('Landing v2 preserves colours, highlights and safe links but rejects arbitrary styling', async () => {
   const e = await editor();
@@ -464,7 +520,7 @@ test('Live preview accepts only its current frame and token and retains valid ou
     select(first, 'one', 1); assert.deepEqual(selected, [1]);
     preview.update('/?preview=true', 'two');
     const second = shell.root.querySelector('iframe[hidden]');
-    preview.stale('Incomplete link');
+    preview.fallback('/?preview=true', 'saved:base', 'Incomplete link');
     assert.equal(first.isConnected, true);
     assert.equal(second.isConnected, false);
     assert.match(shell.root.querySelector('[role=status]').textContent, /vorige Fassung/);
@@ -492,7 +548,8 @@ test('Section navigation keeps pending edits and the same preview frame', async 
     await e.settle(); const frame = readyFrame(e);
     const field = () => e.root.querySelector('.iss-editorial-field--title textarea');
     e.input(field(), 'First edited');
-    e.root.querySelectorAll('.iss-editorial-outline__select')[1].click();
+    const selector = e.root.querySelector('select[aria-label="Abschnitt auswählen"]');
+    selector.value = '1'; selector.dispatchEvent(new e.window.Event('change', {bubbles:true}));
     assert.equal(field().value, 'Legacy intro');
     assert.equal(e.value().sections[0].title, 'First edited');
     assert.equal(e.root.querySelector('iframe'), frame);
@@ -561,7 +618,7 @@ test('Visual treatment choices preserve text and focus', async () => {
     const choice = inspector.querySelector('input[value="feature.media-panel"]');
     const before = e.value().sections[0].body;
     choice.focus(); choice.click();
-    assert.equal(e.window.document.activeElement, choice);
+    assert.equal(e.window.document.activeElement, inspector.querySelector('input[value="feature.media-panel"]'));
     assert.equal(e.value().sections[0].body, before);
     assert.equal(e.value().sections[0].treatment, 'feature.media-panel');
   } finally { e.dom.window.close(); }
@@ -964,7 +1021,7 @@ test('Workspace opening guidance follows its owner and invalid opening remains v
     handle.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
     assert.match(e.root.querySelector('.iss-editorial-opening-note').textContent, /Seitenauftakt prüfen/);
     assert.equal(e.root.querySelector('.iss-editorial-opening-note').hidden, false, 'Invalid opening does not lose its warning');
-    assert.equal(e.root.querySelector('.iss-editorial-studio__position').textContent, 'Abschnitt 2 von 2');
+    assert.match(e.root.querySelector('.iss-editorial-studio__position').selectedOptions[0].textContent, /^Abschnitt 2 von 2 · /);
   } finally { e.dom.window.close(); }
 });
 
@@ -1319,10 +1376,19 @@ test('Sidebar navigation keeps its hierarchy and contextual help without changin
     e.button('Links').click(); assert.equal(help.dataset.help, 'links');
     const previous = e.root.querySelector('[aria-label="Vorherigen Abschnitt auswählen"]');
     const next = e.root.querySelector('[aria-label="Nächsten Abschnitt auswählen"]');
-    assert.equal(previous.disabled, true); assert.match(next.textContent, /Nächster/);
-    next.click(); assert.match(e.root.querySelector('.iss-editorial-studio__position').textContent, /2 von 2/);
+    const selector = e.root.querySelector('select[aria-label="Abschnitt auswählen"]');
+    assert.deepEqual(Array.from(selector.options, option => option.textContent), ['Abschnitt 1 von 2 · First section', 'Abschnitt 2 von 2 · Legacy intro']);
+    assert.equal(previous.disabled, true); assert.match(next.dataset.helpText, /nächsten Abschnitt/);
+    next.click(); assert.equal(selector.value, '1');
     assert.equal(next.disabled, true); assert.equal(previous.disabled, false);
-    previous.click(); assert.match(e.root.querySelector('.iss-editorial-studio__position').textContent, /1 von 2/);
+    previous.click(); assert.equal(selector.value, '0');
+    e.root.querySelector('.iss-editorial-studio__inspector').scrollTop = 400;
+    selector.focus(); selector.value = '1'; selector.dispatchEvent(new e.window.Event('change', {bubbles:true}));
+    assert.equal(e.root.querySelector('[aria-current="true"]').title, 'Legacy intro · Intro');
+    assert.equal(e.window.document.activeElement, selector, 'Keyboard section selection keeps focus on the selector');
+    assert.equal(e.root.querySelector('.iss-editorial-studio__inspector').scrollTop, 0, 'Short windows reveal the new section from its start');
+    assert.equal(next.disabled, true); assert.equal(help.dataset.help, 'section:intro');
+    assert.match(selector.title, /Legacy intro/);
     e.button('Hinzufügen', top).click(); assert.equal(active(), 'Hinzufügen'); assert.equal(help.dataset.help, 'arrange');
     e.button('Seite', top).click(); assert.equal(active(), 'Seite'); assert.equal(help.dataset.help, 'page');
     e.button('Abschnitte', top).click(); assert.equal(active(), 'Abschnitte');
@@ -1582,4 +1648,47 @@ test('Legacy summaries and rich text share one control-aware href policy',async(
     assert.equal(sanitize('<a href="/safe/" target="_blank">Safe</a>','basic'),'<a href="/safe/">Safe</a>');
     assert.equal(sanitize('<p><span class="iss-ink-123abc">Legacy</span></p>','basic'),'<p>Legacy</p>');
   } finally {e.dom.window.close();}
+});
+
+for (const field of ['quote_treatment', 'section_treatment', 'gallery_layout']) {
+  test(`${field}: registered chooser adapts legacy state without hydration writes and retains bounded options`, async () => {
+    const section = {type:'renamed_gesture', [field]:'source', orientation:'media-right', title:'Keep title', quote:'Keep quotation', attribution:'Keep source', media_refs:[], object_refs:[]};
+    const e = await editor('renamed_owner', {skins:[{slug:'standard',label:'Standard'},{slug:'exhibition',label:'Exhibition'}], document:{schema_version:3,skin:'exhibition',sections:[section]}, sections:{renamed_gesture:{label:'Shared gesture',supports:['quote','treatment',field,'orientation'],legacy_treatment_field:field,default_treatment:'voice.pull',treatments:[{slug:'voice.pull',label:'Plain',legacy_value:'pull'},{slug:'voice.source',label:'Source',legacy_value:'source'},{slug:'voice.station',label:'Station',legacy_value:'source'}],treatment_contexts:{standard:{allowed:['voice.pull','voice.source'],default:'voice.pull'},exhibition:{allowed:['voice.pull','voice.source','voice.station'],default:'voice.station',legacy:{source:'voice.station'}}}}}});
+    assert.equal(e.root.querySelector('.iss-editorial-treatment-choice input:checked').value,'voice.station');
+    assert.equal(e.value().sections[0].treatment,undefined);
+    assert.equal(e.value().sections[0][field],'source');
+    const plain=e.root.querySelector('.iss-editorial-treatment-choice input[value="voice.pull"]');
+    plain.checked=true; plain.dispatchEvent(new e.window.Event('change',{bubbles:true}));
+    assert.equal(e.value().sections[0].treatment,'voice.pull');
+    assert.equal(e.value().sections[0][field],'pull');
+    for(const key of ['orientation','title','quote','attribution']) assert.equal(e.value().sections[0][key],section[key]);
+    assert.equal(e.root.querySelectorAll('.iss-editorial-field--quote-treatment, .iss-editorial-field--section-treatment, .iss-editorial-field--gallery-layout').length,0);
+    e.dom.window.close();
+  });
+}
+
+test('Treatment context changes refresh choices while retaining an explicit existing treatment', async () => {
+  const e = await editor('ausstellung', {skins:[{slug:'standard',label:'Standard'},{slug:'exhibition',label:'Exhibition'}],document:{schema_version:3,skin:'exhibition',sections:[{type:'voice',title:'Keep',treatment:'voice.station',orientation:'media-right'}]},sections:{voice:{label:'Voice',supports:['treatment'],default_treatment:'voice.pull',treatments:[{slug:'voice.pull',label:'Plain'},{slug:'voice.station',label:'Station'}],treatment_contexts:{standard:{allowed:['voice.pull'],default:'voice.pull'},exhibition:{allowed:['voice.pull','voice.station'],default:'voice.station'}}}}});
+  const select=[...e.root.querySelectorAll('select')].find(n=>[...n.options].some(o=>o.value==='exhibition'));
+  assert.ok(select);
+  select.value='standard'; select.dispatchEvent(new e.window.Event('change',{bubbles:true}));
+  await e.settle();
+  assert.equal(e.value().sections[0].treatment,'voice.station');
+  assert.equal(e.value().sections[0].orientation,'media-right');
+  assert.equal(e.root.querySelectorAll('.iss-editorial-treatment-choice').length,1);
+  assert.match(e.root.textContent,/gespeicherte Darstellung bleibt erhalten/);
+  e.dom.window.close();
+});
+
+
+test('Canonical gallery treatment controls the media picker without a legacy field', async () => {
+  const e = await editor('projekt', {document:{schema_version:3,skin:'standard',sections:[{type:'galerie',title:'Gallery',treatment:'galerie.viewport',media_refs:[]}]},sections:{galerie:{label:'Gallery',supports:['treatment','gallery_layout','media_refs'],legacy_treatment_field:'gallery_layout',default_treatment:'galerie.grid',treatments:[{slug:'galerie.grid',label:'Grid',legacy_value:'grid'},{slug:'galerie.viewport',label:'Viewport',legacy_value:'viewport'}]}}});
+  try {
+    assert.match(e.root.textContent,/Vollbild verwendet genau ein 16:9-Bild/);
+    assert.equal(e.value().sections[0].gallery_layout,undefined);
+    const grid=e.root.querySelector('.iss-editorial-treatment-choice input[value="galerie.grid"]');
+    grid.checked=true; grid.dispatchEvent(new e.window.Event('change',{bubbles:true}));
+    assert.doesNotMatch(e.root.textContent,/Vollbild verwendet genau ein 16:9-Bild/);
+    assert.equal(e.value().sections[0].gallery_layout,'grid');
+  } finally { e.dom.window.close(); }
 });

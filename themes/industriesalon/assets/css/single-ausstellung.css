@@ -291,24 +291,6 @@
   margin-bottom: 0;
 }
 
-.iss-ausstellung-editorial__quote {
-  display: grid;
-  gap: 0.75rem;
-  max-width: 52rem;
-  padding: clamp(1.25rem, 2.5vw, 2rem);
-  border-left: 4px solid var(--iss-ausstellung-accent);
-  background: #fff;
-  color: var(--iss-ausstellung-dark);
-  font-size: clamp(1.25rem, 1vw + 1rem, 1.75rem);
-  line-height: 1.45;
-}
-
-.iss-ausstellung-editorial__quote cite {
-  color: rgba(30, 30, 30, 0.64);
-  font-size: 0.95rem;
-  font-style: normal;
-}
-
 .iss-ausstellung-editorial__refs {
   display: grid;
   gap: 1rem;

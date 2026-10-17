@@ -111,7 +111,6 @@ function industriesalon_get_editorial_tour_section_context(array $section, strin
         'bildbuehne' => 'stage',
         'intro' => 'intro',
         'kapitel' => 'chapter',
-        'zitat' => 'quote',
         'galerie' => 'gallery',
         'image_wall' => 'image-wall',
         'atlas_map' => 'atlas-map',
@@ -616,8 +615,6 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
     $kicker = trim((string) ($section['kicker'] ?? ''));
     $title = trim((string) ($section['title'] ?? ''));
     $body = trim((string) ($section['body'] ?? ''));
-    $quote = trim((string) ($section['quote'] ?? ''));
-    $attribution = trim((string) ($section['attribution'] ?? ''));
     $links = is_array($section['links'] ?? null) ? $section['links'] : [];
     $media_refs = is_array($section['media_refs_resolved'] ?? null) ? $section['media_refs_resolved'] : [];
     $object_refs = is_array($section['object_refs_resolved'] ?? null) ? $section['object_refs_resolved'] : [];
@@ -633,7 +630,7 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
         $refs_html .= industriesalon_render_editorial_tour_archive_reference((array) $ref, $show_placeholders);
     }
 
-    if ($kicker === '' && $title === '' && $body === '' && $quote === '' && $links_html === '' && $media_html === '' && $refs_html === '') {
+    if ($kicker === '' && $title === '' && $body === '' && $links_html === '' && $media_html === '' && $refs_html === '') {
         return '';
     }
 
@@ -651,7 +648,7 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
     if ($refs_html !== '') {
         $section_classes[] = 'has-refs';
     }
-    if ($kicker !== '' || $title !== '' || $body !== '' || $quote !== '' || $links_html !== '') {
+    if ($kicker !== '' || $title !== '' || $body !== '' || $links_html !== '') {
         $section_classes[] = 'has-copy';
     }
     if ($media_html === '' && $refs_html === '') {
@@ -669,7 +666,7 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
             <?php if ($media_html !== '' && !in_array($context['layout'], ['gallery', 'image-wall', 'viewport-image'], true)) : ?>
                 <div class="iss-tour-section__media"><?php echo $media_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Media render through escaped helpers above. ?></div>
             <?php endif; ?>
-            <?php if ($kicker !== '' || $title !== '' || $body !== '' || $quote !== '' || $links_html !== '') : ?>
+            <?php if ($kicker !== '' || $title !== '' || $body !== '' || $links_html !== '') : ?>
                 <div class="iss-tour-section__copy">
                     <?php if ($kicker !== '') : ?>
                         <p class="iss-kicker iss-kicker--compact iss-tour-section__kicker"><?php echo esc_html($kicker); ?></p>
@@ -680,14 +677,7 @@ function industriesalon_render_editorial_tour_section(array $section, bool $show
                     <?php if ($body !== '') : ?>
                         <div class="iss-tour-section__body"><?php echo wp_kses_post(wpautop($body)); ?></div>
                     <?php endif; ?>
-                    <?php if ($quote !== '') : ?>
-                        <blockquote class="iss-tour-section__quote">
-                            <?php echo wp_kses_post(wpautop($quote)); ?>
-                            <?php if ($attribution !== '') : ?>
-                                <cite><?php echo esc_html($attribution); ?></cite>
-                            <?php endif; ?>
-                        </blockquote>
-                    <?php endif; ?>
+
                     <?php echo $links_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Links are escaped in industriesalon_render_editorial_tour_links(). ?>
                 </div>
             <?php endif; ?>

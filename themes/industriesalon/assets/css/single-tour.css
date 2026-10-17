@@ -568,15 +568,13 @@
 
 .iss-tour-editorial-intro__title,
 .iss-tour-editorial-intro__body > :first-child,
-.iss-tour-section__body > :first-child,
-.iss-tour-section__quote > :first-child {
+.iss-tour-section__body > :first-child {
   margin-top: 0;
 }
 
 .iss-tour-editorial-intro__title,
 .iss-tour-section__title,
-.iss-tour-section__body > :last-child,
-.iss-tour-section__quote > :last-child {
+.iss-tour-section__body > :last-child {
   margin-bottom: 0;
 }
 
@@ -632,7 +630,6 @@
   order: 2;
 }
 
-.iss-tour-section--layout-quote .iss-tour-section__inner,
 .iss-tour-section--layout-conclusion .iss-tour-section__inner {
   grid-template-columns: minmax(0, 0.4fr) minmax(0, 1fr);
 }
@@ -693,32 +690,11 @@
   border-top: 0;
 }
 
-.iss-tour-section--layout-quote,
 .iss-tour-section--layout-conclusion {
   padding: 2rem;
   border: 1px solid rgba(30, 30, 30, 0.12);
   border-radius: 0.45rem;
   background: #fbfaf7;
-}
-
-.iss-tour-section__quote {
-  margin: 0;
-  padding: 1rem 0 1rem 1.25rem;
-  border-left: 0.22rem solid var(--iss-scarlet-red, #e81d25);
-  color: rgba(30, 30, 30, 0.9);
-  font-size: 1.55rem;
-  font-weight: 700;
-  line-height: 1.28;
-}
-
-.iss-tour-section__quote cite {
-  display: block;
-  margin-top: 0.7rem;
-  color: rgba(30, 30, 30, 0.62);
-  font-size: 0.82rem;
-  font-style: normal;
-  font-weight: 600;
-  line-height: 1.4;
 }
 
 .iss-tour-section__links {
@@ -835,8 +811,7 @@
   grid-column: 1;
 }
 
-.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media--strip,
-.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media-item {
+.iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media--strip, .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media-item {
   width: 100%;
   height: 100%;
   margin: 0;
@@ -1322,7 +1297,6 @@
 
   .iss-tour-section__inner,
   .iss-tour-section--media-aside .iss-tour-section__inner,
-  .iss-tour-section--layout-quote .iss-tour-section__inner,
   .iss-tour-section--layout-conclusion .iss-tour-section__inner,
   .iss-tour-section.is-text-only .iss-tour-section__inner,
   .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__inner {
@@ -1333,7 +1307,6 @@
     grid-column: auto;
   }
 
-  .iss-tour-section--layout-quote,
   .iss-tour-section--layout-conclusion {
     padding: 1.35rem;
   }
@@ -1342,10 +1315,7 @@
     min-height: auto;
   }
 
-  .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media,
-  .iss-tour-section.has-media.iss-tour-section--media-aside:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media,
-  .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__copy,
-  .iss-tour-section.has-media.iss-tour-section--media-aside:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__copy {
+  .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media, .iss-tour-section.has-media.iss-tour-section--media-aside:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__media, .iss-tour-section.has-media:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__copy, .iss-tour-section.has-media.iss-tour-section--media-aside:not(.iss-tour-section--layout-gallery, .iss-tour-section--layout-image-wall) .iss-tour-section__copy {
     grid-row: auto;
     grid-column: auto;
   }
@@ -1361,10 +1331,6 @@
 
   .iss-tour-section__title {
     font-size: 1.85rem;
-  }
-
-  .iss-tour-section__quote {
-    font-size: 1.28rem;
   }
 
   .iss-tour-section--media-aside .iss-tour-section__media {

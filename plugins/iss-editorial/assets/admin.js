@@ -110,7 +110,7 @@
     retry.addEventListener('click', function () { queueSave('retry').catch(function () {}); });
     var livePreview = null;
     var studio = null;
-    var pickers = window.issEditorialPickers.create({config: config, postId: postId, sections: sections, sectionEditor: sectionEditor, render: render, scheduleAutosave: scheduleAutosave, collectionCount: collectionCount, createElement: createElement, clear: clear, getStudio: function () { return studio; }});
+    var pickers = window.issEditorialPickers.create({config: config, postId: postId, sections: sections, sectionEditor: sectionEditor, presentationValue: presentationValue, render: render, scheduleAutosave: scheduleAutosave, collectionCount: collectionCount, createElement: createElement, clear: clear, getStudio: function () { return studio; }});
     var renderObjectPicker = pickers.renderObjectPicker;
     var renderMediaPicker = pickers.renderMediaPicker;
     var renderAlbumEditor = pickers.renderAlbumEditor;
@@ -126,6 +126,7 @@
 
     function selectWorkspace(index, fromPreview, openInspector) {
       if (!documentState.sections[index]) { return; }
+      var navigating = studio.root.querySelector('.iss-editorial-studio__navigation').contains(document.activeElement);
       studioSection = documentState.sections[index];
       activeSectionIndex = index;
       disposeRichEditors(studio.body);
@@ -133,10 +134,11 @@
       renderSectionFields(studioSection, studio.body);
       studio.organizeFields(studioSection.type);
       studio.body.scrollTop = 0;
+      studio.inspector.scrollTop = 0;
       renderWorkspaceOutline();
       if (openInspector !== false) { studio.showView('inspector'); }
       if (livePreview) { livePreview.selectSection(index, !fromPreview, studioSection); }
-      if (openInspector !== false && !fromPreview) {
+      if (openInspector !== false && !fromPreview && !navigating) {
         var firstField = studio.body.querySelector('input, textarea, select');
         if (firstField) { firstField.focus(); }
       }
@@ -192,8 +194,8 @@
           add: function (type, index) { afterCanvasEdit(function () { addSection(type, index); }); },
           afterEditing: afterCanvasEdit,
           finish: function () { return saveRouteStationsIfDirty().then(function () { return queueSave('finish'); }).then(function (url) { return !!url && currentSaveValue() === lastSavedValue; }); },
-          sketch: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === (section.treatment || defaultTreatment(section.type)); }); return treatmentSketch(choice || sectionConfig(section.type)); },
-          treatmentLabel: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === (section.treatment || defaultTreatment(section.type)); }); return choice ? choice.label : ''; }
+          sketch: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === resolvedTreatment(section); }); return treatmentSketch(choice || sectionConfig(section.type)); },
+          treatmentLabel: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === resolvedTreatment(section); }); return choice ? choice.label : ''; }
         });
         if (skins.length > 1) { studio.ownerBody.appendChild(renderSkinControl()); }
         if (config.railControl) { studio.ownerBody.appendChild(renderRailFeatureControl()); }
@@ -455,7 +457,7 @@
     }
 
     function previewSections() {
-      return { refs: documentState.sections.slice(), values: JSON.parse(JSON.stringify(documentState.sections)), labels: documentState.sections.map(function (section) { return sectionConfig(section.type).label + ' · ' + treatmentLabel(section.type, section.treatment || defaultTreatment(section.type)); }) };
+      return { refs: documentState.sections.slice(), values: JSON.parse(JSON.stringify(documentState.sections)), labels: documentState.sections.map(function (section) { return sectionConfig(section.type).label + ' · ' + treatmentLabel(section.type, resolvedTreatment(section)); }) };
     }
 
     function refreshLivePreview() {
@@ -696,6 +698,7 @@
         afterCanvasEdit(function () {
           documentState.skin = select.value || 'standard';
           updateField(); render(); scheduleAutosave();
+          if (studioSection) { selectWorkspace(documentState.sections.indexOf(studioSection), true, false); }
         });
       });
 
@@ -988,10 +991,6 @@
         renderMediaLayoutControl(section, displayPanel.body);
       }
 
-      if (supports(type, 'gallery_layout')) {
-        renderGalleryLayoutControl(section, displayPanel.body);
-      }
-
       if (supports(type, 'rail_options')) {
         renderRailEditor(section, displayPanel.body);
       }
@@ -1009,10 +1008,6 @@
         }));
       }
 
-      if (supports(type, 'quote_treatment')) {
-        renderQuoteTreatmentControl(section, displayPanel.body);
-      }
-
       if (supports(type, 'image_fit')) {
         displayPanel.body.appendChild(createSelect('Bilddarstellung', section.image_fit || 'cover', [
           { value: 'cover', label: 'Foto im Ausschnitt' }, { value: 'contain', label: 'Ganzes Bild / Logo / Plakat' }
@@ -1024,10 +1019,6 @@
           { value: 'default', label: 'Papier' }, { value: 'soft', label: 'Leise abgesetzt' },
           { value: 'dark', label: 'Dunkel' }, { value: 'accent', label: 'Akzentfarbe' }
         ], function (value) { section.surface = value; render(); scheduleAutosave(); }));
-      }
-
-      if (supports(type, 'section_treatment')) {
-        renderSectionTreatmentControl(section, displayPanel.body);
       }
 
       if (supports(type, 'object_refs')) {
@@ -1155,20 +1146,39 @@
     function mediaLayoutChoices(section) {
       var layout = sectionConfig(section.type).media_layout || {};
       var treatments = layout.treatments || [];
-      if (treatments.length && treatments.indexOf(section.treatment || defaultTreatment(section.type)) === -1) { return []; }
+      if (treatments.length && treatments.indexOf(resolvedTreatment(section)) === -1) { return []; }
       return layout.choices || [];
     }
 
     function treatmentChoices(type) {
+      var context = (sectionConfig(type).treatment_contexts || {})[currentSkin()] || {};
       return (sectionConfig(type).treatments || []).filter(function (item) {
-        return item && item.slug && (item.min_version || 1) <= documentState.schema_version && (item.role !== 'opening' || config.openingSkin);
+        return item && item.slug && (!context.allowed || context.allowed.indexOf(item.slug) !== -1) && (item.min_version || 1) <= documentState.schema_version && (item.role !== 'opening' || config.openingSkin);
       });
     }
 
     function defaultTreatment(type) {
       var choices = treatmentChoices(type);
 
-      return sectionConfig(type).default_treatment || (choices.length ? choices[0].slug : '');
+      var context = (sectionConfig(type).treatment_contexts || {})[currentSkin()] || {};
+      return context.default || sectionConfig(type).default_treatment || (choices.length ? choices[0].slug : '');
+    }
+
+    function resolvedTreatment(section) {
+      var definition = sectionConfig(section.type);
+      var choices = definition.treatments || [];
+      var explicit = (definition.treatment_aliases || {})[section.treatment] || section.treatment;
+      if (explicit) {
+        return choices.some(function (choice) { return choice.slug === explicit; }) ? explicit : defaultTreatment(section.type);
+      }
+      var legacy = section[definition.legacy_treatment_field];
+      var context = (definition.treatment_contexts || {})[currentSkin()] || {};
+      if (legacy !== undefined) {
+        if ((context.legacy || {})[legacy]) { return context.legacy[legacy]; }
+        var choice = choices.find(function (item) { return item.legacy_value === legacy; });
+        if (choice) { return choice.slug; }
+      }
+      return defaultTreatment(section.type);
     }
 
     function treatmentLabel(type, treatment) {
@@ -1178,6 +1188,13 @@
       })[0];
 
       return match ? match.label : treatment;
+    }
+
+    function presentationValue(section, fieldName) {
+      var definition = sectionConfig(section.type);
+      var treatment = resolvedTreatment(section);
+      var choice = (definition.treatments || []).find(function (item) { return item.slug === treatment; });
+      return definition.legacy_treatment_field === fieldName && choice && choice.legacy_value ? choice.legacy_value : section[fieldName];
     }
 
     function openingNote(selectedSection) {
@@ -1198,7 +1215,10 @@
       var wrapper = createElement('fieldset', 'iss-editorial-field iss-editorial-field--treatment');
       wrapper.appendChild(createElement('legend', '', 'Darstellung wählen'));
       var grid = createElement('div', 'iss-editorial-treatment-grid');
-      var current = section.treatment || choices[0].slug;
+      var current = resolvedTreatment(section);
+      if (section.treatment && !choices.some(function (choice) { return choice.slug === section.treatment; })) {
+        wrapper.appendChild(createElement('p', 'description', 'Die gespeicherte Darstellung bleibt erhalten. Für diesen Kontext stehen die folgenden Varianten zur Wahl.'));
+      }
       choices.forEach(function (choice) {
         var label = createElement('label', 'iss-editorial-treatment-choice');
         var input = document.createElement('input'); input.type = 'radio';
@@ -1207,6 +1227,13 @@
         input.addEventListener('change', function () {
           if (!input.checked) { return; }
           section.treatment = choice.slug;
+          var legacyField = sectionConfig(section.type).legacy_treatment_field;
+          if (legacyField && choice.legacy_value) { section[legacyField] = choice.legacy_value; }
+          if (studioSection === section) {
+            selectWorkspace(documentState.sections.indexOf(section), true, false);
+            var selectedChoice = studio.body.querySelector('.iss-editorial-treatment-choice input:checked');
+            if (selectedChoice) { selectedChoice.focus(); }
+          }
           render(); scheduleAutosave();
         });
         label.appendChild(input); label.appendChild(treatmentSketch(choice));
@@ -1283,110 +1310,8 @@
       body.appendChild(wrapper);
     }
 
-    function renderGalleryLayoutControl(section, body) {
-      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--gallery-layout');
-      var options = createElement('div', 'iss-editorial-segmented');
-      var choices = [
-        { value: 'grid', label: 'Raster' },
-        { value: 'sequence', label: 'Strecke' },
-        { value: 'wall', label: 'Bilderwand' },
-        { value: 'viewport', label: 'Vollbild' }
-      ];
-      var current = ['grid', 'sequence', 'wall', 'viewport'].indexOf(section.gallery_layout) !== -1 ? section.gallery_layout : 'grid';
 
-      choices.forEach(function (choice) {
-        var label = createElement('label', 'iss-editorial-segmented__option');
-        var input = document.createElement('input');
-        var text = createElement('span', '', choice.label);
-        input.type = 'radio';
-        input.name = 'iss-editorial-gallery-layout-' + String(documentState.sections.indexOf(section));
-        input.value = choice.value;
-        input.checked = current === choice.value;
-        input.addEventListener('change', function () {
-          if (input.checked) {
-            section.gallery_layout = choice.value;
-            render();
-            scheduleAutosave();
-          }
-        });
-        label.appendChild(input);
-        label.appendChild(text);
-        options.appendChild(label);
-      });
 
-      wrapper.appendChild(createElement('span', '', 'Galerie-Layout'));
-      wrapper.appendChild(options);
-      body.appendChild(wrapper);
-    }
-
-    function renderQuoteTreatmentControl(section, body) {
-      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--quote-treatment');
-      var options = createElement('div', 'iss-editorial-segmented');
-      var choices = [
-        { value: 'pull', label: 'Zitat' },
-        { value: 'source', label: 'Quellenauszug' }
-      ];
-      var current = section.quote_treatment === 'source' ? 'source' : 'pull';
-
-      choices.forEach(function (choice) {
-        var label = createElement('label', 'iss-editorial-segmented__option');
-        var input = document.createElement('input');
-        var text = createElement('span', '', choice.label);
-        input.type = 'radio';
-        input.name = 'iss-editorial-quote-treatment-' + String(documentState.sections.indexOf(section));
-        input.value = choice.value;
-        input.checked = current === choice.value;
-        input.addEventListener('change', function () {
-          if (input.checked) {
-            section.quote_treatment = choice.value;
-            render();
-            scheduleAutosave();
-          }
-        });
-        label.appendChild(input);
-        label.appendChild(text);
-        options.appendChild(label);
-      });
-
-      wrapper.appendChild(createElement('span', '', 'Zitat-Typ'));
-      wrapper.appendChild(options);
-      body.appendChild(wrapper);
-    }
-
-    function renderSectionTreatmentControl(section, body) {
-      var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--section-treatment');
-      var options = createElement('div', 'iss-editorial-segmented');
-      var choices = [
-        { value: 'standard', label: 'Kapitel' },
-        { value: 'aside', label: 'Hintergrund / Exkurs' },
-        { value: 'disclosure', label: 'Aufklappbar' }
-      ];
-      var current = ['aside', 'disclosure'].indexOf(section.section_treatment) !== -1 ? section.section_treatment : 'standard';
-
-      choices.forEach(function (choice) {
-        var label = createElement('label', 'iss-editorial-segmented__option');
-        var input = document.createElement('input');
-        var text = createElement('span', '', choice.label);
-        input.type = 'radio';
-        input.name = 'iss-editorial-section-treatment-' + String(documentState.sections.indexOf(section));
-        input.value = choice.value;
-        input.checked = current === choice.value;
-        input.addEventListener('change', function () {
-          if (input.checked) {
-            section.section_treatment = choice.value;
-            render();
-            scheduleAutosave();
-          }
-        });
-        label.appendChild(input);
-        label.appendChild(text);
-        options.appendChild(label);
-      });
-
-      wrapper.appendChild(createElement('span', '', 'Kapitel-Typ'));
-      wrapper.appendChild(options);
-      body.appendChild(wrapper);
-    }
 
     function renderLinkEditor(section, body, setCount) {
       var wrapper = createElement('div', 'iss-editorial-field iss-editorial-field--links');
@@ -1896,11 +1821,16 @@
           lastSavedValue = snapshot;
           retry.hidden = true;
           if (payload.data.validationMessage) {
+            previewData = null;
             lastSavedStatus = 'Entwurf gesichert. Vor dem Veröffentlichen prüfen: ' + payload.data.validationMessage;
             setStatus(lastSavedStatus);
             if (studio) { studio.message('Entwurf gesichert. Bitte prüfen: ' + payload.data.validationMessage); }
-            if (livePreview) { livePreview.stale('Bitte prüfen: ' + payload.data.validationMessage); livePreview.reportSave('Entwurf gesichert. Bitte prüfen: ' + payload.data.validationMessage); }
-            if (intent === 'preview' || intent === 'submit') { throw new Error(payload.data.validationMessage); }
+            if (livePreview) { livePreview.fallback(config.previewUrl, 'saved:' + config.baseToken, 'Bitte prüfen: ' + payload.data.validationMessage); livePreview.reportSave('Entwurf gesichert. Bitte prüfen: ' + payload.data.validationMessage); }
+            if (intent === 'preview' || intent === 'submit') {
+              var validationError = new Error(payload.data.validationMessage);
+              validationError.draftSaved = true;
+              throw validationError;
+            }
             return '';
           }
           if (livePreview) { livePreview.reportSave('Entwurf gesichert · unveröffentlicht'); }
@@ -1932,7 +1862,7 @@
         return savePreviewDocument(intent, candidate);
       });
       return saveChain.catch(function (error) {
-        if (intent === 'validate') { throw error; }
+        if (intent === 'validate' || error.draftSaved) { throw error; }
         setStatus(error.message || 'Nicht gesichert. Bitte erneut versuchen.');
         if (studio) { studio.message('Nicht gesichert: ' + error.message); }
         retry.hidden = false;

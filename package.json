@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "lint": "npm run lint:css && npm run lint:js && npm run lint:shell && npm run lint:yaml",
-    "lint:css": "stylelint \"themes/industriesalon/**/*.css\" \"plugins/iss-*/**/*.css\" \"plugins/industriesalon-*/**/*.css\" --ignore-pattern \"**/vendor/**\" --ignore-pattern \"**/*.min.css\"",
+    "lint:css": "stylelint \"themes/industriesalon/**/*.css\" \"plugins/iss-*/**/*.css\" \"plugins/industriesalon-*/**/*.css\" --ignore-pattern \"**/vendor/**\" --ignore-pattern \"**/*.min.css\" && npm run test:editorial-css",
     "lint:js": "eslint \"themes/industriesalon/**/*.js\" \"plugins/iss-*/**/*.js\" \"plugins/industriesalon-*/**/*.js\"",
     "lint:shell": "bash tools/shellcheck-target.sh",
     "lint:yaml": "bash tools/yamllint-target.sh",
@@ -14,7 +14,8 @@
     "test:e2e": "playwright test -c playwright.config.js",
     "test:e2e:a11y": "playwright test -c playwright.config.js tests/e2e/specs/accessibility.spec.js",
     "test:e2e:headed": "playwright test -c playwright.config.js --headed",
-    "test:e2e:debug": "playwright test -c playwright.config.js --debug"
+    "test:e2e:debug": "playwright test -c playwright.config.js --debug",
+    "test:editorial-css": "node --test tests/e2e/bin/editorial-css.cjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",

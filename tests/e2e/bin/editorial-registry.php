@@ -28,6 +28,70 @@ add_filter('iss_editorial_formats', $landing_fixture, 99);
 iss_editorial_reset_format_cache();
 try {
     $assert(iss_editorial_registry_errors() === [], 'Effective registry must be internally consistent');
+    foreach (['event.general' => 'typografisch', 'event.festival' => 'buehne'] as $entity => $expected_skin) {
+        $event_document = ['entity_key' => $entity, 'sections' => []];
+        $new_event = array_merge(iss_editorial_get_empty_document('veranstaltung'), $event_document);
+        $assert(apply_filters('iss_editorial_editor_document', $new_event, 0, 'veranstaltung')['skin'] === $expected_skin, "$entity: new editor uses entity default rather than a materialized generic default");
+        $assert(industriesalon_structured_veranstaltung_skin($event_document) === $expected_skin, "$entity: absent page skin uses its entity default");
+        $assert(iss_editorial_sanitize_document($event_document, 'veranstaltung')['skin'] === $expected_skin, "$entity: normalized read model uses the same default");
+        foreach (['standard', 'typografisch', 'buehne'] as $explicit_skin) {
+            $event_document['skin'] = $explicit_skin;
+            $assert(industriesalon_structured_veranstaltung_skin($event_document) === $explicit_skin, "$entity: explicit skin wins entity default");
+            $assert(iss_editorial_sanitize_document($event_document, 'veranstaltung')['skin'] === $explicit_skin, "$entity: normalization preserves explicit skin");
+        }
+    }
+    // Context resolution adapts legacy choices without rewriting the source document.
+    foreach (['projekt', 'ausstellung', 'rueckblick', 'publication', 'landing', 'article', 'fuehrung', 'veranstaltung'] as $slug) {
+        $format = iss_editorial_get_format($slug);
+        foreach (['zitat' => ['quote_treatment', 'source', 'zitat.source'], 'kapitel' => ['section_treatment', 'disclosure', 'kapitel.disclosure'], 'galerie' => ['gallery_layout', 'wall', 'galerie.wall']] as $type => [$field, $legacy, $expected]) {
+            $definition = $format['sections'][$type];
+            $sample = ['type' => $type, $field => $legacy, 'orientation' => 'media-right'];
+            $before = $sample;
+            $assert(iss_editorial_resolve_section_treatment($sample, $definition, 'standard') === $expected, "$slug.$type: explicit legacy choice resolves");
+            $assert($sample === $before, "$slug.$type: resolution never rewrites input");
+            $view = iss_editorial_section_presentation($sample, $definition, 'standard');
+            $assert($view['orientation'] === 'media-right' && $view[$field] === $legacy, "$slug.$type: bounded legacy options retained");
+            $normalized = iss_editorial_sanitize_section($sample, $format, 3);
+            $assert(!isset($normalized['treatment']), "$slug.$type: normalization does not materialize a treatment default");
+            $absent = iss_editorial_sanitize_section(['type' => $type], $format, 3);
+            $assert(!isset($absent[$field]), "$slug.$type: absent legacy fields cannot override a future context default");
+        }
+    }
+    $quote = iss_editorial_get_format('ausstellung')['sections']['zitat'];
+    $future_document = ['schema_version' => 3, 'skin' => 'objektalbum', 'sections' => [['type' => 'zitat', 'quote' => 'Retain unknown choice', 'treatment' => 'future.quote']]];
+    $future_read = iss_editorial_sanitize_document($future_document, 'ausstellung');
+    $assert($future_read['sections'][0]['treatment'] === 'future.quote', 'Read normalization retains an unknown treatment for diagnosis');
+    $assert(is_wp_error(iss_editorial_validate_document($future_document, 'ausstellung')), 'Unknown treatment cannot silently replace stored content on save');
+    $assert(str_contains(industriesalon_render_editorial_portable_section($future_read['sections'][0], 0, 'objektalbum', 'ausstellung'), 'data-section-treatment="zitat.display"'), 'Public normalized read and editor use the same context fallback');
+    foreach (['quellenbuehne', 'objektalbum', 'chronik'] as $skin) {
+        $assert(iss_editorial_resolve_section_treatment(['quote_treatment' => 'source'], $quote, $skin) === 'zitat.source-stage', "$skin: authored source retains its exhibition treatment");
+        $assert(iss_editorial_resolve_section_treatment(['quote_treatment' => 'pull'], $quote, $skin) === 'zitat.display', "$skin: authored quote retains its exhibition treatment");
+        $assert(iss_editorial_resolve_section_treatment(['treatment' => 'zitat.pull', 'quote_treatment' => 'source'], $quote, $skin) === 'zitat.pull', "$skin: explicit canonical choice wins conflicting legacy field");
+        $assert(iss_editorial_resolve_section_treatment(['treatment' => 'future.quote'], $quote, $skin) === 'zitat.display', "$skin: unknown choice has a safe context rendering fallback");
+    }
+    $assert(count(iss_editorial_treatment_choices($quote, 'standard')) === 2 && count(iss_editorial_treatment_choices($quote, 'objektalbum')) === 4, 'Context offers only its designed quote choices');
+    $assert(iss_editorial_resolve_section_treatment(['treatment' => 'zitat.display'], $quote, 'standard') === 'zitat.display', 'Changing context retains a known authored treatment');
+    $host_override = static function (array $formats): array {
+        $formats['projekt']['sections']['zitat']['treatments']['zitat.project-test'] = ['label' => 'Project treatment', 'schematic' => 'callout', 'legacy_value' => 'pull'];
+        $formats['projekt']['sections']['zitat']['default_treatment'] = 'zitat.project-test';
+        return $formats;
+    };
+    add_filter('iss_editorial_formats', $host_override, 120);
+    iss_editorial_reset_format_cache();
+    $host_read = iss_editorial_sanitize_section(['type' => 'zitat', 'quote' => 'Host-owned choice'], iss_editorial_get_format('projekt'), 3);
+    $html = industriesalon_render_editorial_portable_section($host_read, 0, 'dossier', 'projekt');
+    $assert(str_contains($html, 'data-section-treatment="zitat.project-test"'), 'Portable renderer resolves the actual host registry rather than landing');
+    remove_filter('iss_editorial_formats', $host_override, 120);
+    iss_editorial_reset_format_cache();
+    $bad_context = static function (array $formats): array {
+        $formats['projekt']['sections']['zitat']['treatment_contexts']['dossier'] = ['allowed' => ['missing.treatment'], 'default' => 'missing.treatment'];
+        return $formats;
+    };
+    add_filter('iss_editorial_formats', $bad_context, 120);
+    iss_editorial_reset_format_cache();
+    $assert(in_array('projekt.zitat: invalid treatment context dossier', iss_editorial_registry_errors(), true), 'Registry rejects unknown context choices/defaults');
+    remove_filter('iss_editorial_formats', $bad_context, 120);
+    iss_editorial_reset_format_cache();
     $special_choices = [
         'landing' => ['map_img', 'dynamic_slot', 'atlas_map'], 'article' => [],
         'fuehrung' => ['bildbuehne', 'atlas_map', 'upload_intake'],
@@ -195,7 +259,7 @@ try {
         return match ($slug) {
             'landing', 'article' => industriesalon_render_editorial_landing_section($section, 0, $skin),
             'projekt' => industriesalon_render_editorial_project_section($section, false, 0, $skin),
-            'ausstellung', 'rueckblick' => industriesalon_render_editorial_ausstellung_section($section, false, 0, $skin),
+            'ausstellung', 'rueckblick' => industriesalon_render_editorial_ausstellung_section($section, false, 0, $skin, $slug),
             'fuehrung' => industriesalon_render_editorial_tour_section($section, false, 0, $skin, 'portable-anchor', get_the_ID()),
             'veranstaltung' => industriesalon_render_structured_veranstaltung_section($section, $skin),
             'publication' => industriesalon_render_editorial_portable_section($section, 0, $skin, 'publication') ?? '',
@@ -380,6 +444,12 @@ try {
                 $contract = iss_editorial_get_format('article')['sections'][$common_type];
                 foreach (['supports', 'rich_text', 'treatments', 'default_treatment', 'legacy_types'] as $field) {
                     $actual = $definition[$field];
+                    if ($field === 'treatments') {
+                        $common = array_column($contract[$field], null, 'slug');
+                        $actual_common = array_intersect_key(array_column($actual, null, 'slug'), $common);
+                        $assert($actual_common === $common, "$slug.$common_type: shared treatments retain their contract alongside context additions");
+                        continue;
+                    }
                     if ($field === 'supports' && $slug === 'veranstaltung' && $common_type === 'kapitel') { $actual = array_values(array_diff($actual, ['dynamic_refs'])); }
                     if ($field === 'supports' && $slug === 'veranstaltung' && $common_type === 'material') { $actual = array_values(array_diff($actual, ['object_refs', 'dynamic_refs', 'items'])); }
                     $assert($actual === $contract[$field], "$slug.$common_type: identical $field contract");
@@ -423,8 +493,8 @@ try {
                         if ($common_type === 'galerie') { $assert(str_contains($html, 'data-gallery-layout="' . $choice['gallery_layout'] . '"'), "$label: renderer follows chosen gallery layout"); }
                         if ($common_type === 'zitat') {
                             $assert(str_contains($html, '<strong>Quoted words</strong>') && str_contains($html, 'Author &amp; Archive'), "$label: quote formatting and attribution survive");
-                            $assert(str_contains($html, 'iss-landing-quote--source') === ($choice['quote_treatment'] === 'source'), "$label: source layout is explicit");
-                            $assert(str_contains($html, 'iss-landing-quote--media-right') === (($choice['orientation'] ?? '') === 'media-right'), "$label: orientation is explicit");
+                            $assert(str_contains($html, 'iss-editorial-quote--source') === ($choice['quote_treatment'] === 'source'), "$label: source layout is explicit");
+                            $assert(str_contains($html, 'iss-editorial-quote--media-right') === (($choice['orientation'] ?? '') === 'media-right'), "$label: orientation is explicit");
                         }
                     }
                 }
@@ -833,7 +903,7 @@ try {
     $assert($starter === ['type' => 'statement', 'treatment' => 'statement.leitfrage'], 'Exhibition starter creates the canonical question treatment');
     $assert(!$place['sections']['material']['portable'] && $place['sections']['material']['supports'] === ['anchor', 'media_refs', 'links'], 'Place material retains its separate contract');
     $assert(!isset($place['sections']['objektfokus']), 'Place retains its separate archive supplement contract');
-    $assert(!$place['sections']['galerie']['portable'] && $place['sections']['galerie']['supports'] === ['media_refs', 'object_refs', 'gallery_layout'], 'Place gallery retains its separate contract');
+    $assert(!$place['sections']['galerie']['portable'] && $place['sections']['galerie']['supports'] === ['media_refs', 'object_refs', 'gallery_layout', 'treatment'], 'Place gallery retains native content ownership with the shared presentation chooser');
     $place_html = industriesalon_render_editorial_ausstellung_section(['type' => 'galerie', 'title' => 'Place gallery', 'body' => 'Place body'], false, 0, 'standard', 'place');
     $assert(str_contains($place_html, 'iss-ausstellung-section') && !str_contains($place_html, 'iss-landing-section'), 'Place supplement retains native renderer');
     $assert($place['sections']['intro']['max_instances'] === 1 && $place['sections']['gegenwart']['max_instances'] === 1 && $place['sections']['epoche']['max_instances'] === 0, 'Place insertion limits only its fixed overview slots');

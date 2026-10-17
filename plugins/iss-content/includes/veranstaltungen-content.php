@@ -498,7 +498,6 @@ add_filter('get_post_metadata', static function ($value, int $post_id, string $k
 
 add_filter('iss_editorial_admin_settings', static function (array $settings, WP_Post $post, array $format): array {
     if ($format['slug'] === 'veranstaltung') {
-        $settings['skins'] = [];
         $settings['dynamicPreviews'] = iss_content_model_veranstaltung_dynamic_previews($settings['document']);
         $settings['documentBindings'] = ['entity_key' => '[name="iss_content_model[_iss_entity_key]"]'];
         foreach (['hero_title', 'hero_subtitle', 'hero_kicker', 'hero_image_fit'] as $field) {
@@ -515,6 +514,9 @@ add_filter('iss_editorial_admin_settings', static function (array $settings, WP_
 add_filter('iss_editorial_editor_document', static function (array $document, int $post_id, string $format): array {
     if ($format === 'veranstaltung') {
         $document['entity_key'] = get_post_meta($post_id, '_iss_entity_key', true) ?: ($document['entity_key'] ?? 'event.general');
+        if (empty($document['skin']) || !get_metadata_raw('post', $post_id, iss_editorial_get_document_meta_key($format), true)) {
+            $document['skin'] = iss_content_model_veranstaltung_entity_default_skin($document['entity_key']);
+        }
     }
     return $document;
 }, 10, 3);
@@ -529,6 +531,9 @@ add_filter('iss_editorial_sanitized_section', static function (array $sanitized,
 add_filter('iss_editorial_sanitized_document', static function (array $sanitized, array $document, array $format): array {
     if ($format['slug'] === 'veranstaltung') {
         $sanitized['entity_key'] = iss_content_model_sanitize_veranstaltung_entity_key((string) ($document['entity_key'] ?? 'event.general'));
+        if (empty($document['skin'])) {
+            $sanitized['skin'] = iss_content_model_veranstaltung_entity_default_skin($sanitized['entity_key']);
+        }
         foreach (['hero_title', 'hero_subtitle', 'hero_kicker'] as $field) {
             if (isset($document[$field]) && is_scalar($document[$field])) {
                 $sanitized[$field] = sanitize_text_field((string) $document[$field]);
