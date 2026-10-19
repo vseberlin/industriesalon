@@ -1487,6 +1487,16 @@ function iss_content_model_render_veranstaltung_basis_box($post): void {
     echo '</div>';
     echo '<div class="iss-veranstaltung-admin__grid">';
 
+    echo '<p class="iss-veranstaltung-admin__field"><label for="iss_project_id"><strong>' . esc_html__('Reihe / Projekt', 'iss-content-model') . '</strong></label>';
+    echo '<select class="widefat" id="iss_project_id" name="iss_content_model[iss_project_id]">';
+    echo '<option value="0">' . esc_html__('Keine Zuordnung', 'iss-content-model') . '</option>';
+    $event_project = iss_content_model_get_event_project((int) $post->ID, false);
+    foreach (get_posts(['post_type' => 'projekt', 'post_status' => ['publish', 'draft', 'pending', 'future', 'private'], 'numberposts' => -1, 'orderby' => 'title', 'order' => 'ASC']) as $project) {
+        if (!current_user_can('read_post', $project->ID)) { continue; }
+        echo '<option value="' . esc_attr((string) $project->ID) . '" ' . selected($event_project->ID ?? 0, $project->ID, false) . '>' . esc_html($project->post_title) . '</option>';
+    }
+    echo '</select><span class="description">' . esc_html__('Ordnet diesen Termin der Projektseite und dem Graphen zu. Datum und Inhalt werden hier gepflegt.', 'iss-content-model') . '</span></p>';
+
     echo '<p class="iss-veranstaltung-admin__field"><label for="iss_start_datetime"><strong>' . esc_html__('Beginn', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="datetime-local" id="iss_start_datetime" name="iss_content_model[iss_start_datetime]" value="' . esc_attr(iss_content_model_mysql_to_local_input($start)) . '"></p>';
 
@@ -2600,6 +2610,7 @@ function iss_content_model_add_veranstaltung_entity_column(array $columns): arra
         if ($key === 'title') {
             $ordered_columns['iss_entity_key'] = __('Struktur', 'iss-content-model');
             $ordered_columns['iss_veranstaltung_semantic'] = __('Art', 'iss-content-model');
+            $ordered_columns['iss_project_id'] = __('Reihe / Projekt', 'iss-content-model');
         }
     }
 
@@ -2609,6 +2620,11 @@ add_filter('manage_' . ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE . '_posts_colum
 
 function iss_content_model_render_veranstaltung_entity_column(string $column, int $post_id): void
 {
+    if ($column === 'iss_project_id') {
+        $project = iss_content_model_get_event_project($post_id, false);
+        echo esc_html($project ? $project->post_title : '—');
+        return;
+    }
     if ($column === 'iss_entity_key') {
         $entity_key = function_exists('iss_content_model_sanitize_veranstaltung_entity_key')
             ? iss_content_model_sanitize_veranstaltung_entity_key((string) get_post_meta($post_id, '_iss_entity_key', true))

@@ -1481,6 +1481,8 @@ function industriesalon_render_editorial_landing_dynamic_slot(array $section, in
         $slot_html = industriesalon_render_team_directory_slot();
     } elseif ($slot_key === 'schoneweide-atlas') {
         $slot_html = industriesalon_render_schoneweide_atlas_slot();
+    } elseif ($slot_key === 'project-events') {
+        $slot_html = industriesalon_render_project_events_slot((int) get_the_ID());
     }
 
     if (trim($slot_html) === '') {

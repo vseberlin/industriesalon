@@ -417,6 +417,13 @@ future sentinel dates such as `2099-12-31` are invalid drift.
 Editorial WordPress source providers are `veranstaltung`, `ausstellung`, and
 opt-in `projekt`. `fuehrung` occurrence rows are external SuperSaaS slot
 projections linked back to parent Führung posts, not editorial date rows.
+An event's optional `iss_project_id` is canonical WordPress metadata owned by
+`iss-content`; the graph derives `project`/`part_of` edges under `content_native`.
+Project event sections select editorial member IDs, then query occurrences with
+`source_post_ids`. They do not repurpose recurrence `series_key` or add graph IDs
+to calendar rows. Graph relation readers select one primary name per entity
+(preferring the canonical display title), so imported primary-name aliases do not
+multiply outgoing/incoming edges or consume the relation limit twice.
 Legacy programme meta/options such as `iss_timeline_item_id`,
 `iss_exhibition_source`, `iss_exhibition_type`, `_iss_legacy_archive_term_slug`,
 `iss_is_permanent`, retired `iss_timeline_enabled`, and `iss_calendar_*`

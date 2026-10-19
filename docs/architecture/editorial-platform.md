@@ -231,6 +231,21 @@ existing media picker. Logo and colours currently affect Bühne; they survive
 preview, recovery and native revisions. The palette supplies readable text and
 colour surfaces through skin tokens, without arbitrary CSS or per-project files.
 
+Projects also support **Automatische Inhalte → Veranstaltungen dieser Reihe**
+(`dynamic_slot`, `project-events`). Its heading and introduction belong to the
+project JSON; dates, titles, destinations and programme visibility come from the
+linked Veranstaltungen through `iss-occurrences`. The shared homepage programme
+preview features the next eligible evening, with remaining dates in its compact
+timeline. Past editions use the same timeline rows, grouped by year, newest first;
+an empty upcoming list announces that further dates will follow. Event membership
+is the optional
+`iss_project_id` reference, edited under **Reihe / Projekt** and visible in the
+Veranstaltungen table. The graph derives an event → project `part_of` relation;
+changing/removing the reference or changing project visibility refreshes that
+projection through the existing queue. Individual evenings keep separate records
+and are not recurrence-series appointments. Private project drafts use the normal
+shared editor preview/recovery/revision contract.
+
 A first **Bild & Text → Seitenauftakt** (`feature.opening`, v3) replaces the
 Bühne template introduction when it has a title and an image. The theme renders
 one H1, preserves the exact canvas section address and omits that section from

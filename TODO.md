@@ -4,6 +4,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Review the local Futura/Zukunft im Gespräch pages and their shared JSON editors.
+  Preserve ZiG's private draft recovery state (19 October, 12:56); complete the
+  interactive user-draft save and Firefox checks. See [current handoff](handoff_CURRENT.md)
+  for the local commit and private content dependencies; staging is unchanged.
 - Complete human and cross-browser UAT for the
   [JSON editor audit](docs/project/json-editor-audit-2026-10-16.md) and
   [gesture-treatment consolidation](docs/project/gesture-treatment-consolidation-plan.md#implementation-receipt):

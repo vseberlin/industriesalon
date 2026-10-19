@@ -455,6 +455,14 @@ function iss_content_model_register_editorial_formats(array $formats): array
         ],
     ];
 
+    $formats['projekt']['sections']['dynamic_slot'] = [
+        'label' => __('Automatische Inhalte', 'iss-content-model'),
+        'description' => __('Veranstaltungen dieser Reihe. Die Zuordnung wird bei der Veranstaltung unter „Reihe / Projekt“ gepflegt.', 'iss-content-model'),
+        'supports' => ['anchor', 'treatment', 'slot_key'],
+        'slots' => ['project-events' => ['label' => __('Veranstaltungen dieser Reihe', 'iss-content-model'), 'treatment' => 'slot.project-events']],
+        'treatments' => ['slot.project-events' => ['label' => __('Veranstaltungen dieser Reihe', 'iss-content-model'), 'schematic' => 'cards']],
+    ];
+
     $formats['rueckblick'] = [
         'label' => __('Rückblick', 'iss-content-model'),
         'base' => 'ordered',

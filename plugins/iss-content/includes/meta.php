@@ -104,6 +104,7 @@ function iss_content_model_meta_definitions() {
             'iss_end_datetime' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_event_status' => ['type' => 'string', 'sanitize' => 'iss_content_model_sanitize_event_status', 'default' => ''],
             'iss_primary_place_id' => ['type' => 'integer', 'sanitize' => 'absint', 'default' => 0],
+            'iss_project_id' => ['type' => 'integer', 'sanitize' => 'iss_content_model_sanitize_event_project_id', 'default' => 0],
             'iss_location' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_programme_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],
             'iss_timeline_target_url' => ['type' => 'string', 'sanitize' => 'esc_url_raw', 'default' => ''],

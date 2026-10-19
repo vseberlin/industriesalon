@@ -141,6 +141,7 @@ function iss_graph_get_public_content_native_relation_families(): array
         'place',
         'person',
         'organization',
+        'project',
     ]);
 
     return array_values(array_unique(array_filter(array_map('sanitize_key', $families))));
@@ -177,12 +178,49 @@ function iss_graph_collect_public_content_native_relation_rows(WP_Post $post, in
         'place' => iss_graph_collect_public_content_native_place_rows($post),
         'person' => [],
         'organization' => [],
+        'project' => iss_graph_collect_public_content_native_project_rows($post),
     ];
 
     $filtered_rows = apply_filters('iss_graph_public_content_native_relation_rows', $rows, $post, $entity_id);
 
     return is_array($filtered_rows) ? $filtered_rows : $rows;
 }
+
+function iss_graph_collect_public_content_native_project_rows(WP_Post $post): array
+{
+    $project = function_exists('iss_content_model_get_event_project')
+        ? iss_content_model_get_event_project((int) $post->ID, false) : null;
+    if (!$project) { return []; }
+    $entity = iss_graph_sync_public_content_entity((int) $project->ID);
+    if (empty($entity['id'])) { throw new RuntimeException('Could not synchronize the event project.'); }
+    return [[
+        'to_entity_id' => (int) $entity['id'], 'relation_type' => 'part_of',
+        'relation_role' => 'part_of', 'relation_label' => __('Reihe / Projekt', 'iss-graph'),
+        'source_field' => 'iss_project_id', 'confidence' => 100,
+        'is_public' => $project->post_status === 'publish' && $project->post_password === '',
+    ]];
+}
+
+/** REST/meta-only edits also pass through the established projection queue. */
+function iss_graph_refresh_event_project_on_meta_change($meta_id, int $post_id, string $meta_key): void
+{
+    if ($meta_key !== 'iss_project_id' || get_post_type($post_id) !== 'veranstaltung') { return; }
+    if (!iss_graph_defer_post_projection($post_id, 'event_project_changed', 'iss_content')) {
+        iss_graph_sync_public_content_entity($post_id);
+    }
+}
+add_action('added_post_meta', 'iss_graph_refresh_event_project_on_meta_change', 30, 3);
+add_action('updated_post_meta', 'iss_graph_refresh_event_project_on_meta_change', 30, 3);
+add_action('deleted_post_meta', 'iss_graph_refresh_event_project_on_meta_change', 30, 3);
+
+/** Publishing/restoring a project also refreshes memberships assigned while it was private. */
+add_action('post_updated', static function (int $post_id, WP_Post $after, WP_Post $before): void {
+    if ($after->post_type !== 'projekt' || !function_exists('iss_content_model_get_project_event_ids')) { return; }
+    if ($after->post_status === $before->post_status && $after->post_password === $before->post_password) { return; }
+    foreach (iss_content_model_get_project_event_ids($post_id) as $event_id) {
+        iss_graph_refresh_event_project_on_meta_change(0, (int) $event_id, 'iss_project_id');
+    }
+}, 35, 3);
 
 function iss_graph_collect_public_content_native_place_rows(WP_Post $post): array
 {

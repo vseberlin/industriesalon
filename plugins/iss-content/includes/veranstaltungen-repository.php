@@ -4,6 +4,36 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+/** An event belongs to one editorial project; recurrence remains independent. */
+function iss_content_model_sanitize_event_project_id($value): int
+{
+    $id = absint($value);
+    $project = $id > 0 ? get_post($id) : null;
+    return $project instanceof WP_Post && $project->post_type === 'projekt'
+        && !in_array($project->post_status, ['trash', 'auto-draft'], true) ? $id : 0;
+}
+
+function iss_content_model_get_event_project(int $post_id, bool $public_only = true): ?WP_Post
+{
+    if (get_post_type($post_id) !== 'veranstaltung') { return null; }
+    $id = iss_content_model_sanitize_event_project_id(get_post_meta($post_id, 'iss_project_id', true));
+    $project = $id > 0 ? get_post($id) : null;
+    if ($project && $public_only && ($project->post_status !== 'publish' || $project->post_password !== '')) { return null; }
+    return $project;
+}
+
+/** Ordinary editorial membership lookup; dates/visibility stay with occurrences. */
+function iss_content_model_get_project_event_ids(int $project_id): array
+{
+    if (get_post_type($project_id) !== 'projekt') { return []; }
+    return get_posts([
+        'post_type' => 'veranstaltung', 'post_status' => 'publish', 'has_password' => false,
+        'numberposts' => -1, 'fields' => 'ids', 'orderby' => 'ID', 'order' => 'ASC',
+        'meta_key' => 'iss_project_id', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- One canonical editorial reference, not a date/projection query.
+        'meta_value' => $project_id, // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_value -- Exact membership in an editorial project.
+    ]);
+}
+
 function iss_content_model_veranstaltung_entity_keys_for_shapes(array $shapes): array
 {
     $shapes = array_values(array_unique(array_filter(array_map('sanitize_key', $shapes))));

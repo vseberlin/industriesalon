@@ -574,6 +574,10 @@ function industriesalon_programme_entry(array $row, string $variant, string $now
         $html .= '<figure class="iss-card__media">' . $image . '</figure>';
     }
     $html .= '<div class="iss-card__body">';
+    $project = function_exists('iss_content_model_get_event_project') ? iss_content_model_get_event_project($id) : null;
+    if ($project) {
+        $html .= '<p class="iss-card__kicker"><a href="' . esc_url(get_permalink($project)) . '">' . esc_html($project->post_title) . '</a></p>';
+    }
     if ($is_feature) {
         $labels = ['next' => __('Als Nächstes', 'industriesalon'), 'focus' => __('Im Fokus', 'industriesalon'), 'current' => __('Jetzt zu erleben', 'industriesalon')];
         $html .= '<p class="iss-card__kicker">' . esc_html($labels[$row['feature_label'] ?? 'next']) . '</p>';
@@ -657,7 +661,7 @@ function industriesalon_programme_overview($html, array $items, array $attribute
         }
         $html .= '</div></section>';
     }
-    // Retrospectives are published editorial reports, never relabelled expired appointments.
+    // This selection features written reports; every past event also retains its own retrospective view.
     $reports = new WP_Query(['post_type' => 'rueckblick', 'post_status' => 'publish', 'has_password' => false, 'posts_per_page' => 12, 'no_found_rows' => true,
         // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query -- Small editorial report CPT; only illustrated reports are eligible.
         'meta_query' => [['key' => '_thumbnail_id', 'compare' => 'EXISTS']]]);
@@ -752,8 +756,16 @@ add_filter('render_block_core/paragraph', static function (string $html, array $
     if (!is_singular('veranstaltung') || ($block['attrs']['className'] ?? '') !== 'iss-event-hero__kicker iss-kicker' || post_password_required()) {
         return $html;
     }
-    $document = iss_content_model_veranstaltung_content_document((int) get_queried_object_id());
-    return '<p class="iss-event-hero__kicker iss-kicker">' . esc_html(($document['hero_kicker'] ?? '') ?: __('Veranstaltung', 'industriesalon')) . '</p>';
+    $id = (int) get_queried_object_id();
+    $document = iss_content_model_veranstaltung_content_document($id);
+    $project = function_exists('iss_content_model_get_event_project') ? iss_content_model_get_event_project($id) : null;
+    $kicker = $project ? '<a href="' . esc_url(get_permalink($project)) . '">' . esc_html($project->post_title) . '</a>' : esc_html(($document['hero_kicker'] ?? '') ?: __('Veranstaltung', 'industriesalon'));
+    $state = iss_content_model_event_appointment($id);
+    if (!empty($state['past'])) {
+        $label = ($state['row']['availability_state'] ?? get_post_meta($id, 'iss_event_status', true)) === 'cancelled' ? __('Abgesagt', 'industriesalon') : __('Rückblick', 'industriesalon');
+        $kicker = esc_html($label) . ($project || !empty($document['hero_kicker']) ? ' · ' . $kicker : '');
+    }
+    return '<p class="iss-event-hero__kicker iss-kicker">' . $kicker . '</p>';
 }, 10, 2);
 
 add_filter('render_block_core/post-featured-image', static function (string $html, array $block, WP_Block $instance): string {
@@ -803,8 +815,7 @@ add_filter('iss_content_meta_presentation', static function ($html, int $id, arr
     if ($summary) {
         $action = !$past ? industriesalon_event_ticket_action($id, $row) : [];
         if ($past) {
-            $url = iss_content_upload_url($id);
-            $action = $url !== '' ? ['url' => $url, 'label' => __('Erinnerung beitragen', 'industriesalon')] : [];
+            $action = ['url' => '#rueckblicke', 'label' => __('Zum Rückblick', 'industriesalon')];
         } elseif (!$action) {
             $action = ['url' => '#besuch', 'label' => in_array($status, ['cancelled', 'sold_out'], true) ? __('Veranstaltungsdetails', 'industriesalon') : __('Besuch planen', 'industriesalon')];
         }
@@ -812,7 +823,9 @@ add_filter('iss_content_meta_presentation', static function ($html, int $id, arr
         if ($action) {
             $out .= '<a class="iss-button iss-button--filled" href="' . esc_url($action['url']) . '">' . esc_html($action['label']) . '</a>';
         }
-        if (iss_content_report_connections($id, true)) {
+        if ($past && ($url = iss_content_upload_url($id)) !== '') {
+            $out .= '<a class="iss-action-link" href="' . esc_url($url) . '">' . esc_html__('Erinnerung beitragen', 'industriesalon') . '</a>';
+        } elseif (!$past && iss_content_report_connections($id, true)) {
             $out .= '<a class="iss-action-link" href="#rueckblicke">' . esc_html__('Zum Rückblick', 'industriesalon') . '</a>';
         }
         $out .= '</div>';

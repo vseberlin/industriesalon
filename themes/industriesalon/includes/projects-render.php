@@ -631,6 +631,29 @@ function industriesalon_render_editorial_project_dossier_spread(array $chapter, 
     return industriesalon_editorial_preview_section($html, $facts_section, ['title' => 'iss-project-dossier-spread__facts-title', 'kicker' => 'iss-project-section__kicker', 'body' => 'iss-project-dossier-spread__facts-body'], 'iss-project-dossier-spread__facts');
 }
 
+/** Share the homepage preview and timeline; occurrence dates/destinations stay canonical. */
+function industriesalon_render_project_events_slot(int $project_id): string
+{
+    if (!function_exists('iss_programm_get_project_events')) { return ''; }
+    iss_programm_enqueue_timeline_assets();
+    $upcoming = iss_programm_get_project_events($project_id, 'upcoming');
+    $past = iss_programm_get_project_events($project_id, 'past');
+    $html = '<div><h3>' . esc_html__('Nächste Veranstaltungen', 'industriesalon') . '</h3>';
+    $html .= $upcoming
+        ? industriesalon_programme_overview(null, $upcoming, ['presentation' => 'programme-preview', 'limit' => count($upcoming)])
+        : '<p>' . esc_html__('Weitere Termine werden angekündigt.', 'industriesalon') . '</p>';
+    $html .= '</div><div class="iss-timeline--programme is-style-programme-compact"><h3>' . esc_html__('Vergangene Ausgaben', 'industriesalon') . '</h3>';
+    $html .= $past
+        ? '<div class="iss-timeline">' . iss_timeline_render_items_list($past, [
+            'programmeLayout' => true, 'yearGrouping' => true, 'order' => 'DESC',
+            'showRecurringNote' => false, 'showRecommendButton' => false,
+            'detailsButtonText' => __('Details', 'industriesalon'),
+            'ticketsButtonText' => __('Buchen', 'industriesalon'),
+        ]) . '</div>'
+        : '<p>' . esc_html__('Bisher sind keine vergangenen Ausgaben erfasst.', 'industriesalon') . '</p>';
+    return $html . '</div>';
+}
+
 function industriesalon_render_editorial_project_section(array $section, bool $show_placeholders, int $rendered_index, string $skin, string $anchor = ''): string
 {
     $portable = industriesalon_render_editorial_portable_section($section, $rendered_index, $skin, 'projekt', $anchor);

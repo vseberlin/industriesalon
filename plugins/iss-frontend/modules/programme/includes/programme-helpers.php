@@ -13,6 +13,22 @@ function iss_programm_occurrences_ready(): bool
     return !function_exists('iss_occurrences_public_query_ready') || iss_occurrences_public_query_ready();
 }
 
+/** Each salon evening keeps its own occurrence; this is not recurrence grouping. */
+function iss_programm_get_project_events(int $project_id, string $time_mode): array
+{
+    if (!iss_programm_occurrences_ready() || !function_exists('iss_content_model_get_project_event_ids')) { return []; }
+    $project = get_post($project_id);
+    if (!$project || $project->post_type !== 'projekt') { return []; }
+    if (($project->post_status !== 'publish' || $project->post_password !== '') && !current_user_can('edit_post', $project_id)) { return []; }
+    $ids = iss_content_model_get_project_event_ids($project_id);
+    if (!$ids) { return []; }
+    return iss_occurrences_query([
+        'source_post_ids' => $ids, 'post_types' => ['veranstaltung'],
+        'time_mode' => $time_mode === 'past' ? 'past' : 'upcoming',
+        'order' => $time_mode === 'past' ? 'DESC' : 'ASC', 'limit' => -1,
+    ]);
+}
+
 if (!function_exists('iss_programm_get_upcoming_events')) {
     function iss_programm_get_upcoming_events($post_id, $limit = 12) {
         $post_id = (int) $post_id;

@@ -79,6 +79,7 @@ try {
     $next = iss_occurrences_get_next_dates($id, 1);
     $rows = iss_content_model_get_meta_rows_for_post($id);
     $expect(count($next) === 1 && $rows[0]['value'] === $next[0]['datetime_label'], 'Recurring detail date equals overview occurrence');
+    $expect(empty(iss_content_model_event_appointment($id)['past']), 'A future recurrence keeps its canonical event current');
     $expect(!str_contains(wp_json_encode($rows), 'Juli'), 'Old source date range not displayed as next appointment');
     $occurrences->delete_source_occurrences($id, 'veranstaltung');
     delete_post_meta($id, 'iss_end_datetime');
@@ -134,6 +135,61 @@ try {
     $rendered = do_blocks('<!-- wp:post-content /-->');
     $expect(!str_contains($rendered, 'https://example.org/book'), 'Past announcement has no active ticket links');
     $expect(str_contains($rendered, 'Stimmen zur Veranstaltung') && str_contains($rendered, 'Die Ankündigung') && strpos($rendered, 'Stimmen zur Veranstaltung') < strpos($rendered, 'Die Ankündigung'), 'Past event places visitor voices before original announcement');
+    $expect(substr_count($rendered, 'id="rueckblicke"') === 1 && str_contains($rendered, 'noch kein Bericht') && strpos($rendered, 'id="rueckblicke"') < strpos($rendered, 'Die Ankündigung'), 'An event without a report automatically has one retrospective section before its announcement');
+    $expect(str_contains($summary, 'href="#rueckblicke"'), 'Past summary links to its retrospective before a written report exists');
+    $kicker_block = '<!-- wp:paragraph {"className":"iss-event-hero__kicker iss-kicker"} --><p class="iss-event-hero__kicker iss-kicker">Veranstaltung</p><!-- /wp:paragraph -->';
+    $expect(str_contains(do_blocks($kicker_block), 'Rückblick · Series'), 'Past opening identifies the retrospective and retains the editorial series');
+    $permalink = get_permalink($id);
+    $report_count = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='rueckblick'");
+    remove_filter('iss_occurrences_query_now', $past_clock, 100);
+    $expect(!str_contains(do_blocks('<!-- wp:post-content /-->'), 'id="rueckblicke"') && !str_contains(do_blocks($kicker_block), 'Rückblick'), 'Upcoming event has no empty retrospective');
+    $transition_now = '2026-10-10 19:00:00';
+    $transition_clock = static function () use (&$transition_now) { return $transition_now; };
+    add_filter('iss_occurrences_query_now', $transition_clock, 100);
+    $expect(!str_contains(do_blocks('<!-- wp:post-content /-->'), 'id="rueckblicke"'), 'Event remains current through its explicit end');
+    $transition_now = '2026-10-10 19:00:01';
+    $expect(str_contains(do_blocks('<!-- wp:post-content /-->'), 'id="rueckblicke"'), 'Next request after the end automatically displays the retrospective');
+    delete_post_meta($id, 'iss_end_datetime');
+    wp_update_post(['ID' => $id]);
+    $transition_now = '2026-10-10 23:59:59';
+    $expect(!str_contains(do_blocks('<!-- wp:post-content /-->'), 'id="rueckblicke"'), 'Unknown end keeps the event current through its Berlin calendar day');
+    $transition_now = '2026-10-11 00:00:00';
+    $expect(str_contains(do_blocks('<!-- wp:post-content /-->'), 'id="rueckblicke"'), 'Unknown end becomes a retrospective at Berlin midnight');
+    $expect(get_permalink($id) === $permalink && $report_count === (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_type='rueckblick'"), 'Date transition retains the original URL without generating report posts');
+    remove_filter('iss_occurrences_query_now', $transition_clock, 100);
+    add_filter('iss_occurrences_query_now', $past_clock, 100);
+    update_post_meta($id, 'iss_event_status', 'cancelled');
+    $expect(str_contains(do_blocks($kicker_block), 'Abgesagt') && str_contains(do_blocks('<!-- wp:post-content /-->'), 'Diese Veranstaltung wurde abgesagt.'), 'Past cancelled event is explicitly marked as cancelled');
+    delete_post_meta($id, 'iss_event_status');
+    iss_content_set_upload_open($id, false);
+    $closed_summary = apply_filters('iss_content_meta_presentation', null, $id, $rows, ['presentation' => 'event-summary']);
+    $expect(str_contains($closed_summary, 'href="#rueckblicke"') && !str_contains($closed_summary, 'Erinnerung beitragen'), 'Closed contribution intake still exposes the retrospective without reopening uploads');
+    $report = iss_content_create_report($id);
+    $expect(!is_wp_error($report) && $report > 0, 'Report created from the original event');
+    $ids[] = $report;
+    $expect(iss_content_create_report($id) === $report, 'Repeated editor action resumes the same report draft');
+    $expect(array_column(iss_content_report_connections($report), 'ID') === [$id] && array_column(iss_content_report_connections($id), 'ID') === [$report], 'Creation automatically connects report and event in both directions');
+    $expect(!str_contains(do_blocks('<!-- wp:post-content /-->'), get_permalink($report)), 'Private report draft does not appear publicly');
+    wp_update_post(['ID' => $report, 'post_status' => 'publish', 'post_excerpt' => 'The evening in review.']);
+    iss_graph_flush_request_projections();
+    $with_report = do_blocks('<!-- wp:post-content /-->');
+    $expect(str_contains($with_report, get_permalink($report)) && !str_contains($with_report, 'noch kein Bericht'), 'Published report automatically replaces the pending-report message');
+    $GLOBALS['wp_query'] = new WP_Query(['p' => $report, 'post_type' => 'rueckblick']);
+    $GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
+    $GLOBALS['wp_query']->the_post();
+    $expect(str_contains(do_blocks('<!-- wp:post-content /-->'), $permalink), 'Report page automatically links back to the original event');
+    wp_update_post(['ID' => $report, 'post_status' => 'draft']);
+    iss_graph_flush_request_projections();
+    $GLOBALS['wp_query'] = new WP_Query(['p' => $id, 'post_type' => 'veranstaltung']);
+    $GLOBALS['wp_the_query'] = $GLOBALS['wp_query'];
+    $GLOBALS['wp_query']->the_post();
+    $withdrawn = do_blocks('<!-- wp:post-content /-->');
+    $expect(!str_contains($withdrawn, get_permalink($report)) && str_contains($withdrawn, 'noch kein Bericht'), 'Withdrawing a report restores the retrospective awaiting a report');
+    wp_update_post(['ID' => $id, 'post_password' => 'test-only']);
+    $GLOBALS['post'] = get_post($id);
+    $expect(!str_contains(do_blocks('<!-- wp:post-content /-->'), 'id="rueckblicke"'), 'Protected event does not expose its retrospective section');
+    wp_update_post(['ID' => $id, 'post_password' => '']);
+    $GLOBALS['post'] = get_post($id);
     $title_html = do_blocks('<!-- wp:post-title {"level":1,"className":"iss-event-hero__title"} /-->');
     $expect(str_contains($title_html, 'A short headline') && substr_count($title_html, '<h1') === 1, 'Native title uses explicit opening with one h1');
     $GLOBALS['wp_query'] = $old_query; $GLOBALS['wp_the_query'] = $old_main; $GLOBALS['post'] = $old_post;
@@ -153,10 +209,16 @@ try {
     $expect(serialize_blocks($blocks) === $template->content, 'Template block serialization round trip');
     WP_CLI::log("PASS: $checks event/feedback assertions.");
 } finally {
-    foreach ([$clock ?? null, $running_clock ?? null, $past_clock ?? null] as $test_clock) {
+    foreach ([$clock ?? null, $running_clock ?? null, $past_clock ?? null, $transition_clock ?? null] as $test_clock) {
         if ($test_clock) { remove_filter('iss_occurrences_query_now', $test_clock, 100); }
     }
-    foreach ($ids as $id) { wp_delete_post($id, true); }
+    $fixture_sets = [];
+    foreach (array_reverse($ids) as $id) {
+        foreach (iss_content_editorial_sets_service()->get_links_for_context(get_post_type($id), $id) as $link) { $fixture_sets[(int) $link['set_id']] = true; }
+        wp_delete_post($id, true);
+    }
+    foreach (array_keys($fixture_sets) as $set_id) { $expect(iss_content_editorial_sets_service()->delete_set_if_safe($set_id), 'Remove empty fixture source Set'); }
+    iss_graph_flush_request_projections();
     $expect($before === $wpdb->get_results("SELECT ID, post_title, post_content, post_excerpt, post_status FROM {$wpdb->posts} WHERE post_type IN ('veranstaltung','rueckblick') ORDER BY ID", ARRAY_A), 'Existing events and reports unchanged');
     $expect($before_comments === $wpdb->get_results("SELECT * FROM {$wpdb->comments} ORDER BY comment_ID", ARRAY_A), 'Existing comments unchanged');
     WP_CLI::log('PASS: own fixtures removed; existing events, reports and comments unchanged.');

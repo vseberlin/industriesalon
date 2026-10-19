@@ -38,6 +38,7 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         // Maintain each renderer's existing choice order.
         $formats[$slug]['skins'] = array_replace(array_fill_keys($choices, ''), $formats[$slug]['skins']);
         if ($slug === 'projekt') {
+            $formats[$slug]['sections']['dynamic_slot']['renderer'] = 'landing';
             $formats[$slug]['editor']['identity_palettes'] = [
                 'neutral' => __('Papier / Schwarz', 'industriesalon'),
                 'neon' => __('Neon / Vier Farben', 'industriesalon'),

@@ -391,32 +391,41 @@ add_filter('render_block_core/post-content', static function (string $content, a
         return $content;
     }
     $post_id = (int) ($instance->context['postId'] ?? 0);
-    if ($post_id <= 0 || $post_id !== (int) get_queried_object_id()) {
+    if ($post_id <= 0 || $post_id !== (int) get_queried_object_id() || post_password_required($post_id)) {
         return $content;
     }
     $is_report = get_post_type($post_id) === 'rueckblick';
     $is_event = get_post_type($post_id) === 'veranstaltung';
-    $card_options = $is_event ? ['layoutVariant' => 'stack', 'show_image' => true] : ['skin' => 'standard'];
+    $state = $is_event ? iss_content_model_event_appointment($post_id) : [];
+    $past = !empty($state['past']);
+    $card_options = $is_event ? ['layoutVariant' => 'stack'] : ['skin' => 'standard'];
     $cards = [];
     foreach (iss_content_report_connections($post_id, true) as $post) {
-        if ($is_event) {
-            $card_options['show_image'] = has_post_thumbnail($post);
-        }
-        $cards[] = iss_relations_render_related_content_card($post, ['kicker' => get_post_type_object($post->post_type)->labels->singular_name, 'link_text' => $is_event ? __('Rückblick lesen', 'industriesalon') : __('Weiter', 'industriesalon')], $card_options);
+        $card_options['show_image'] = has_post_thumbnail($post);
+        $cards[] = iss_relations_render_related_content_card($post, ['kicker' => get_post_type_object($post->post_type)->labels->singular_name, 'link_text' => $is_report ? __('Weiter', 'industriesalon') : __('Rückblick lesen', 'industriesalon')], $card_options);
     }
     $contributions = '';
-    if ($cards) {
-        $contributions .= '<section' . ($is_event ? ' id="rueckblicke"' : '') . ' class="iss-related-feed' . ($is_event ? '' : ' iss-container') . ' section"><h2>' . esc_html($is_report ? __('Dazu gehört dieser Rückblick', 'industriesalon') : __('Rückblicke', 'industriesalon')) . '</h2>' . iss_relations_render_cards_grid($cards, 'rueckblick', $is_event ? ['columns' => 1, 'layoutVariant' => 'stack'] : ['columns' => 3]) . '</section>';
+    if ($cards || $past) {
+        $heading = $is_event ? __('Rückblick', 'industriesalon') : ($is_report ? __('Dazu gehört dieser Rückblick', 'industriesalon') : __('Rückblicke', 'industriesalon'));
+        $contributions .= '<section' . ($is_event ? ' id="rueckblicke"' : '') . ' class="iss-related-feed' . ($is_event ? '' : ' iss-container') . ' section"><h2>' . esc_html($heading) . '</h2>';
+        if ($past && ($state['row']['availability_state'] ?? get_post_meta($post_id, 'iss_event_status', true)) === 'cancelled') {
+            $contributions .= '<p>' . esc_html__('Diese Veranstaltung wurde abgesagt.', 'industriesalon') . '</p>';
+        } elseif ($past && !$cards) {
+            $contributions .= '<p>' . esc_html__('Zu dieser Veranstaltung liegt noch kein Bericht vor. Die ursprüngliche Ankündigung finden Sie unten.', 'industriesalon') . '</p>';
+        }
+        if ($cards) {
+            $contributions .= iss_relations_render_cards_grid($cards, 'rueckblick', $is_event ? ['columns' => 1, 'layoutVariant' => 'stack'] : ['columns' => 3]);
+        }
+        $contributions .= '</section>';
     }
     if ($is_event && function_exists('industriesalon_render_event_feedback')) {
         $contributions .= industriesalon_render_event_feedback($post_id);
     }
-    $state = $is_event ? iss_content_model_event_appointment($post_id) : [];
     if ($is_event) {
         $description_class = 'iss-event-description' . (industriesalon_editorial_has_portable_sections($post_id) ? ' iss-event-description--composition' : '');
-        $content = '<section class="' . esc_attr($description_class) . '"><h2>' . esc_html(!empty($state['past']) ? __('Die Ankündigung', 'industriesalon') : __('Über die Veranstaltung', 'industriesalon')) . '</h2>' . $content . '</section>';
+        $content = '<section class="' . esc_attr($description_class) . '"><h2>' . esc_html($past ? __('Die Ankündigung', 'industriesalon') : __('Über die Veranstaltung', 'industriesalon')) . '</h2>' . $content . '</section>';
     }
-    $content = !empty($state['past']) ? $contributions . $content : $content . $contributions;
+    $content = $past ? $contributions . $content : $content . $contributions;
     if ($is_report) {
         $date = (string) get_post_meta($post_id, '_iss_report_date', true);
         if ($date !== '') {

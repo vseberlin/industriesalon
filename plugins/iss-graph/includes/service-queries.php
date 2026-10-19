@@ -298,8 +298,9 @@ trait ISS_Graph_Queries
             LEFT JOIN {$this->get_entity_table_name()} e
                 ON e.id = r.to_entity_id
             LEFT JOIN {$this->get_name_table_name()} pn
-                ON pn.entity_id = e.id
-               AND pn.is_primary = 1
+                ON pn.id = (SELECT preferred.id FROM {$this->get_name_table_name()} preferred
+                    WHERE preferred.entity_id = e.id AND preferred.is_primary = 1
+                    ORDER BY (preferred.name = e.display_title) DESC, preferred.position ASC, preferred.valid_from_year ASC, preferred.id ASC LIMIT 1)
             WHERE " . implode(' AND ', $where) . "
             ORDER BY r.position ASC, r.weight DESC, r.valid_from_year ASC, r.id ASC
             LIMIT %d";
@@ -426,8 +427,9 @@ trait ISS_Graph_Queries
             LEFT JOIN {$this->get_entity_table_name()} e
                 ON e.id = r.from_entity_id
             LEFT JOIN {$this->get_name_table_name()} pn
-                ON pn.entity_id = e.id
-               AND pn.is_primary = 1
+                ON pn.id = (SELECT preferred.id FROM {$this->get_name_table_name()} preferred
+                    WHERE preferred.entity_id = e.id AND preferred.is_primary = 1
+                    ORDER BY (preferred.name = e.display_title) DESC, preferred.position ASC, preferred.valid_from_year ASC, preferred.id ASC LIMIT 1)
             WHERE " . implode(' AND ', $where) . "
             ORDER BY r.position ASC, r.weight DESC, r.valid_from_year ASC, r.id ASC
             LIMIT %d";

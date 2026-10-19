@@ -1,77 +1,98 @@
-# Current handoff — 17 October 2026
+# Current handoff — 19 October 2026
 
-## Released checkpoint
+## Local checkpoint
 
-Gesture treatments, CSS consolidation, editor controls and landing-preview recovery
-are committed and deployed on staging as **`a9dd4a6`**, including the earlier editor
-commit `4e4dbc0`. Staging advanced cleanly from `4239654` through GitHub `main` at
-19:39:48 UTC. This receipt records the final documentation checkpoint.
-No SQL/content/uploads artifact, schema migration, service restart or configuration
-change was needed. GitHub contains code, tests and documentation only.
+Futura, Zukunft im Gespräch (ZiG) and automatic event Rückblicke are committed
+with this checkpoint in `/home/vladimir/wp-website`. No push or deployment was
+requested. Fetched `origin/main` remains **299058d**; that is also the last verified
+staging release (17 October). See that commit for the previous release receipt.
 
-Website delivery belongs in `/home/vladimir/wp-website`; local `wp_app` mounts its
-plugins/theme/receiver. Core, DB, uploads and intake remain under `/home/vladimir/wp`.
-Staging checkout is `/srv/industriesalon/stage/repo`, runtime is its parent's
-`compose.yml` and `app`, via `vladimir@staging.industriesalon.info` (`iss-prod-01`).
+## Delivered locally
 
-The [delivery contract](docs/project/gesture-treatment-consolidation-plan.md)
-records treatment resolution, distinct exhibition presentations, legacy adapters,
-event skin precedence and the CSS drain. Edited public CSS is 42,748 source bytes
-smaller. Plugin and theme changes must travel together. No stored content migration.
+- **ZiG project 42100**, `/projekte/zukunft-im-gespraech/`: shared JSON editor,
+  Bühne/Ocker presentation and automatic project events. Optional **Reihe / Projekt**
+  (`iss_project_id`) appears in the Veranstaltung form/table and projects a graph
+  `part_of` edge. The homepage preview features the next eligible evening; compact
+  timeline rows show the other dates and past editions. All six current evenings
+  are past, so a feature appears once a future event is registered.
+- Six canonical events: existing **24829, 13349, 28060**, new **42103, 42106,
+  42111**. Kowalczuk, Isabella Hermann and La Hengst start at user-confirmed 18:00.
+  Massarrat is **22 April 2026, 19–21**; Anne Rabe is **15 October 2026, 19:00**.
+  Existing event documents/private drafts remain intact. Undated 2027 plans stay
+  editorial text. Individual evenings do not share recurrence keys.
+- Five ZiG reports **42152, 42155, 42158, 42161, 42164** preserve the ten essay
+  paragraphs from the supplied July DOCX. Each has seven graph links: original
+  event, project, guest, moderator, two organisers and venue. Internal accounting
+  and completion notes remain private. Anne's source section is an announcement,
+  so her event currently displays the pending-report view.
+- Every dated event automatically presents a **Rückblick at its original URL**
+  after the existing occurrence boundary. Published reports and approved voices
+  precede the original announcement. Without a report, the page says one is not
+  yet available. Cancellations remain explicit; future recurrences stay current;
+  closed intake and private reports remain protected. No date-triggered post or
+  graph identity is created. Reports created from an event connect both ways.
+- Bühne projects render the native content block and its reciprocal report feed.
+  Text-only report cards omit empty images. Graph queries select one primary
+  name per entity, preventing duplicate relation rows from imported aliases.
+- **Futura report 42087**, `/rueckblick/futura-2025/`, has six JSON sections and
+  ten verified graph relationships to two projects, three people, two organisations
+  and three places. Project **30743** links internally; its opening venue is
+  corrected to Industriesalon. Protected source posts/private drafts are preserved.
 
-## Verification and preservation
+## Verification and acceptance
 
-- Local: 14,680 registry/renderer, 334 validation, 363 lossiness, 554 storage,
-  42 native revision, 108 editor DOM checks and 3 CSS ownership gates pass.
-  PHP syntax/PHPCS/PHPStan and JS/CSS lint pass. Browser coverage includes
-  responsive treatments, chooser focus/preservation and compact editor controls.
-- Local Führungen: an empty link in section 6 of its private draft blocked the
-  preview. Recovery now shows the authenticated saved page without canvas editing
-  until the entry is completed/removed; then the current preview resumes. Four
-  saved and three private draft documents remained unchanged. Its original tab
-  was reloaded and the preview became visible. Nothing was published.
-- Staging: nine registries and all 180 canonical documents validate; all 180
-  document renderers return, with no previously nonempty output becoming empty.
-  Twelve public routes return 200/noindex. Restricted Projects login/editor works;
-  four unrelated admin routes remain 403. Six editor script assets match exactly.
-- Eight authenticated landing-preview requests (Führungen, home, Schöneweide,
-  About; viewing and editing modes) return 200 with correct section markers and
-  editing-asset isolation; sampled HTTP responses are 181–441 ms. Chrome confirms
-  exhibition treatment/source-image rendering and phone layouts without overflow.
-  Human interactive staging and cross-browser UAT remain separate acceptance work.
-- Staging before/after/final hashes match all 15,504 posts and 239,199 non-lock
-  postmeta rows, including revisions, private drafts and DB templates. Place epoch/
-  state projections also match. Containers are healthy; no release PHP/nginx errors.
-  No email, invitation, test content or historical revision purge was performed.
+Passed: 75 event/feedback, 48 date-rotation, 59 ZiG public/text/graph/editor,
+42 project membership/editor/visibility/feature/report, 25 homepage-preview,
+114 graph atomicity and 29 programme checks; targeted syntax/PHPCS/PHPStan and
+`git diff --check`. Browser checks cover desktop and 390px project/report layouts,
+Anne's pending-report view and Isabella's published report, anchors and overflow.
+Event responses remain no-cache. Test fixtures were removed; existing events,
+reports, comments, source revisions and six ZiG calendar occurrences are preserved.
 
-Private release evidence: `var/gesture-release-20261017/`; implementation evidence:
-`var/gesture-consolidation-20261017/`; preview fix: `var/landing-preview-20261017/`.
-These ignored directories are not GitHub transfer artifacts.
+Next acceptance: review the local Futura/ZiG pages and shared JSON editor. ZiG
+has a user private draft recovery prompt (19 October, 12:56); it remains untouched.
+Canvas/selector hydration and native fixture saves passed; interactive user-draft
+save and Firefox UAT remain open. Broader accepted UAT work stays in `TODO.md`.
 
-## Rollback and next action
+## Private data dependencies
 
-Fresh verified staging backup: `backups/iss-backup-20261017T193729Z/` under the stage
-root; seven hashed/read-tested artifacts, 119 tables, code baseline `4239654`.
-The earlier audit rollback bundle is retained as the manual copy
-`backups/editorial-audit-20261017T130015Z/`; the 16 October full-refresh backup
-`backups/iss-backup-20261016T133026Z/` also remains. Never restore old content over
-newer UAT edits. This release changed code only; rollback must preserve later work.
+Migration programs are in Git; content inputs, sources, before/after snapshots
+and verification receipts are ignored, private files:
 
-Reload existing editors for changed assets. Complete the human/cross-browser
-checks in [TODO](TODO.md), especially contextual treatments and unfinished-draft
-recovery. Production deployment is not part of this release.
+| Migration under `ops/migrations/` | Private input and evidence directory |
+| --- | --- |
+| `2026-10-19-futura-rueckblick.php` | `var/futura-rueckblick-20261019/` |
+| `2026-10-19-zukunft-gespraech.php` | `var/zukunft-gespraech-20261019/` |
+| `2026-10-19-zig-rueckblicke.php` | `var/zig-rueckblicke-20261019/` |
 
-## Preserve UAT and environment boundaries
+Each directory retains valid `content.json`, `before.json`, `after.json` and
+`verification.json`. ZiG reports also require their retained `source.docx`.
+Non-autoload DB receipts: `iss_backup_20261019_futura_rueckblick`,
+`iss_backup_20261019_zukunft_gespraech`, `iss_backup_20261019_zig_rueckblicke`.
+Latest public recheck: `var/event-retrospective-20261019/zig-verification.json`.
+Existing media is reused; **no new uploads or table/schema migration** is needed.
+The automatic retrospective presentation itself needs no stored-content migration.
 
-- Futura **30743**, `/projekte/futura-biennale-2027-2/`, is the UAT project.
-  Preserve Burmeister's private draft, original Futura **25657**, draft **30615**,
-  and published KiezKarte **30811**; do not replay older staging-only migrations.
-- `Burmeister` (**328**) retains Projects-only create/edit/media access; new projects
-  need review. Credentials stay private in ignored `var/project-uat-20261016/`.
-- Staging remains publicly previewable with `blog_public=0`/noindex by explicit
-  user exception. Default WordPress mail is not routed to Mailpit; inspect mail
-  mode before any notification test. Maintenance activation remains separate.
-- The last full content/users/templates/uploads/intake sync was 16 October,
-  13:33 UTC; preserve subsequent target UAT work. Its detailed receipt is `d9c4d79`
-  and private `var/help-release-20261016/`. This release did not repeat that sync.
-- The mixed/archive checkout and external archive storage are not cleanup targets.
+A later authorized release must transfer private inputs separately, deploy matching
+code, inspect target identities/media and later edits, then use migration owner APIs
+and their verification modes. Never replay over newer content or private drafts.
+Rollback guidance is in each migration header; retain its before-image/receipt.
+
+## Environment and preservation boundaries
+
+- `wp_app` mounts website code from `/home/vladimir/wp-website`; core, DB, uploads
+  and intake remain under `/home/vladimir/wp`. The mixed/archive checkout and
+  external archive storage are not cleanup targets.
+- Staging: `/srv/industriesalon/stage/repo`, runtime in its parent, via
+  `vladimir@staging.industriesalon.info` (`iss-prod-01`). Last full data/media sync:
+  16 October, 13:33 UTC. Preserve subsequent target UAT work.
+- Preserve Futura UAT **30743**, original **25657**, draft **30615**, KiezKarte
+  **30811** and Burmeister's private draft. Burmeister **328** retains Projects-only
+  create/edit/media rights; credentials stay in ignored `var/project-uat-20261016/`.
+- Staging remains publicly previewable with noindex by user exception. Default
+  WordPress mail is not routed to Mailpit; inspect mail mode before notification
+  tests. Maintenance activation and production deployment are separate work.
+- Last verified staging backup: `backups/iss-backup-20261017T193729Z/` under the
+  stage root (seven verified artifacts, 119 tables, baseline **4239654**). Retain
+  the 16 October full-refresh and editorial-audit backups. Previous release
+  evidence: `var/gesture-release-20261017/` and `var/landing-preview-20261017/`.

@@ -44,7 +44,7 @@ $side_rail = !empty($rail['rail_feature']['enabled']) && in_array($placement, ['
         <div class="iss-project-stage__layout<?php echo $side_rail ? ' iss-project-stage__layout--' . esc_attr($placement) : ''; ?>">
             <?php if ($side_rail) { echo industriesalon_render_editorial_project_rail($rail['rail_section'] ?? [], $rail['nav_items'] ?? []); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- The shared renderer escapes its values.
             } ?>
-            <div class="iss-project-stage__content"><?php the_content(); ?></div>
+            <div class="iss-project-stage__content"><?php echo do_blocks('<!-- wp:post-content /-->'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Native content block includes the shared report connections and editorial renderer. ?></div>
         </div>
     <?php endwhile; ?>
 </main>
