@@ -396,6 +396,13 @@ function iss_payments_lite_send_request_notification(int $request_id, string $re
         '',
         admin_url('tools.php?page=iss-payments-lite-requests&request_id=' . $request_id),
     ];
+    if ($request_kind === 'booking') {
+        array_splice($lines, 4, 0, [
+            'Regulär: ' . (string) ($entry['regular_tickets'] ?? $entry['tickets'] ?? 0),
+            'Ermäßigt: ' . (string) ($entry['reduced_tickets'] ?? 0),
+            'Gesamtpreis: ' . number_format_i18n((int) ($entry['amount_cents'] ?? 0) / 100, 2) . ' €',
+        ]);
+    }
 
     $sent = wp_mail($email, $subject, implode("\n", $lines));
     iss_payments_lite_record_notification_result($request_id, (bool) $sent, $sent ? '' : 'wp_mail returned false');
@@ -439,6 +446,23 @@ function iss_payments_lite_create_request(WP_REST_Request $request) {
     return iss_payments_lite_process_request_payload($payload, $request);
 }
 
+/** A reduced count is a subset of the total seat count, including on retries. */
+function iss_payments_lite_booking_ticket_counts(array $payload): array {
+    $counts = [];
+    foreach (['tickets', 'reduced_tickets'] as $key) {
+        $value = array_key_exists($key, $payload) ? $payload[$key] : 0;
+        if ((!is_int($value) && !is_string($value)) || !preg_match('/^(0|[1-9][0-9]*)$/D', (string) $value)
+            || filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 0, 'max_range' => 2147483647]]) === false) {
+            throw new InvalidArgumentException('Bitte eine ganze, nicht negative Ticketanzahl angeben.');
+        }
+        $counts[$key] = (int) $value;
+    }
+    if ($counts['tickets'] < 1 || $counts['reduced_tickets'] > $counts['tickets']) {
+        throw new InvalidArgumentException('Bitte mindestens 1 Ticket wählen; ermäßigte Tickets sind Teil der Gesamtanzahl.');
+    }
+    return $counts;
+}
+
 /** The fingerprint describes customer intent, excluding mutable prices, titles and transport metadata. */
 function iss_payments_lite_request_identity(string $kind, array $payload): array {
     $key = $payload['request_key'] ?? '';
@@ -456,6 +480,13 @@ function iss_payments_lite_request_identity(string $kind, array $payload): array
         'slot_id' => $kind === 'booking' ? trim(sanitize_text_field($payload['slot_id'] ?? '')) : '',
         'start' => $kind === 'inquiry' ? sanitize_text_field($payload['start'] ?? '') : '',
     ];
+    if ($kind === 'booking') {
+        $counts = iss_payments_lite_booking_ticket_counts($payload);
+        // Preserve fingerprints of already committed regular-only requests.
+        if ($counts['reduced_tickets'] > 0) {
+            $intent['reduced_tickets'] = $counts['reduced_tickets'];
+        }
+    }
     return ['key' => $key !== '' ? hash('sha256', $key) : null, 'fingerprint' => hash('sha256', (string) wp_json_encode($intent)), 'kind' => $kind];
 }
 
@@ -561,7 +592,10 @@ function iss_payments_lite_store_request(string $kind, array $entry, array $payl
 function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_Request $request): WP_REST_Response {
     $name = sanitize_text_field($payload['name'] ?? '');
     $email = sanitize_email($payload['email'] ?? '');
-    $tickets = isset($payload['tickets']) ? (int) $payload['tickets'] : 0;
+    $counts = iss_payments_lite_booking_ticket_counts($payload);
+    $tickets = $counts['tickets'];
+    $reduced_tickets = $counts['reduced_tickets'];
+    $regular_tickets = $tickets - $reduced_tickets;
     $slot_id = isset($payload['slot_id']) ? trim((string) $payload['slot_id']) : '';
     $payment = sanitize_text_field($payload['payment'] ?? '');
 
@@ -571,6 +605,7 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
     $source_post_id = isset($payload['source_post_id']) ? (int) $payload['source_post_id'] : 0;
     $source_post_type = sanitize_key($payload['source_post_type'] ?? '');
     $price_cents = 0;
+    $reduced_price_cents = 0;
 
     $tag = $payload_tag;
     if ($source_post_id <= 0 || !in_array($source_post_type, ['fuehrung', 'veranstaltung'], true) || get_post_type($source_post_id) !== $source_post_type || !is_post_publicly_viewable($source_post_id) || get_post_field('post_password', $source_post_id) !== '') {
@@ -584,6 +619,10 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
         $price_cents = max(0, (int) get_post_meta($source_post_id, 'iss_booking_price_cents', true));
     } elseif ($source_post_type === 'fuehrung') {
         $price_cents = max(0, (int) get_post_meta($source_post_id, 'booking_price_cents', true));
+        $reduced_price_cents = max(0, (int) get_post_meta($source_post_id, 'booking_reduced_price_cents', true));
+    }
+    if ($reduced_tickets > 0 && ($reduced_price_cents <= 0 || $reduced_price_cents >= $price_cents)) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Für dieses Angebot sind keine ermäßigten Tickets verfügbar. Bitte die Seite neu laden.'], 400);
     }
     if ($title === '') {
         $title = get_the_title($source_post_id);
@@ -645,7 +684,7 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
                 $errors[] = 'Für diese Anzahl sind nicht genügend Plätze verfügbar.';
             }
             $start = (string) $found['start'];
-            $title = get_the_title($source_post_id);
+            $title = trim((string) ($found['title'] ?? '')) ?: get_the_title($source_post_id);
         } else {
             $errors[] = 'Ungültiger Slot.';
         }
@@ -667,6 +706,8 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
         'name' => $name,
         'email' => $email,
         'tickets' => $tickets,
+        'regular_tickets' => $regular_tickets,
+        'reduced_tickets' => $reduced_tickets,
         'slot_id' => $slot_id,
         'payment' => $payment,
         'tag' => $tag,
@@ -675,7 +716,8 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
         'source_post_id' => $source_post_id,
         'source_post_type' => $source_post_type,
         'price_cents' => $price_cents,
-        'amount_cents' => $price_cents * $tickets,
+        'reduced_price_cents' => $reduced_tickets > 0 ? $reduced_price_cents : 0,
+        'amount_cents' => $price_cents * $regular_tickets + $reduced_price_cents * $reduced_tickets,
         'duplicate_hash' => $duplicate_hash,
         'ip' => isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) $_SERVER['REMOTE_ADDR']) : '',
         'ua' => isset($_SERVER['HTTP_USER_AGENT']) ? sanitize_text_field((string) $_SERVER['HTTP_USER_AGENT']) : '',

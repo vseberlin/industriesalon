@@ -26,6 +26,7 @@ function iss_fuehrungen_render_meta_box($post) {
         'target_group'  => __('Zielgruppe', 'iss-fuehrungen'),
         'price_note'    => __('Preishinweis', 'iss-fuehrungen'),
         'booking_price_cents' => __('Buchungspreis in Euro', 'iss-fuehrungen'),
+        'booking_reduced_price_cents' => __('Ermäßigter Buchungspreis in Euro', 'iss-fuehrungen'),
         'booking_note'  => __('Buchungshinweis', 'iss-fuehrungen'),
         'booking_mode'  => __('Buchungsmodus', 'iss-fuehrungen'),
         'allow_on_demand_with_calendar' => __('Anfrage zusätzlich erlauben', 'iss-fuehrungen'),
@@ -57,10 +58,14 @@ function iss_fuehrungen_render_meta_box($post) {
                 printf('<option value="%s" %s>%s</option>', esc_attr($option_value), selected($mode, $option_value, false), esc_html($option_label));
             }
             echo '</select>';
-        } elseif ($key === 'booking_price_cents') {
+        } elseif (in_array($key, ['booking_price_cents', 'booking_reduced_price_cents'], true)) {
             $price_cents = max(0, (int) $value);
             $price_display = $price_cents > 0 ? number_format($price_cents / 100, 2, ',', '') : '';
-            echo '<input class="widefat" type="text" inputmode="decimal" id="iss_' . esc_attr($key) . '" name="iss_fuehrung_booking_price_display" value="' . esc_attr($price_display) . '" placeholder="12,00">';
+            $field_name = $key === 'booking_price_cents' ? 'iss_fuehrung_booking_price_display' : 'iss_fuehrung_booking_reduced_price_display';
+            echo '<input class="widefat" type="text" inputmode="decimal" id="iss_' . esc_attr($key) . '" name="' . esc_attr($field_name) . '" value="' . esc_attr($price_display) . '">';
+            if ($key === 'booking_reduced_price_cents') {
+                echo '<span class="description">' . esc_html__('Leer oder 0: keine ermäßigten Tickets. Der ermäßigte Preis muss unter dem regulären Preis liegen.', 'iss-fuehrungen') . '</span>';
+            }
         } elseif ($key === 'allow_on_demand_with_calendar') {
             echo '<label><input type="checkbox" name="iss_fuehrung[' . esc_attr($key) . ']" value="1" ' . checked(!empty($value), true, false) . '> ' . esc_html__('Ja', 'iss-fuehrungen') . '</label>';
         } elseif ($key === 'offer_catalog_groups') {
@@ -128,6 +133,9 @@ add_action('save_post_' . ISS_FUEHRUNGEN_POST_TYPE, function ($post_id) {
     $fields = iss_fuehrungen_meta_fields();
     $raw['booking_price_cents'] = isset($_POST['iss_fuehrung_booking_price_display'])
         ? iss_fuehrungen_parse_price_to_cents(wp_unslash((string) $_POST['iss_fuehrung_booking_price_display']))
+        : 0;
+    $raw['booking_reduced_price_cents'] = isset($_POST['iss_fuehrung_booking_reduced_price_display'])
+        ? iss_fuehrungen_parse_price_to_cents(wp_unslash((string) $_POST['iss_fuehrung_booking_reduced_price_display']))
         : 0;
     delete_post_meta($post_id, 'inquiry_url');
 

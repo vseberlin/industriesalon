@@ -4,10 +4,15 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Continue the [website correction plan](docs/project/website-correction-plan-2026-10-20.md#umsetzung--programm-und-erstes-korrekturpaket)
+  with visitor information (remaining F04), then the next agreed text/visual slice.
+  Keep separate public/group offers, confirmed €14/€10 fares, individual-calendar
+  exclusions and the dated Behrensbau interior-closure notice. See the current
+  handoff for release evidence; private data artifacts never go to GitHub.
 - Review the local Futura/Zukunft im Gespräch pages and their shared JSON editors.
   Preserve ZiG's private draft recovery state (19 October, 12:56); complete the
   interactive user-draft save and Firefox checks. See [current handoff](handoff_CURRENT.md)
-  for the local commit and private content dependencies; staging is unchanged.
+  for the released code and private content dependencies.
 - Complete human and cross-browser UAT for the
   [JSON editor audit](docs/project/json-editor-audit-2026-10-16.md) and
   [gesture-treatment consolidation](docs/project/gesture-treatment-consolidation-plan.md#implementation-receipt):

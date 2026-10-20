@@ -487,7 +487,12 @@ function iss_occurrences_booking_inquiry_allowed(int $source_post_id, string $so
         return !empty(get_post_meta($source_post_id, 'iss_booking_enabled', true));
     }
 
-    return in_array($source_post_type, ['fuehrung', 'ausstellung'], true);
+    if ($source_post_type === 'fuehrung') {
+        return function_exists('iss_fuehrung_get_effective_booking_mode')
+            && in_array(iss_fuehrung_get_effective_booking_mode($source_post_id), ['on_demand', 'hybrid'], true);
+    }
+
+    return $source_post_type === 'ausstellung';
 }
 
 /**
@@ -596,6 +601,11 @@ function iss_occurrences_get_booking_slots(array $args = []): array {
 
             if ($price_cents > 0) {
                 $slot['amount'] = $price_cents;
+            }
+            $reduced_price_cents = $slot_source_post_type === 'fuehrung'
+                ? max(0, (int) get_post_meta($slot_source_post_id, 'booking_reduced_price_cents', true)) : 0;
+            if ($reduced_price_cents > 0 && $reduced_price_cents < $price_cents) {
+                $slot['reduced_amount'] = $reduced_price_cents;
             }
             if ($cta_label !== '') {
                 $slot['label'] = $cta_label;

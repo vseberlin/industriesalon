@@ -2098,6 +2098,9 @@ final class ISS_Occurrences_Service
         }
 
         $title = $source_post_id > 0 ? trim((string) get_the_title($source_post_id)) : '';
+        if ($source_post_type === 'fuehrung' && ($row['origin'] ?? '') === 'supersaas' && trim((string) ($row['title'] ?? '')) !== '') {
+            $title = trim((string) $row['title']);
+        }
         if ($title === '') {
             $title = isset($row['title']) ? trim((string) $row['title']) : '';
         }

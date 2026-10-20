@@ -1279,7 +1279,7 @@ function industriesalon_render_front_newsletter_slot(): string
         </div>
         <div class="iss-newsletter-band__side">
             <div class="iss-newsletter-band__support">
-                <p class="iss-newsletter-band__support-title"><?php esc_html_e('Wir bedanken uns herzlich für die Unterstützung durch den', 'industriesalon'); ?></p>
+                <p class="iss-newsletter-band__support-title"><?php esc_html_e('Wir danken unseren Förderern und Partnern.', 'industriesalon'); ?></p>
                 <figure class="iss-newsletter-band__logo"><?php echo wp_get_attachment_image(25727, 'full', false, ['loading' => 'lazy']); ?></figure>
             </div>
         </div>
@@ -1438,7 +1438,7 @@ function industriesalon_render_team_directory_slot(): string
             <?php
             $post_id = (int) get_the_ID();
             $role_label = trim((string) get_post_meta($post_id, 'iss_role_label', true));
-            $excerpt = trim((string) get_the_excerpt($post_id));
+            $excerpt = trim((string) get_post_field('post_excerpt', $post_id, 'raw'));
             ?>
             <article class="iss-card iss-team-card iss-team-directory__card" role="listitem">
                 <?php if (has_post_thumbnail($post_id)) : ?>
@@ -1447,7 +1447,7 @@ function industriesalon_render_team_directory_slot(): string
                 <div class="iss-card__body iss-team-card__body">
                     <?php if ($role_label !== '') : ?><p class="iss-kicker iss-card__kicker iss-team-card__kicker"><?php echo esc_html($role_label); ?></p><?php endif; ?>
                     <h3 class="iss-card__title iss-team-card__title"><a href="<?php echo esc_url(get_permalink($post_id)); ?>"><?php echo esc_html(get_the_title($post_id)); ?></a></h3>
-                    <?php if ($excerpt !== '') : ?><p class="iss-card__text iss-team-card__text"><?php echo esc_html(wp_trim_words($excerpt, 24, '')); ?></p><?php endif; ?>
+                    <?php if ($excerpt !== '') : ?><p class="iss-card__text iss-team-card__text"><?php echo esc_html($excerpt); ?></p><?php endif; ?>
                     <p class="iss-card__footer"><a class="iss-card__link" href="<?php echo esc_url(get_permalink($post_id)); ?>"><?php esc_html_e('Profil', 'industriesalon'); ?></a></p>
                 </div>
             </article>

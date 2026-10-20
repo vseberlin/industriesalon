@@ -454,6 +454,24 @@ Online settlement is not implied by a stored request row; supported payment
 methods default to onsite/request capture until a provider integration is
 explicitly added.
 
+Tour ticket rates use `iss-content` metadata: `booking_price_cents` and optional
+`booking_reduced_price_cents` (0 disables the reduced rate; a positive rate must
+be below the regular rate). Availability exposes these as `amount` and, when
+valid, `reduced_amount`. Booking intake keeps `tickets` as the total seat count
+and accepts `reduced_tickets` as a subset, defaulting to 0 for existing clients.
+Commerce validates both counts and calculates prices from the source metadata.
+The existing request payload records regular/reduced counts and unit prices;
+`quantity` remains the total and `amount_cents` the combined price. Staff views,
+notifications and appended CSV columns carry the breakdown. Nonzero reduced
+counts enter the retry fingerprint; regular-only fingerprints remain compatible.
+No request-table schema change is required.
+
+For SuperSaaS tour occurrences, the appointment title is preserved separately
+from the matched editorial series. Public formatting and request storage use
+that appointment label; an ignored series must not be rematched automatically.
+Individual slot exclusions use the existing owner review state and retain raw
+source rows. No upstream appointment is deleted by this review.
+
 ## Rules
 
 - Use `WP_Query` for ordinary public post loops and editor-authored content lists.

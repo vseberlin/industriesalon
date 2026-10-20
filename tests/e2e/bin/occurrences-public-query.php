@@ -8,7 +8,7 @@ $expect = static function (bool $ok, string $label) use (&$checks): void { ++$ch
 $expect(defined('DISABLE_WP_CRON') && DISABLE_WP_CRON && !wp_using_ext_object_cache(), 'Cron disabled and caches process-local');
 $owner = iss_occurrences_get_service();
 $table = $owner->get_occurrences_table_name();
-$tables = [$wpdb->posts, $wpdb->postmeta, $table];
+$tables = [$wpdb->posts, $wpdb->postmeta, $table, $owner->get_series_table_name(), $owner->get_supersaas_slots_table_name(), $wpdb->options];
 $checksum = static fn($name) => $wpdb->get_row("CHECKSUM TABLE `$name`", ARRAY_N)[1];
 $before = array_map($checksum, $tables);
 $schemas = [];
@@ -19,6 +19,7 @@ $expect((int) $wpdb->get_var($wpdb->prepare("SELECT COUNT(*) FROM {$wpdb->posts}
 $created = []; $error = null; $user = get_current_user_id();
 $now = '2026-10-25 23:59:59';
 $clock = static function () use (&$now): string { return $now; };
+$http = null;
 add_filter('iss_occurrences_query_now', $clock, 99);
 try {
     foreach ($schemas as $name => $schema) { $expect($wpdb->query($schema) !== false, 'Create temporary schema'); $created[] = $name; }
@@ -54,8 +55,38 @@ try {
     $expect(iss_timeline_rest_render_collection($request)->get_data()['count'] === 0, 'Same request rotates at next Berlin midnight');
     $now = '2026-10-25 12:00:00';
     $expect(iss_timeline_rest_render_collection($request)->get_data()['count'] === 1, 'Earlier authorized clock result cannot be poisoned by later render');
+    // Run the real sync using isolated owner tables and a mandatory HTTP stub.
+    $tour_id = $base + 10;
+    $post = array_merge($template, ['ID' => $tour_id, 'post_type' => 'fuehrung', 'post_status' => 'publish', 'post_password' => '', 'post_title' => 'Fixture Tour', 'post_name' => 'fixture-tour', 'post_content' => '', 'post_excerpt' => '']);
+    $expect($wpdb->insert($wpdb->posts, $post) === 1, 'Seed public tour');
+    wp_cache_flush();
+    update_option('timezone_string', 'Europe/Berlin');
+    update_option(ISS_SUPERSAAS_SETTINGS_OPTION, ['account_name' => 'fixture', 'api_key' => 'fixture', 'base_url' => 'https://example.invalid', 'schedule_id' => '123', 'schedule_path' => 'public']);
+    $owner->upsert_series(['series_key' => 'tour:fixture-tour', 'source_post_id' => $tour_id, 'source_post_type' => 'fuehrung', 'supersaas_title' => 'Fixture Tour', 'review_state' => 'mapped']);
+    $owner->upsert_series(['series_key' => 'tour:fixture-tour-individuell', 'supersaas_title' => 'Fixture Tour individuell', 'review_state' => 'ignored']);
+    $start = gmdate('Y-m-d', time() + DAY_IN_SECONDS) . ' 14:00:00';
+    $end = gmdate('Y-m-d', time() + DAY_IN_SECONDS) . ' 15:30:00';
+    $http = static function ($pre, $args, $url) use ($expect, $start, $end): array {
+        $expect(str_starts_with($url, 'https://example.invalid/api/free/123.json'), 'All upstream calls intercepted at fixture endpoint');
+        return ['headers' => [], 'body' => wp_json_encode(['slots' => [
+            ['id' => 'special', 'title' => 'Fixture Tour Spezial', 'start' => $start, 'finish' => $end, 'capacity' => 10, 'count' => 4],
+            ['id' => 'individual', 'title' => 'Fixture Tour individuell', 'start' => $start, 'finish' => $end, 'capacity' => 10, 'count' => 7],
+        ]]), 'response' => ['code' => 200, 'message' => 'OK'], 'cookies' => []];
+    };
+    add_filter('pre_http_request', $http, PHP_INT_MAX, 3);
+    for ($repeat = 0; $repeat < 2; ++$repeat) {
+        $result = iss_supersaas_sync_occurrences();
+        $expect($result['errors'] === 0, 'Isolated sync succeeds');
+        $special = $owner->get_occurrence_by_external('supersaas', 'public:special');
+        $expect($special && (int) $special['source_post_id'] === $tour_id && $special['title'] === 'Fixture Tour Spezial', 'Series matching preserves appointment title');
+        $display = $owner->format_timeline_row($special);
+        $expect($display['title'] === 'Fixture Tour Spezial' && $display['time_label'] === '14:00 – 15:30 Uhr', 'Public special label and actual duration survive formatting');
+        $expect(!$owner->get_occurrence_by_external('supersaas', 'public:individual')
+            && $owner->get_series_by_key('tour:fixture-tour-individuell')['review_state'] === 'ignored', 'Ignored individual series cannot rematch to regular public tour');
+    }
 } catch (Throwable $caught) { $error = $caught; }
 finally {
+    if ($http) { remove_filter('pre_http_request', $http, PHP_INT_MAX); }
     remove_filter('iss_occurrences_query_now', $clock, 99); wp_set_current_user($user);
     foreach (array_reverse($created) as $name) { $wpdb->query("DROP TEMPORARY TABLE `$name`"); }
     for ($index = 0; $index < 9; ++$index) { wp_cache_delete($base + $index, 'posts'); wp_cache_delete($base + $index, 'post_meta'); }

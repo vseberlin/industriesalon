@@ -12,6 +12,7 @@ const bookable = (slot) => !!slot && !['cancelled', 'unavailable', 'sold_out'].i
 const dateLabel = (slot) => slot.date_label || new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${dayOf(slot)}T12:00:00Z`));
 const timeLabel = (slot) => slot.time_label || `${String(slot.start || '').slice(11, 16)}${slot.end ? ` – ${String(slot.end).slice(11, 16)}` : ''} Uhr`;
 const unavailableLabel = (slot) => slot.availability_state === 'cancelled' ? 'abgesagt' : slot.available != null && Number(slot.available) <= 0 || slot.availability_state === 'sold_out' ? 'ausgebucht' : 'nicht verfügbar';
+const price = cents => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(cents / 100);
 
 // Day-only arithmetic deliberately stays in UTC; the occurrence owner supplies
 // Berlin dates and the server supplies "today", independently of browser zone.
@@ -54,8 +55,8 @@ const { state, actions } = store('iss/booking', {
     catalog: {}, source: null, slots: [], day: '', slotId: '', intent: 'booking',
     open: false, loading: false, failed: false, submitting: false, submitted: false,
     inquiryAllowed: false, status: '', requestKey: '', loadedAt: 0,
-    customerName: '', email: '', preferredDate: '', preferredTime: '', quantity: 1,
-    get title() { return state.source?.title || 'Anfrage'; },
+    customerName: '', email: '', preferredDate: '', preferredTime: '', quantity: 1, reducedQuantity: 0,
+    get title() { return state.selectedSlot?.title || state.source?.title || 'Anfrage'; },
     get selectedSlot() { return state.slots.find((slot) => String(slot.id) === state.slotId && dayOf(slot) === state.day); },
     get isInquiry() { return state.intent === 'inquiry'; },
     get needsQuantity() { return !state.isInquiry; },
@@ -70,12 +71,28 @@ const { state, actions } = store('iss/booking', {
     get hideRetry() { return !state.failed; },
     get hideInquirySwitch() { return !state.inquiryAllowed; },
     get fieldsDisabled() { return state.loading || state.submitting || state.submitted; },
-    get submitDisabled() { return state.fieldsDisabled || (state.intent === 'booking' && !bookable(state.selectedSlot)) || (state.isInquiry && !state.inquiryAllowed); },
-    get quantityLabel() { return state.intent === 'order' ? 'Exemplare' : 'Tickets'; },
+    get submitDisabled() { return state.fieldsDisabled || !!state.quantityError || (state.intent === 'booking' && !bookable(state.selectedSlot)) || (state.isInquiry && !state.inquiryAllowed); },
+    get hasReducedTickets() { return state.intent === 'booking' && Number(state.selectedSlot?.reduced_amount) > 0 && Number(state.selectedSlot.reduced_amount) < Number(state.selectedSlot.amount); },
+    get hideReducedTickets() { return !state.hasReducedTickets; },
+    get reducedDisabled() { return state.fieldsDisabled || !state.hasReducedTickets; },
+    get quantityLabel() { return state.hasReducedTickets ? `Regulär (${price(state.selectedSlot.amount)})` : state.intent === 'order' ? 'Exemplare' : 'Tickets'; },
+    get reducedQuantityLabel() { return state.hasReducedTickets ? `Ermäßigt (${price(state.selectedSlot.reduced_amount)})` : 'Ermäßigt'; },
+    get minQuantity() { return state.hasReducedTickets ? 0 : 1; },
     get maxQuantity() { return state.intent === 'order' ? 99 : Math.max(1, Math.min(8, state.selectedSlot?.available ?? 8)); },
+    get totalQuantity() { return Number(state.quantity) + (state.hasReducedTickets ? Number(state.reducedQuantity) : 0); },
+    get quantityError() {
+      if (state.isInquiry || state.choosingDate) return '';
+      if (String(state.quantity).trim() === '' || !Number.isInteger(Number(state.quantity)) || Number(state.quantity) < state.minQuantity
+        || (state.hasReducedTickets && (String(state.reducedQuantity).trim() === '' || !Number.isInteger(Number(state.reducedQuantity)) || Number(state.reducedQuantity) < 0))) return 'Bitte eine ganze Anzahl angeben.';
+      if (state.totalQuantity < 1) return 'Bitte mindestens 1 Ticket wählen.';
+      if (state.totalQuantity > state.maxQuantity) return `Bitte insgesamt höchstens ${state.maxQuantity} ${state.intent === 'order' ? 'Exemplare' : 'Tickets'} wählen.`;
+      return '';
+    },
     get priceLabel() {
-      const cents = Number(state.selectedSlot?.amount ?? state.source?.amount ?? 0) * Number(state.quantity || 1);
-      return cents > 0 ? `${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(cents / 100)} · Zahlung vor Ort` : 'Keine Online-Zahlung';
+      if (state.quantityError) return '';
+      const unit = Number(state.selectedSlot?.amount ?? state.source?.amount ?? 0);
+      const cents = unit * Number(state.quantity) + (state.hasReducedTickets ? Number(state.selectedSlot.reduced_amount) * Number(state.reducedQuantity) : 0);
+      return cents > 0 ? `${price(cents)} · Zahlung vor Ort` : 'Keine Online-Zahlung';
     },
     picker: { month: '', focusDay: '' },
     get selectedDateLabel() { return state.day ? new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${state.day}T12:00:00Z`)) : 'Bitte einen verfügbaren Tag wählen.'; },
@@ -122,7 +139,7 @@ const { state, actions } = store('iss/booking', {
     get times() {
       return state.slots.filter((slot) => dayOf(slot) === state.day).map((slot) => ({
         ...slot, disabled: !bookable(slot),
-        displayLabel: `${timeLabel(slot)}${bookable(slot) ? '' : ` · ${unavailableLabel(slot)}`}`,
+        displayLabel: `${timeLabel(slot)}${slot.title && slot.title !== state.source?.title ? ` · ${slot.title}` : ''}${bookable(slot) ? '' : ` · ${unavailableLabel(slot)}`}`,
       }));
     },
   },
@@ -154,7 +171,7 @@ const { state, actions } = store('iss/booking', {
         open: true, loading: false, failed: false, submitting: false, submitted: false,
         inquiryAllowed: false, status: '',
         requestKey: Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join(''),
-        loadedAt: Math.floor(Date.now() / 1000), customerName: '', email: '', preferredDate: '', preferredTime: '', quantity: 1,
+        loadedAt: Math.floor(Date.now() / 1000), customerName: '', email: '', preferredDate: '', preferredTime: '', quantity: 1, reducedQuantity: 0,
       });
       if (!host.open) host.showModal();
       if (state.intent !== 'order') yield actions.loadSlots();
@@ -189,7 +206,7 @@ const { state, actions } = store('iss/booking', {
         context.calendar.day = day.value;
         yield actions.openSource({ ...context.source, day: day.value, slotId: '' }, getElement().ref);
       } else {
-        state.day = day.value; state.slotId = ''; state.quantity = 1;
+        state.day = day.value; state.slotId = ''; state.quantity = 1; state.reducedQuantity = 0;
       }
     },
     focusCalendarDay() { picker().focusDay = getContext().cell.value; },
@@ -223,7 +240,7 @@ const { state, actions } = store('iss/booking', {
       const slot = getContext().slot;
       if (!bookable(slot)) return;
       const trigger = getElement().ref;
-      state.slotId = String(slot.id); state.quantity = 1; state.status = '';
+      state.slotId = String(slot.id); state.quantity = 1; state.reducedQuantity = 0; state.status = '';
       yield new Promise(resolve => requestAnimationFrame(resolve));
       if (document.activeElement === trigger || document.activeElement === document.body) dialog().querySelector('[name="name"]')?.focus();
     },
@@ -243,7 +260,7 @@ const { state, actions } = store('iss/booking', {
     },
     input() {
       const { ref } = getElement();
-      const property = { name: 'customerName', email: 'email', preferred_date: 'preferredDate', preferred_time: 'preferredTime', quantity: 'quantity' }[ref.name];
+      const property = { name: 'customerName', email: 'email', preferred_date: 'preferredDate', preferred_time: 'preferredTime', quantity: 'quantity', reduced_quantity: 'reducedQuantity' }[ref.name];
       if (property) state[property] = ref.value;
     },
     close() { dialog()?.close(); },
@@ -260,7 +277,8 @@ const { state, actions } = store('iss/booking', {
       const payload = {
         intent: state.intent, source_post_id: source.id, source_post_type: source.type,
         tag: source.tag, title: source.title, name: values.name, email: values.email,
-        tickets: Number(values.quantity || 1), quantity: Number(values.quantity || 1), payment: 'onsite',
+        tickets: state.totalQuantity, quantity: state.totalQuantity,
+        reduced_tickets: state.hasReducedTickets ? Number(state.reducedQuantity) : 0, payment: 'onsite',
         slot_id: slot?.id || '', start: state.isInquiry ? `${values.preferred_date}${values.preferred_time ? `T${values.preferred_time}:00` : ''}` : slot?.start || '',
         website: values.website || '', loaded_at: state.loadedAt, request_key: state.requestKey,
       };

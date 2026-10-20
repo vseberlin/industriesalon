@@ -166,7 +166,7 @@ function iss_fuehrung_render_booking_box($post_id) {
                 : '';
 
             // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Attribute string is built from escaped values above.
-            echo '<a class="' . esc_attr($button_classes) . '" href="' . esc_url($booking_url) . '"' . $button_attrs . '>Buchen</a>';
+            echo '<a class="' . esc_attr($button_classes) . '" href="' . esc_url($booking_url) . '"' . $button_attrs . '>' . esc_html__('Termine und Verfügbarkeit', 'iss-fuehrungen') . '</a>';
         }
         if ($mode === 'hybrid') {
             // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Helper returns fully escaped inquiry trigger markup.

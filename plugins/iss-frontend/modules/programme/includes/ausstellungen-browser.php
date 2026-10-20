@@ -4,7 +4,7 @@ if (!defined('ABSPATH')) exit;
 function iss_programm_ausstellungen_filter_options(): array
 {
     return [
-        'aktuell' => __('Aktuell', 'iss-programm'),
+        'aktuell' => __('Aktuell im Haus', 'iss-programm'),
         'dauer' => __('Dauer', 'iss-programm'),
         'digital' => __('Digital', 'iss-programm'),
         'archiv' => __('Archiv', 'iss-programm'),
@@ -105,6 +105,11 @@ function iss_programm_ausstellungen_period_meta_query(string $filter): array
         'relation' => 'AND',
         [
             'key' => 'iss_start_date',
+            'value' => '',
+            'compare' => '!=',
+        ],
+        [
+            'key' => 'iss_start_date',
             'value' => $today,
             'compare' => '<=',
             'type' => 'DATE',
@@ -175,14 +180,11 @@ function iss_programm_ausstellungen_query_args(string $filter, int $limit, strin
         return $args;
     }
 
-    if ($filter === 'archiv') {
-        $args['meta_query'][] = iss_programm_ausstellungen_period_meta_query('archiv');
-        $tax = iss_programm_ausstellungen_type_tax_query([$dauer_slug, $digital_slug], 'NOT IN');
-        if (!empty($tax)) {
-            // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Archive excludes availability-oriented Ausstellung types on the editor-owned taxonomy.
-            $args['tax_query'] = [$tax];
-        }
-        return $args;
+    $args['meta_query'][] = iss_programm_ausstellungen_period_meta_query($filter);
+    $tax = iss_programm_ausstellungen_type_tax_query([$dauer_slug, $digital_slug], 'NOT IN');
+    if (!empty($tax)) {
+        // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query -- Current and past temporary exhibitions have separate permanent/digital tabs.
+        $args['tax_query'] = [$tax];
     }
 
     return $args;
@@ -197,10 +199,6 @@ function iss_programm_get_ausstellungen_for_filter(string $filter, int $limit, s
     $posts = array_values(array_filter($query->posts, static function ($post): bool {
         return $post instanceof WP_Post;
     }));
-
-    if ($filter === 'aktuell') {
-        $posts = array_values(array_filter($posts, 'iss_programm_ausstellung_is_currently_available'));
-    }
 
     $posts = iss_programm_ausstellungen_apply_availability_editorial_signals($posts);
     return array_slice($posts, 0, $limit);
@@ -292,24 +290,6 @@ function iss_programm_ausstellungen_get_type_slugs(int $post_id): array
     return array_values(array_unique(array_filter(array_map(static function ($slug): string {
         return sanitize_title((string) $slug);
     }, (array) $type_slugs))));
-}
-
-function iss_programm_ausstellung_is_currently_available(WP_Post $post): bool
-{
-    $post_id = (int) $post->ID;
-    if (iss_programm_ausstellung_has_type($post_id, ['dauerausstellung', 'digitaleausstellungen'])) {
-        return true;
-    }
-
-    $today = iss_programm_ausstellungen_today();
-    $start = trim((string) get_post_meta($post_id, 'iss_start_date', true));
-    $end = trim((string) get_post_meta($post_id, 'iss_end_date', true));
-
-    if ($start === '' || $start > $today) {
-        return false;
-    }
-
-    return $end === '' || $end >= $today;
 }
 
 function iss_programm_ausstellungen_get_period_label(int $post_id): string

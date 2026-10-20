@@ -61,6 +61,7 @@ foreach ($items as $row) {
 $expect($illustrated !== null, 'Local programme includes an illustrated item');
 $card = industriesalon_programme_entry($illustrated, 'feature-compact', $now);
 $expect(str_contains($card, '<img') && str_contains($card, 'loading="lazy"') && str_contains($card, '<h3'), 'Compact feature uses the existing image and section heading level');
+$expect(str_contains($card, 'Unser Tipp') && !str_contains($card, 'Als Nächstes'), 'Homepage feature does not claim to precede earlier tours in the adjacent list');
 $original = industriesalon_programme_entry($illustrated, 'feature', $now);
 $expect(str_contains($original, 'fetchpriority="high"') && str_contains($original, '<h2'), 'Existing programme opening retains its image loading and heading behavior');
 $before = $live['feature'];

@@ -1234,6 +1234,9 @@ function iss_supersaas_sync_occurrences() {
         if ($clean_title === '') {
             $clean_title = trim((string) $raw_title);
         }
+        // Keep the appointment's public title even when its source is matched
+        // to a broader tour series below.
+        $appointment_title = $clean_title;
         $series_kind = $slot_source_type === 'range' ? 'event' : 'tour';
         $series_key = ($clean_title !== '' && function_exists('iss_occurrences_build_series_key'))
             ? iss_occurrences_build_series_key($clean_title, $series_kind)
@@ -1241,7 +1244,8 @@ function iss_supersaas_sync_occurrences() {
         $series_entry = ($series_key !== '' && isset($series_sources[$series_key]) && is_array($series_sources[$series_key]))
             ? $series_sources[$series_key]
             : [];
-        if ($slot_source_type === 'free' && ($clean_title === '' || empty($series_entry['source_post_id']))) {
+        if ($slot_source_type === 'free' && ($series_entry['review_state'] ?? '') !== 'ignored'
+            && ($clean_title === '' || empty($series_entry['source_post_id']))) {
             $matched_series = iss_supersaas_match_mapped_series_from_slot_text($slot, $series_sources);
             if (!empty($matched_series)) {
                 $matched_series_key = isset($matched_series['series_key'])
@@ -1565,7 +1569,7 @@ function iss_supersaas_sync_occurrences() {
             'source_post_id' => $source_post_id,
             'source_post_type' => 'fuehrung',
             'kind' => 'tour',
-            'title' => $clean_title !== '' ? wp_strip_all_tags($clean_title) : trim((string) $raw_title),
+            'title' => wp_strip_all_tags($appointment_title !== '' ? $appointment_title : $clean_title),
             'starts_at' => $start,
             'ends_at' => $end,
             'date_source' => 'supersaas',

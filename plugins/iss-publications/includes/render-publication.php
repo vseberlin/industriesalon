@@ -122,7 +122,7 @@ function iss_publications_get_card_kicker($post_id) {
         iss_publications_get_year_label($post_id),
     ];
 
-    return implode(' / ', array_filter($items));
+    return implode(' / ', array_unique(array_filter($items)));
 }
 
 function iss_publications_get_card_meta_items($post_id) {

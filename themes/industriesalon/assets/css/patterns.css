@@ -627,7 +627,6 @@
    --iss-hero-pad-bottom
    --iss-hero-left-pad
    --iss-hero-right-pad
-   --iss-banner-shift-x
    --iss-banner-shift-y
    --iss-banner-width
    ========================================================= */
@@ -656,7 +655,6 @@
   --iss-hero-left-pad: max(var(--iss-container-pad), calc((100vw - var(--iss-content-width)) / 2 + var(--iss-container-pad)));
   --iss-banner-width: 23rem;
   --iss-hero-right-pad: clamp(0.75rem, 2.2vw, 2.25rem);
-  --iss-banner-shift-x: 250px;
   --iss-banner-shift-y: 90px;
   position: relative;
   min-height: var(--iss-hero-min-h);
@@ -1170,7 +1168,7 @@
   max-width: var(--iss-banner-width);
   grid-column: 2;
   justify-self: end;
-  transform: translateX(var(--iss-banner-shift-x)) translateY(var(--iss-banner-shift-y));
+  transform: translateY(var(--iss-banner-shift-y));
   z-index: 5;
 }
 

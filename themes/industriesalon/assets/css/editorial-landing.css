@@ -509,6 +509,7 @@
 }
 
 .iss-landing-gateway__media {
+  position: relative;
   aspect-ratio: 16 / 10;
   overflow: hidden;
   background: color-mix(in srgb, var(--iss-landing-ink) 7%, transparent);

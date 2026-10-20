@@ -70,7 +70,7 @@
       maxBoundsViscosity: 1,
       markerZoomAnimation: false,
       minZoom: -5,
-      scrollWheelZoom: !preview,
+      scrollWheelZoom: false,
       tap: false,
       touchZoom: !preview,
       wheelPxPerZoomLevel: 240,

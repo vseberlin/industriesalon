@@ -68,6 +68,11 @@ function iss_fuehrungen_meta_fields() {
             'sanitize' => 'absint',
             'default' => 0,
         ],
+        'booking_reduced_price_cents' => [
+            'type' => 'integer',
+            'sanitize' => 'absint',
+            'default' => 0,
+        ],
         'booking_note' => [
             'type' => 'string',
             'sanitize' => 'sanitize_textarea_field',

@@ -579,7 +579,7 @@ function industriesalon_programme_entry(array $row, string $variant, string $now
         $html .= '<p class="iss-card__kicker"><a href="' . esc_url(get_permalink($project)) . '">' . esc_html($project->post_title) . '</a></p>';
     }
     if ($is_feature) {
-        $labels = ['next' => __('Als Nächstes', 'industriesalon'), 'focus' => __('Im Fokus', 'industriesalon'), 'current' => __('Jetzt zu erleben', 'industriesalon')];
+        $labels = ['next' => $variant === 'feature-compact' ? __('Unser Tipp', 'industriesalon') : __('Als Nächstes', 'industriesalon'), 'focus' => __('Im Fokus', 'industriesalon'), 'current' => __('Jetzt zu erleben', 'industriesalon')];
         $html .= '<p class="iss-card__kicker">' . esc_html($labels[$row['feature_label'] ?? 'next']) . '</p>';
     }
     if ($variant !== 'row') {

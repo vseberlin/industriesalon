@@ -1246,8 +1246,9 @@ function iss_relations_get_card_detail_line(WP_Post $post): string
 
     if (function_exists('iss_fuehrung_get_next_event')) {
         $next_event = iss_fuehrung_get_next_event((int) $post->ID);
-        if ($next_event instanceof WP_Post && function_exists('iss_fuehrung_get_event_start_label')) {
-            return __('Nächster Termin:', 'iss-relations') . ' ' . iss_fuehrung_get_event_start_label((int) $next_event->ID);
+        if (function_exists('iss_fuehrung_is_calendar_event') && iss_fuehrung_is_calendar_event($next_event)
+            && function_exists('iss_fuehrung_get_event_start_label')) {
+            return __('Nächster Termin:', 'iss-relations') . ' ' . iss_fuehrung_get_event_start_label($next_event);
         }
     }
 

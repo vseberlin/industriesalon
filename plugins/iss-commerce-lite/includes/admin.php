@@ -240,8 +240,9 @@ function iss_payments_lite_admin_export_csv(): void
         exit;
     }
 
-    fputcsv($out, ['id', 'request_kind', 'status', 'created_at', 'customer_name', 'customer_email', 'item_label', 'quantity', 'amount_cents', 'payment_method', 'slot_id', 'tag', 'source_post_id', 'source_post_type', 'ip_address', 'notified_at', 'notification_error']);
+    fputcsv($out, ['id', 'request_kind', 'status', 'created_at', 'customer_name', 'customer_email', 'item_label', 'quantity', 'amount_cents', 'payment_method', 'slot_id', 'tag', 'source_post_id', 'source_post_type', 'ip_address', 'notified_at', 'notification_error', 'regular_tickets', 'reduced_tickets', 'price_cents', 'reduced_price_cents']);
     foreach ($result['rows'] as $row) {
+        $payload = json_decode((string) ($row['payload'] ?? ''), true);
         fputcsv($out, [
             (int) ($row['id'] ?? 0),
             (string) ($row['request_kind'] ?? ''),
@@ -260,6 +261,10 @@ function iss_payments_lite_admin_export_csv(): void
             (string) ($row['ip_address'] ?? ''),
             (string) ($row['notified_at'] ?? ''),
             (string) ($row['notification_error'] ?? ''),
+            $payload['regular_tickets'] ?? '',
+            $payload['reduced_tickets'] ?? '',
+            $payload['price_cents'] ?? '',
+            $payload['reduced_price_cents'] ?? '',
         ]);
     }
 
@@ -415,7 +420,20 @@ function iss_payments_lite_render_requests_page(): void
                                     <pre style="white-space: pre-wrap;"><?php echo esc_html((string) ($row['payload'] ?? '')); ?></pre>
                                 </details>
                             </td>
-                            <td><?php echo esc_html((string) (int) ($row['quantity'] ?? 0)); ?></td>
+                            <td>
+                                <?php
+                                echo esc_html((string) (int) ($row['quantity'] ?? 0));
+                                $payload = json_decode((string) ($row['payload'] ?? ''), true);
+                                if (isset($payload['regular_tickets'], $payload['reduced_tickets'])) {
+                                    echo '<br><small>' . esc_html(sprintf(
+                                        /* translators: 1: regular tickets, 2: reduced tickets. */
+                                        __('%1$d regulär / %2$d ermäßigt', 'iss-payments-lite'),
+                                        (int) $payload['regular_tickets'],
+                                        (int) $payload['reduced_tickets']
+                                    )) . '<br>' . esc_html(number_format_i18n((int) ($row['amount_cents'] ?? 0) / 100, 2) . ' €') . '</small>';
+                                }
+                                ?>
+                            </td>
                             <td>
                                 <?php
                                 $notified_at = (string) ($row['notified_at'] ?? '');
