@@ -624,7 +624,7 @@ function iss_programm_render_ausstellungen_cards(array $posts, array $opts): str
         if (has_post_thumbnail($post_id)) {
             $out .= '<figure class="iss-card__media iss-timeline-card__media">';
             if ($permalink !== '') {
-                $out .= '<a href="' . esc_url($permalink) . '">';
+                $out .= '<a href="' . esc_url($permalink) . '" aria-label="' . esc_attr(get_the_title($post_id)) . '">';
             }
             $out .= get_the_post_thumbnail($post_id, 'large');
             if ($permalink !== '') {
@@ -681,7 +681,7 @@ function iss_programm_render_ausstellungen_filter_nav(string $active_filter, str
         if ($filter === $active_filter) {
             $classes .= ' is-active';
         }
-        $out .= '<a class="' . esc_attr($classes) . '" href="' . esc_url($url) . '" aria-pressed="' . esc_attr($filter === $active_filter ? 'true' : 'false') . '" data-ausstellungen-filter="' . esc_attr($filter) . '">' . esc_html($label) . '</a>';
+        $out .= '<a class="' . esc_attr($classes) . '" href="' . esc_url($url) . '" aria-current="' . esc_attr($filter === $active_filter ? 'page' : 'false') . '" data-ausstellungen-filter="' . esc_attr($filter) . '">' . esc_html($label) . '</a>';
     }
     $out .= '</nav>';
 

@@ -633,9 +633,6 @@ function industriesalon_render_editorial_landing_gallery(array $section, int $re
     if ($items_html === '' && $copy_html === '') { return ''; }
 
     $layout = industriesalon_editorial_landing_gallery_layout($section);
-    if ($layout === 'sequence' && function_exists('iss_relations_enqueue_related_strip_script')) {
-        iss_relations_enqueue_related_strip_script();
-    }
 
     ob_start();
     ?>
@@ -643,12 +640,8 @@ function industriesalon_render_editorial_landing_gallery(array $section, int $re
         <div class="iss-container iss-landing-section__inner iss-landing-gallery">
             <?php echo $copy_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Copy output is escaped in helper. ?>
             <?php if ($layout === 'sequence') : ?>
-                <div class="iss-related-feed__carousel iss-landing-gallery__carousel" data-iss-strip-carousel>
-                    <div class="iss-related-feed__carousel-controls" aria-label="<?php esc_attr_e('Galerie-Steuerung', 'industriesalon'); ?>">
-                        <button type="button" class="iss-related-feed__carousel-control iss-related-feed__carousel-control--prev" data-iss-strip-carousel-prev aria-label="<?php esc_attr_e('Vorherige Bilder', 'industriesalon'); ?>" disabled><span class="iss-related-feed__carousel-control-icon" aria-hidden="true"></span><span class="iss-related-feed__carousel-control-text"><?php esc_html_e('Zurück', 'industriesalon'); ?></span></button>
-                        <button type="button" class="iss-related-feed__carousel-control iss-related-feed__carousel-control--next" data-iss-strip-carousel-next aria-label="<?php esc_attr_e('Nächste Bilder', 'industriesalon'); ?>" disabled><span class="iss-related-feed__carousel-control-text"><?php esc_html_e('Weiter', 'industriesalon'); ?></span><span class="iss-related-feed__carousel-control-icon" aria-hidden="true"></span></button>
-                    </div>
-                    <div class="iss-landing-gallery__track" data-iss-strip-carousel-track><?php echo $items_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Gallery items escape their content. ?></div>
+                <div class="iss-landing-gallery__carousel">
+                    <div class="iss-landing-gallery__track" tabindex="0" role="region" aria-label="<?php echo esc_attr((string) ($section['title'] ?? __('Bildergalerie', 'industriesalon'))); ?>"><?php echo $items_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Gallery items escape their content. ?></div>
                 </div>
             <?php else : ?>
                 <div class="iss-landing-gallery__track"><?php echo $items_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Gallery items escape their content. ?></div>
@@ -1275,7 +1268,7 @@ function industriesalon_render_front_newsletter_slot(): string
                 <p class="iss-heading__text iss-newsletter-band__lead"><?php esc_html_e('Erhalten Sie Hinweise zu Veranstaltungen, Ausstellungen, Führungen und Neuigkeiten aus dem Industriesalon Schöneweide direkt per E-Mail.', 'industriesalon'); ?></p>
             </div>
             <div class="iss-newsletter-band__formwrap"><?php echo do_blocks('<!-- wp:iss/newsletter-form /-->'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Registered newsletter block owns its public markup. ?></div>
-            <p class="iss-newsletter-band__note has-small-font-size"><?php echo wp_kses_post('Ich möchte aktuelle Infos aus dem Industriesalon erhalten und mich für den Newsletter anmelden. Eine Abmeldung ist jederzeit möglich. Mit der Eingabe meiner E-Mail-Adresse erkläre ich mich mit der <a href="/verein/#datenschutz">Datenschutzerklärung</a> einverstanden.'); ?></p>
+            <p class="iss-newsletter-band__note has-small-font-size"><?php echo wp_kses_post('Eine Abmeldung ist jederzeit über den Link in jedem Newsletter möglich.'); ?></p>
         </div>
         <div class="iss-newsletter-band__side">
             <div class="iss-newsletter-band__support">
@@ -1303,7 +1296,7 @@ function industriesalon_render_fuehrungen_offer_card(int $post_id, string $group
     }
 
     $state = iss_fuehrung_get_offer_catalog_item_state($post_id, $group_key);
-    $badge = trim((string) get_post_meta($post_id, 'tour_badge', true));
+    $badge = $group_key === 'gruppen' ? __('Gruppenführung auf Anfrage', 'industriesalon') : __('Öffentliche Führung', 'industriesalon');
     $excerpt = trim((string) get_post_field('post_excerpt', $post_id, 'raw'));
     $meta = function_exists('iss_fuehrung_get_card_meta') ? iss_fuehrung_get_card_meta($post_id) : [];
     $action = $state['primary_action'];
@@ -1315,12 +1308,6 @@ function industriesalon_render_fuehrungen_offer_card(int $post_id, string $group
             'intent' => 'inquiry',
         ]))
         : '';
-
-    if ($badge === '') {
-        $badge = $group_key === 'gruppen'
-            ? __('Gruppenführung', 'industriesalon')
-            : __('Öffentliche Führung', 'industriesalon');
-    }
 
     $summary = array_slice(array_values(array_filter(array_map('trim', (array) $meta))), 0, 2);
     if (!empty($state['value'])) {
@@ -1336,7 +1323,7 @@ function industriesalon_render_fuehrungen_offer_card(int $post_id, string $group
     ?>
     <article class="iss-card iss-fuehrungen-catalog__card" role="listitem">
         <?php if (has_post_thumbnail($post_id)) : ?>
-            <figure class="iss-card__media"><a href="<?php echo esc_url(get_permalink($post_id)); ?>"><?php echo get_the_post_thumbnail($post_id, 'large'); ?></a></figure>
+            <figure class="iss-card__media"><a href="<?php echo esc_url(get_permalink($post_id)); ?>" aria-label="<?php echo esc_attr(get_the_title($post_id)); ?>"><?php echo get_the_post_thumbnail($post_id, 'large'); ?></a></figure>
         <?php endif; ?>
         <div class="iss-card__body">
             <p class="iss-card__kicker iss-kicker"><?php echo esc_html($badge); ?></p>
@@ -1442,7 +1429,7 @@ function industriesalon_render_team_directory_slot(): string
             ?>
             <article class="iss-card iss-team-card iss-team-directory__card" role="listitem">
                 <?php if (has_post_thumbnail($post_id)) : ?>
-                    <figure class="iss-card__media iss-team-card__media"><a href="<?php echo esc_url(get_permalink($post_id)); ?>"><?php echo get_the_post_thumbnail($post_id, 'medium_large'); ?></a></figure>
+                    <figure class="iss-card__media iss-team-card__media"><a href="<?php echo esc_url(get_permalink($post_id)); ?>" aria-label="<?php echo esc_attr(get_the_title($post_id)); ?>"><?php echo get_the_post_thumbnail($post_id, 'medium_large'); ?></a></figure>
                 <?php endif; ?>
                 <div class="iss-card__body iss-team-card__body">
                     <?php if ($role_label !== '') : ?><p class="iss-kicker iss-card__kicker iss-team-card__kicker"><?php echo esc_html($role_label); ?></p><?php endif; ?>

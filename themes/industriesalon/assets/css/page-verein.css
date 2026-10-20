@@ -235,6 +235,7 @@
 
 .iss-verein-panel {
   height: 100%;
+  overflow-wrap: anywhere;
   padding: 1.4rem 1.45rem;
   border: 1px solid var(--iss-border);
   border-radius: var(--iss-radius-sm);

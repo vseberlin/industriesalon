@@ -66,6 +66,7 @@
   font-size: 1rem;
   line-height: 1.25;
   color: var(--iss-tl-muted);
+  white-space: nowrap;
 }
 
 .iss-timeline__kicker {
@@ -352,7 +353,7 @@
 }
 
 .iss-timeline-query__controls--calendar .iss-timeline__filter-label {
-  color: var(--iss-surface-subtle);
+  color: var(--iss-surface-muted);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.08em;

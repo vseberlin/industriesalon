@@ -417,7 +417,7 @@
 
 .iss-publications-browser__section-index,
 .iss-publications-browser__section-count {
-  color: rgba(30, 30, 30, 0.52);
+  color: var(--iss-surface-muted);
   font-size: 0.86rem;
   line-height: 1.4;
 }

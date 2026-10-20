@@ -205,7 +205,8 @@
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(30, 30, 30, 0.55);
+
+  color: var(--iss-surface-muted);
 }
 
 /* .iss-archive-entry__title: Element class for `iss-archive-entry`; apply on `title` element. */
@@ -1010,6 +1011,7 @@
 
 .iss-archive-browser__sidebar {
   position: sticky;
+
   top: calc(var(--iss-header-height, var(--iss-site-header-compact-height, 4.5rem)) + 1rem);
   align-self: start;
   min-width: 0;
@@ -1019,14 +1021,10 @@
   display: grid;
   gap: 1.25rem;
   min-width: 0;
-  max-height: calc(100vh - var(--iss-header-height, var(--iss-site-header-compact-height, 4.5rem)) - 1.5rem);
-  overflow: auto;
   padding: 1rem;
   border: 1px solid var(--iss-archive-rail-border);
   background: var(--iss-archive-rail-bg);
   color: var(--iss-archive-rail-text);
-  scrollbar-width: thin;
-  scrollbar-color: rgba(244, 241, 237, 0.28) transparent;
 }
 
 .iss-archive-browser__filters .iss-heading__title {
@@ -1223,8 +1221,10 @@
   --iss-card-border: var(--iss-archive-rail-border);
   --iss-card-border-hover: rgba(var(--iss-accent-rgb), 0.42);
   --iss-card-media-bg: var(--iss-archive-rail-panel);
-  --iss-link-fg: var(--iss-red);
-  --iss-link-hover-fg: var(--iss-red);
+
+  --iss-link-fg: var(--iss-white);
+
+  --iss-link-hover-fg: var(--iss-white);
 
   color: var(--iss-archive-rail-text);
 }

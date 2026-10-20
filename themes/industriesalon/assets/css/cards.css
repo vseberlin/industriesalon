@@ -114,8 +114,8 @@
   --iss-card-border: rgba(30, 30, 30, 0.12);
   --iss-card-border-hover: rgba(30, 30, 30, 0.22);
   --iss-card-radius: var(--iss-radius-sm);
-  --iss-card-rail-width: 2px;
-  --iss-card-rail-width-hover: 3px;
+  --iss-card-rail-width: 0;
+  --iss-card-rail-width-hover: 0;
   --iss-card-body-gap: 0.55rem;
   --iss-card-title-size: clamp(0.98rem, 0.94rem + 0.22vw, 1.12rem);
   --iss-card-title-line: 1.14;
@@ -182,12 +182,18 @@
 }
 
 /* .iss-card__body: Element class for `iss-card`; apply on `body` element. */
-.iss-card__body {
+.iss-card > .iss-card__body {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   gap: var(--iss-card-body-gap, 0.7rem);
   padding: 0.9rem 0.9rem 0.95rem;
+  margin: 0;
+}
+
+/* Card rhythm owns native Gutenberg flow spacing inside the body. */
+.iss-card__body > * {
+  margin-block: 0;
 }
 
 /* .iss-card__kicker: Element class for `iss-card`; apply on `kicker` element. */
@@ -308,26 +314,26 @@
   font-size: 0.88rem;
 }
 
-/* Soft thematic variants */
+/* Compatibility aliases for saved thematic cards: public accents use signal red. */
 /* .iss-card--green: Modifier class for `iss-card`; combine for `green` variant. */
 .iss-card--green {
-  --iss-card-accent: var(--iss-green);
-  --iss-link-hover-fg: var(--iss-green);
+  --iss-card-accent: var(--iss-red);
+  --iss-link-hover-fg: var(--iss-red);
 }
 /* .iss-card--blue: Modifier class for `iss-card`; combine for `blue` variant. */
 .iss-card--blue {
-  --iss-card-accent: var(--iss-blue);
-  --iss-link-hover-fg: var(--iss-blue);
+  --iss-card-accent: var(--iss-red);
+  --iss-link-hover-fg: var(--iss-red);
 }
 /* .iss-card--yellow: Modifier class for `iss-card`; combine for `yellow` variant. */
 .iss-card--yellow {
-  --iss-card-accent: var(--iss-yellow);
-  --iss-link-hover-fg: var(--iss-yellow);
+  --iss-card-accent: var(--iss-red);
+  --iss-link-hover-fg: var(--iss-red);
 }
 /* .iss-card--brown: Modifier class for `iss-card`; combine for `brown` variant. */
 .iss-card--brown {
-  --iss-card-accent: var(--iss-brown);
-  --iss-link-hover-fg: var(--iss-brown);
+  --iss-card-accent: var(--iss-red);
+  --iss-link-hover-fg: var(--iss-red);
 }
 
 /* Outline mode for dense grids */
@@ -352,23 +358,23 @@
   background: transparent;
 }
 
-/* Shared wrapper variant for exhibition/editorial brown card runs. */
+/* Shared exhibition/editorial card treatment. */
 .iss-card-skin--exhibition .iss-card {
-  --iss-card-border: rgba(117, 58, 24, 0.18);
-  --iss-card-border-hover: rgba(117, 58, 24, 0.32);
+  --iss-card-border: var(--iss-border);
+  --iss-card-border-hover: var(--iss-border-strong);
   --iss-card-radius: 2px;
 }
 
 .iss-card-skin--exhibition .iss-timeline-card__kicker,
 .iss-card-skin--exhibition .iss-card__meta {
-  color: rgba(117, 58, 24, 0.92);
+  color: var(--iss-black);
 }
 
 .iss-card-skin--exhibition .iss-card__title a:hover,
 .iss-card-skin--exhibition .iss-card__title a:focus-visible,
 .iss-card-skin--exhibition .iss-card__link:hover,
 .iss-card-skin--exhibition .iss-card__link:focus-visible {
-  color: var(--iss-brown);
+  color: var(--iss-red);
 }
 
 /* Responsive */
@@ -950,7 +956,7 @@
 
 .iss-archive-card--hausarchiv .iss-archive-card__type {
   background: rgba(117, 58, 24, 0.12);
-  color: var(--iss-brown);
+  color: var(--iss-red);
 }
 
 /* Selected-grid family.
@@ -1203,7 +1209,7 @@
 /* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
 /* .iss-team-card__kicker: Element class for `iss-team-card`; apply on `kicker` element. */
 .iss-team-card .iss-team-card__kicker {
-  color: rgba(30, 30, 30, 0.56);
+  color: var(--iss-surface-muted);
 }
 
 /* .iss-team-card: Base class for iss team card; apply on primary wrapper/scope. */
@@ -1507,13 +1513,13 @@
 /* .iss-media-card--red: Modifier class for `iss-media-card`; combine for `red` variant. */
 .iss-media-card--red    { --iss-media-card-rail-color: var(--iss-red); }
 /* .iss-media-card--green: Modifier class for `iss-media-card`; combine for `green` variant. */
-.iss-media-card--green  { --iss-media-card-rail-color: var(--iss-green); }
+.iss-media-card--green  { --iss-media-card-rail-color: var(--iss-red); }
 /* .iss-media-card--blue: Modifier class for `iss-media-card`; combine for `blue` variant. */
-.iss-media-card--blue   { --iss-media-card-rail-color: var(--iss-blue); }
+.iss-media-card--blue   { --iss-media-card-rail-color: var(--iss-red); }
 /* .iss-media-card--yellow: Modifier class for `iss-media-card`; combine for `yellow` variant. */
-.iss-media-card--yellow { --iss-media-card-rail-color: var(--iss-yellow); }
+.iss-media-card--yellow { --iss-media-card-rail-color: var(--iss-red); }
 /* .iss-media-card--brown: Modifier class for `iss-media-card`; combine for `brown` variant. */
-.iss-media-card--brown  { --iss-media-card-rail-color: var(--iss-brown); }
+.iss-media-card--brown  { --iss-media-card-rail-color: var(--iss-red); }
 /* .iss-media-card--grey: Modifier class for `iss-media-card`; combine for `grey` variant. */
 .iss-media-card--grey   { --iss-media-card-rail-color: var(--iss-grey); }
 
@@ -1925,7 +1931,8 @@
 
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-  background: var(--iss-accent-soft);
+
+  background: var(--iss-surface-paper);
 }
 
 .iss-card--programme-feature .iss-card__media {
@@ -1957,8 +1964,9 @@
   --iss-card-title-size: clamp(1.5rem, 2vw, 2rem);
   --iss-card-accent: var(--iss-accent);
 
-  background: var(--iss-accent-soft);
-  border-top: 3px solid var(--iss-accent);
+  background: var(--iss-surface-paper);
+
+  border-top: 1px solid var(--iss-card-border);
 }
 
 .iss-card--programme-feature-compact .iss-card__media {

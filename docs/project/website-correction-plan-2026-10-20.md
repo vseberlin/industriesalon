@@ -6,76 +6,74 @@ Stand 20. Oktober 2026. Zusammenführung der beiden Websiteaudits mit Gegenprüf
 
 Der Plan umfasst Texte, Bilder und Gestaltung sowie funktionale und datenbezogene Fehler. Er beschreibt die nächsten Korrekturen; er erteilt keine Freigabe für ungeprüfte Sachangaben oder eine vollständige Neugestaltung.
 
-## Abschluss des Korrekturpakets — 20. Oktober 2026
+## Aktueller Umsetzungsstand — 20. Oktober 2026
 
-Die umsetzbaren Korrekturen aus beiden Audits sind lokal und auf Staging veröffentlicht
-(Implementierung `dbbe547`, Kalenderhinweis `f700a36`). Der aktuelle
-Veröffentlichungs- und Prüfstand steht im [Handoff](../../handoff_CURRENT.md).
-Die unten erhaltenen Auditbefunde beschreiben den Ausgangszustand, keine neue offene Arbeitsliste.
+Die frühere pauschale Aussage, alle Code- und Inhaltskorrekturen seien abgeschlossen,
+war zu weit gefasst. Das vom Nutzer anschließend benannte Restpaket ist jetzt lokal
+umgesetzt und geprüft; Veröffentlichung und Staging-Abnahme folgen über den bestehenden
+Git-Austauschweg. Der verbindliche Release-Stand steht im [Handoff](../../handoff_CURRENT.md).
+Die weiter unten erhaltenen Auditbefunde beschreiben den Ausgangszustand.
 
-| Bereich | Ergebnis |
+| Angefragtes Restpaket | Korrektur |
 | --- | --- |
-| F01–F05, T01 | Bereits veröffentlicht: Arbeitsnotizen entfernt, vollständige Team-/Fördertexte, getrennte öffentliche und Gruppenführungen, bestätigte Preise und Dauer, Behrensbauhinweis, zentrale Besucherinformationen und freier Eintritt. |
-| F06, T07 | Neutrale Projektbereiche statt falschem „kommend“; stabile Sortierung verhindert doppelte/fehlende Projekte. Futura bleibt ausdrücklich in Planung. KiezKarte behält die bestätigten Pilotbedingungen. Rückblickhandlung führt nur bei vorhandenem Bericht zum Rückblick, sonst zur Ankündigung. ZiG verwendet den aktuellen Newsletterzugang. |
-| F07, T02 | Atlas nennt die Epoche „Historische Perspektive“, erklärt deren Kontextfunktion und zeigt dafür keine irreführenden Trefferzahlen. Bekannte Akteursnamen werden ausgeschrieben. Öffentlicher Kioskknopf entfernt; bestehender Betriebsmodus bleibt erhalten. „Büros“, „Angebot“ und „Jahrzehnt“ ersetzen technische/uneinheitliche Labels. Der leere Trenner im Ortsnamen ist an der Quelle korrigiert. |
-| F08, V02 | Bestehende Bildkarten behalten ihre Zoomschaltflächen; das Scrollrad wird nicht abgefangen. Markerreihenfolge und Ziele stimmen mit den drei Ortskarten überein. Header wird beim Scrollen kompakt, berücksichtigt die Adminleiste und lädt nach Änderungen seine aktuelle Datei. Menüfokus und Escape wurden bedient. |
-| F09, T05 | Archiv beginnt mit Rechercheeinleitung und Suche. Zahlen beziehen sich ausdrücklich auf online veröffentlichte Objekte. Objektseiten zeigen vorhandene Datierung, Urheber, Inventarnummer, Material, Maße, Sammlung, Rechte, Originalnachweis und Serien-/Bestandsbezüge. Fehlende Fakten erzeugen keine erfundenen Werte. Bildvergrößerung verlinkt die bereits öffentliche Bilddatei. Zwölf Filteranzeigenamen korrigiert; IDs, Slugs und Mitgliedschaften erhalten. |
-| F10, V08 | Generische Social-Ziele entfernt; Footer nennt die Zieldomain. Newsletter hat eine sichtbare Beschriftung und „Ihre E-Mail-Adresse“; Einwilligung bleibt erforderlich. Newsletterausrichtung korrigiert. Bestehende Rechtsanker, Startseitenlink und Twinkl-Badge bleiben erhalten. |
-| F11, V05 | Technische Bildunterschriften auf der Schöneweideseite korrigiert; das tatsächlich passende Behrensbau-Eventfoto bleibt erhalten. VIDEO-Platzhalter durch vorhandenes WF-Motiv ersetzt. Leere Archivsuche meldet verständlich fehlende Treffer. Archiv-Bildlinks erhalten einen zugänglichen Namen. Weiße Beschriftung auf Markenrot erhöht den gemessenen Buttonkontrast von 4,31:1 auf 4,53:1. |
-| T03–T06, V03, V06 | Konkrete Besuchereinleitungen auf Startseite, Führungen, Kalender, Sammlung, Archiv und Ausstellungen. Ermäßigungsregeln folgen den Angeboten. Ausstellungen haben eine Filteroberfläche und einen Besuchskasten; wiederholte methodische Essays und die zweite Bildwand entfallen. Publikations-Leerraum reduziert, Absätze bleiben in den Erzählspalten zusammen. |
-| T08 | Gründung und Sammlungsrettung 2009 klar erzählt; Auszeichnung nennt Susanne Reumschüssel, Verdienstmedaille und 23.07.2019. Quellen sind in der Seite verlinkt. Das bereits korrigierte Triptychon bleibt erhalten. |
-| T09 | Raumangebot: 350 m² Fläche statt „Raumhöhe“, bis zu 100 Sitzplätze insgesamt, ab 400 €, Zeiten und Catering auf Anfrage. Keine erfundene Belegungszahl pro Teilraum; bestehende Anfragewege bleiben die Handlung. |
-| T10 | „Schöneweide zum Weiterlesen“ und „Schöneweide in Film und Ton“; Online-Lesen-Bezeichnungen, sachlicher Hinweis auf die unvollständige Röhren-Reihe, Name Winfried Müller aus vorhandenem Inhalt. Veröffentlichungsdatum der Quelle und historischer Zeitbezug getrennt, deutsches Datumsformat. |
-| V01, V04, V07 | Archiv-Kurznavigation, Projektüberschrift und Ermäßigungstitel an ihren Layoutverantwortlichen korrigiert. Zwölf Seiten bei 390/768/1348/1720 px ohne globalen Überlauf. Unterschiedliche Inhaltskarten, Papiergestaltung und bestehende Schriftrollen bewusst erhalten. Suche/Leerzustand, Atlas-Suche plus Epoche, Vollbildschalter und Menütastatur geprüft. |
+| Sammlungen | Konkrete Besuchersprache, benannte Linkziele, einheitliche Bildunterschriften und kürzere Erklärtexte. Drei Links auf den unveröffentlichten Frauen-Entwurf führen jetzt zur veröffentlichten Ausstellung „Frauen im Werk für Fernmeldewesen“. |
+| Führungen: Querverweise | „Nach der Führung geht es weiter“ mit verständlichen Angeboten für Film, Ausstellungen, Bücher, Veranstaltungen, Archiv und Ortskarte; kein Rückverweis auf die gleiche Führungsübersicht. Katalogkicker unterscheiden öffentliche Führung und Gruppenführung auf Anfrage. |
+| Kleine Sprachunterschiede | „Raum mieten“, eigenständige Hero-Kicker, verständliche Medienbeschriftungen, echte Pfeile, geschützte Einheiten und gleichartige Jahresangaben. |
+| Archivsprache und Filter | „Bereich“ und „Weiter entdecken“, konkrete Bereichsteaser mit tatsächlichen Objektzahlen; Kartenkicker nutzen den Bereich, nicht wechselnde Themen oder Quellennamen. Der Originalnachweis bleibt als Quellenangabe erhalten. |
+| Archivseitenleiste | Kein eigener innerer Scrollbereich; Filter und letzte Handlung sind mit Seitenscroll und Tastatur erreichbar. |
+| Gemeinsame Gestaltung | Serif für H1/H2, Sans für Lesetext und Bedienung; roter öffentlicher Akzent, neutrale Flächen und Haarlinien. Bestehende Farbklassen bleiben kompatibel, ohne konkurrierende Seitenfarben. Kleine rote Texte erhalten den kontraststärkeren Rotwert. Projektlogos behalten ihre eigenen Farben. |
+| Layout | Breitere Überschriften, geschlossene Textabsätze statt CSS-Zeitungsspalten, keine leere linke Schöneweide-Spalte, normale Bild-/Textabstände auf Karten. Ruhige Projektkarten ohne Rotation oder Stecknadeln. Galerien haben eine eindeutige Scrollbedienung. **Hero-Handlungen bleiben an ihrer bisherigen Position.** |
+| Startseite und Footer | Ein Brückensatz mit einer Handlung, ein Satz je Archivkachel, neutrale Programmkarte, eine notwendige Newsletter-Einwilligung, ausgerichtete Footerüberschriften, gleichmäßigere Partnerlogos; redundanter Startseitenlink entfernt. Futura-Logo und Projekttitel bleiben sichtbar. |
+| Periodisierung | Sechs gleich benannte Epochen auf Sammlungen, Schöneweide und im Atlas: Kaiserzeit 1880–1918; Weimarer Republik 1918–1933; NS-Zeit 1933–1945; Nachkriegszeit 1945–1949; DDR 1949–1990; Nach 1990. Vorhandene historische Ortsdaten, Zuordnungen und Legacy-IDs werden nicht umgeschrieben. |
+| Abnahmefehler | Bildlinks erhalten zugängliche Namen; Galerien sind fokussierbar; Filterlinks verwenden gültiges `aria-current`; schwache Beschriftungen werden kontrastreicher. Überlauf durch lange Unterschriftslinien auf der Vereinsseite behoben. |
+
+**Bereits veröffentlichte Pakete bleiben erhalten:** Programm- und Buchungszustände,
+öffentliche versus Gruppenführungen, Preise und Behrensbauhinweis; freier Museums-
+und Ausstellungseintritt; Projektstatus, Archivmetadaten und Bildvergrößerung;
+kompakter Scrollheader; laufende Ausstellung und ein Ausstellungsbrowser;
+Raumangebot und Repair-Café-Kalenderhinweis. Implementierung des vorigen Pakets:
+`dbbe547`, Kalenderhinweis `f700a36`, letzter Release-Checkpoint `56fba9a`.
 
 **Bestätigte Angaben:** Repair-Café am ersten und zweiten Mittwoch, kostenlos,
-vor allem Gegenstände in Haushaltsgröße, keine großen Maschinen; konkrete Zeiten
-und Ausnahmen kommen aus dem Kalender. Raumvermietung wie oben. KiezKarte: 49 €,
-20 Partnerangebote, gültig bis 31.12.2026. Der genaue Kiezfondsanteil bleibt fachlich
-offen; veröffentlicht bleibt die ausdrücklich bestätigte Aussage „ein Teil“.
-Keine automatische Verlängerung und keine erfundene Prozentzahl.
+Haushaltsgröße, keine großen Maschinen; Zeiten und Ausnahmen aus dem Kalender.
+Raumvermietung: insgesamt bis zu 100 Sitzplätze, ab 400 €, Zeiten und Catering
+auf Anfrage. KiezKarte: 49 €, 20 Partnerangebote, bis 31.12.2026; veröffentlichte
+Pilotbedingungen beibehalten. Der genaue Kiezfondsanteil bleibt unbestätigt.
 
-Gründung und Auszeichnung wurden mit den veröffentlichten Vereinsquellen
-[Gründungsgeschichte](https://www.industriesalon.de/industriesalon/verein/) und
-[Auszeichnungen](https://www.industriesalon.de/auszeichnungen/) abgeglichen.
+**Lokale Prüfung:** 34 neue + 42 + 42 bestehende Auditprüfungen und 27 Besuchsprüfungen;
+neun konsistente Registries, 191 gültige kanonische Dokumente, 184 vorhandene
+Medienreferenzen. Chrome und Firefox: 13 Hauptseiten bei 390/768/1348/1720 px ohne
+Seitenüberlauf. Firefox/axe: auf diesen Seiten keine automatisiert erkannten
+WCAG-A/AA-Verstöße. 53 interne Zielseiten und deren Sprungmarken erreichbar.
+Galerien, Menü mit Tab/Escape und Fokusrückgabe, Archivsuche/Leerzustand/Filter,
+Atlas-Suche mit Epoche sowie Vollbild/Rückkehr bedient. Newsletter lehnt ungültige
+Adresse und fehlende Einwilligung ab, ohne eine Anmeldung abzusenden.
+Über-uns-Editor lädt die gespeicherte Fassung sowie Desktop-/Telefonvorschau.
+Zusätzlich bestehen sechs exemplarische Detailseiten in Firefox dieselben Breiten-
+und axe-Prüfungen. Gezielte PHP-Syntax, PHPCS/PHPStan, ESLint/Stylelint und drei
+CSS-Vertragstests bestehen. Staging-Abnahme folgt im Release-Checkpoint.
 
-**Prüfung und Grenzen:** 42 neue, 42 bestehende Audit- und 27 Besuchsprüfungen
-bestehen lokal und auf Staging; neun Registries, 191 gültige Dokumente und 184 vorhandene
-Medienreferenzen. Syntax, gezieltes PHPCS/PHPStan, ESLint, Stylelint und drei
-CSS-Vertragstests bestehen. Die 24 bestehenden PHPCS-Meldungen in `videos.php`
-sind gegenüber dem Ausgangsstand unverändert; die kleine Labelkorrektur fügt
-keine hinzu. Chrome: vier Breiten, Menü mit Tab/Escape und zurückgegebenem Fokus,
-Archivsuche/Leerzustand und Atlas-Suche mit historischer Perspektive geprüft.
-Die reine 200%-Zoom-, echte Touch-, Firefox- und Screenreaderabnahme sowie
-redaktionelle Rechteprüfung aller Archivbilder sind damit nicht behauptet.
-Diese menschliche Freigabe bleibt vor einer Produktionsveröffentlichung nötig.
-Es wurden keine echten Formulare, E-Mails oder Buchungen ausgelöst.
+**Privater Datentransfer dieses Pakets:** `ops/migrations/2026-10-20-audit-polish.php`
+ändert genau vier vorhandene Landing-Dokumente über `iss-editorial`:
+Startseite, Führungen, Schöneweide, Über uns. Eingaben, Vorherstände und Prüfbelege
+liegen ausschließlich unter `var/audit-polish-20261020/`; Before-Image-Receipt:
+`iss_backup_20261020_audit_polish`. Staging-Backup:
+`/srv/industriesalon/stage/backups/iss-backup-20261020T144249Z/`
+(119 Tabellen, sieben gelesene/gehashte Sicherungsartefakte).
+Keine vollständige DB-Überschreibung, kein Schema- oder Uploadtransfer.
+Vorhandene Medien sind auf beiden Systemen vorhanden. SQL, Inhalts-JSON,
+Sicherungen und Medien gelangen nicht auf GitHub.
 
-**Privater Datentransfer:** `2026-10-20-audit-completion.php` mit
-`input-stage.json`, dann mit `place-input-stage.json` und `repair-input-stage.json`; anschließend
-`2026-10-20-archive-labels.php`. Vorherzustände und Eingaben liegen unter
-`var/audit-completion-20261020/`, Receipts in den vier nicht automatisch geladenen
-Optionen `iss_backup_20261020_audit_completion`,
-`iss_backup_20261020_audit_place_copy`, `iss_backup_20261020_audit_repair_notice`
-und `iss_backup_20261020_archive_labels`.
-Dreizehn Inhaltsdatensätze, zwei Einstellungen, zwei als Entwurf erhaltene
-Templateübersteuerungen und zwölf Anzeigenamen sind der gezielte Umfang.
-Native und zuständige Plugin-APIs bewahren private Entwürfe; keine vollständige
-Datenbanküberschreibung. Alle verwendeten Bilder existieren auf beiden Systemen;
-kein Upload- oder Schematransfer. GitHub erhält Code, Tests und Dokumentation,
-keine SQL-/Inhalts-/Medienartefakte.
-
-Staging: 21 öffentliche HTTP-Prüfungen einschließlich erwarteter 404 der internen
-Arbeitsnotiz und vorhandener Rechtsanker, 24 zusätzliche Breitenprüfungen ohne
-Überlauf/defekte geladene Bilder, 191 identische kanonische Dokumente nach
-URL-Normalisierung. Bildhashes und geschützte Home-/About-Templates stimmen.
-Die Eigentümer-API erzeugt beim korrigierten Ortsnamen neue Projektions-IDs und
-Zeitstempel; sämtliche 269 inhaltlichen Ortszustände stimmen mit der geprüften
-Sicherung überein. WordPress hat drei alte normale Revisionen des bearbeiteten
-Projekts Walk of Fame nach seiner Aufbewahrungsgrenze entfernt; sie bleiben in der Sicherung.
-Private Entwürfe und unbeteiligte Beiträge blieben unverändert. Repair-Café-Hinweis
-verweist jetzt ebenfalls auf den Kalender, ohne die veraltete Uhrzeit 17–20.
-
+**Verbleibende fachliche und menschliche Freigaben:** Für „Kinder mit Erzieherin
+am Sandkasten“ und „Kinder im Planschbecken, 1977“ sind Quellen verknüpft,
+aber keine Veröffentlichungsrechte im Datensatz erfasst; Bestätigung und
+anzuzeigender Nachweis sind angefragt. Nicht als erledigt gelten ein echter
+Screenreader-Durchgang, physischer Touchgerätetest und tatsächlicher Browserzoom
+auf 200 %. Die verfügbare Chrome-Steuerung änderte bei Zoomtasten die Zoomstufe
+nicht; schmale Viewports ersetzen diesen Test nicht. Automatische Prüfungen sind
+keine vollständige Barrierefreiheitszertifizierung. Produktion bleibt außerhalb
+dieses Staging-Releases; `noindex` bleibt erhalten. Keine echten Nachrichten,
+Newsletter-Anmeldungen, Buchungen oder Bestellungen ausgelöst.
 
 ## Bereits veröffentlichtes Programm- und Besuchspaket
 
@@ -316,4 +314,4 @@ Für spätere Releases gilt die bestehende [Git-Austauschfolge](../runbooks/git-
 6. **Formulare und Buchung:** Newsletter, Raumanfrage und öffentliche beziehungsweise Gruppenbuchung separat bis zum überprüfbaren Ergebnis testen. Dafür vorher Testdaten und einen Weg ohne echte Nachrichten oder Buchungen festlegen; reale Sendungen benötigen ausdrückliche Freigabe.
 7. **Release:** Änderungen nach der [Prüfmatrix](../agent/verification.md) kontrollieren, erforderliche Inhalte/Medien privat mitführen und auf Staging erneut prüfen. `noindex` des Stagings erhalten. HTTP 200 oder ein erfolgreicher Codecheck allein gilt nicht als gestalterische oder fachliche Abnahme.
 
-**Weitere fachliche Freigabe:** Den genauen Kiezfondsanteil ergänzen, sobald er bestätigt ist; die oben abgegrenzte menschliche Geräte-, Editor- und Rechteprüfung vor Produktion abschließen. Die Code- und Inhaltskorrekturen des Plans sind umgesetzt.
+**Weitere fachliche Freigabe:** Den genauen Kiezfondsanteil ergänzen, sobald er bestätigt ist; die oben abgegrenzte menschliche Geräte-, Editor- und Rechteprüfung vor Produktion abschließen. Die angefragten Restkorrekturen sind oben einzeln abgegrenzt; der Release- und Abnahmestand steht im Handoff.

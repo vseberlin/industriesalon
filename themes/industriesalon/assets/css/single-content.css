@@ -72,6 +72,8 @@
 }
 
 .single-archivobjekt .iss-post-intro__media {
+  --iss-link-fg: var(--iss-white);
+  --iss-link-hover-fg: var(--iss-white);
   --iss-media-card-bg: #11161c;
   --iss-media-card-border-width: 1px;
   --iss-media-card-rail-width: 0;

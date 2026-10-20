@@ -15,15 +15,15 @@
   --iss-dossier-visual-border-top: 0;
   --iss-dossier-visual-media-ratio: 1;
   --iss-dossier-visual-body-padding-top: 0.65rem;
-  --iss-dossier-visual-title-font-family: var(--wp--preset--font-family--plex, sans-serif);
-  --iss-dossier-visual-title-font-size: 0.7rem;
-  --iss-dossier-visual-title-transform: uppercase;
+  --iss-dossier-visual-title-font-family: var(--wp--preset--font-family--plex-serif, serif);
+  --iss-dossier-visual-title-font-size: 1.15rem;
+  --iss-dossier-visual-title-transform: none;
   --iss-dossier-visual-text-font-size: 0.88rem;
   --iss-dossier-visual-text-line-height: 1.33;
   --iss-landing-text-image-gap: clamp(0.9rem, 1.8vw, 1.25rem);
   --iss-landing-text-image-body-margin-top: 0.75rem;
   --iss-landing-text-image-body-border: 1px solid rgba(249, 249, 250, 0.16);
-  --iss-landing-text-image-title-spacing: 0.14em;
+  --iss-landing-text-image-title-spacing: 0;
   --iss-dossier-visual-surface: transparent;
 
   color: var(--iss-white);

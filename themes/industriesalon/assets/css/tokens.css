@@ -24,7 +24,7 @@
   --iss-yellow: var(--wp--preset--color--sunrise-yellow);
   --iss-brown: var(--wp--preset--color--russet-brown);
   --iss-accent: var(--iss-red);
-  --iss-accent-rgb: 232, 29, 37;
+  --iss-accent-rgb: 213, 27, 35;
   --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
   --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
 

@@ -533,7 +533,7 @@ function iss_timeline_render_items_cards($items, $opts = []) {
         if ($image !== '') {
             $out .= '<figure class="iss-card__media iss-timeline-card__media">';
             if ($permalink !== '') {
-                $out .= '<a href="' . esc_url($permalink) . '">';
+                $out .= '<a href="' . esc_url($permalink) . '" aria-label="' . esc_attr((string) ($row['title'] ?? '')) . '">';
             }
             $out .= $image;
             if ($permalink !== '') {
@@ -714,7 +714,7 @@ function iss_timeline_render_items_list($items, $opts = []) {
             if ($has_media) {
                 $out .= '<figure class="iss-timeline__media">';
                 if ($permalink !== '') {
-                    $out .= '<a href="' . esc_url($permalink) . '">';
+                    $out .= '<a href="' . esc_url($permalink) . '" aria-label="' . esc_attr((string) ($row['title'] ?? '')) . '">';
                 }
                 $out .= $image;
                 if ($permalink !== '') {

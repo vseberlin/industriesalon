@@ -975,17 +975,9 @@ function iss_wf_import_get_archive_object_browser_result_meta(int $post_id): arr
 
 function iss_wf_import_get_archive_object_browser_kicker(int $post_id): string
 {
-    $taxonomy_order = [
-        ISS_WF_IMPORT_FAMILY_TAXONOMY,
-        ISS_WF_IMPORT_FIELD_TAXONOMY,
-        ISS_WF_IMPORT_CONTEXT_TAXONOMY,
-    ];
-
-    foreach ($taxonomy_order as $taxonomy) {
-        $names = wp_get_post_terms($post_id, $taxonomy, ['fields' => 'names']);
-        if (is_array($names) && !empty($names[0]) && is_string($names[0])) {
-            return $names[0];
-        }
+    $names = wp_get_post_terms($post_id, ISS_WF_IMPORT_FAMILY_TAXONOMY, ['fields' => 'names']);
+    if (is_array($names) && !empty($names[0]) && is_string($names[0])) {
+        return $names[0];
     }
 
     return __('Archivobjekt', 'iss-wf-import');
@@ -1090,7 +1082,7 @@ function iss_wf_import_get_archive_object_feature_meta(int $post_id): array
 
     $family_names = wp_get_post_terms($post_id, ISS_WF_IMPORT_FAMILY_TAXONOMY, ['fields' => 'names']);
     if (is_array($family_names) && $family_names) {
-        $meta[__('Objektfamilie', 'iss-wf-import')] = implode(', ', array_slice(array_map('strval', $family_names), 0, 2));
+        $meta[__('Bereich', 'iss-wf-import')] = implode(', ', array_slice(array_map('strval', $family_names), 0, 2));
     }
 
     $projection = iss_wf_import_get_object_service()->ensure_projection_for_post($post_id);
@@ -1159,7 +1151,7 @@ function iss_wf_import_render_featured_archive_object(int $post_id, array $overr
     ob_start();
     ?>
     <article class="iss-archive-featured-object">
-        <a class="iss-media-card iss-media-card--cover iss-media-card--flat iss-archive-featured-object__media" href="<?php echo esc_url($permalink); ?>">
+        <a class="iss-media-card iss-media-card--cover iss-media-card--flat iss-archive-featured-object__media" href="<?php echo esc_url($permalink); ?>" aria-label="<?php echo esc_attr($title); ?>">
             <?php if (has_post_thumbnail($post_id)) : ?>
                 <?php echo get_the_post_thumbnail($post_id, 'large'); ?>
             <?php endif; ?>
@@ -1312,7 +1304,7 @@ function iss_wf_import_normalize_archive_object_browser_attributes(array $attrib
         'quickTitle' => sanitize_text_field((string) ($attributes['quickTitle'] ?? __('Nachweise und strukturierte Zugänge', 'iss-wf-import'))),
         'showSourceCards' => array_key_exists('showSourceCards', $attributes) ? !empty($attributes['showSourceCards']) : true,
         'quickFamilySlugs' => is_array($attributes['quickFamilySlugs'] ?? null) ? array_values(array_map('sanitize_title', (array) $attributes['quickFamilySlugs'])) : [],
-        'discoveryTitle' => sanitize_text_field((string) ($attributes['discoveryTitle'] ?? __('Weiterentdecken', 'iss-wf-import'))),
+        'discoveryTitle' => sanitize_text_field((string) ($attributes['discoveryTitle'] ?? __('Weiter entdecken', 'iss-wf-import'))),
         'discoveryLinks' => iss_wf_import_normalize_archive_object_browser_discovery_links($attributes['discoveryLinks'] ?? []),
         'useCurrentUrl' => !empty($attributes['useCurrentUrl']),
     ];
@@ -1544,9 +1536,9 @@ function iss_wf_import_render_archive_object_browser_markup(array $payload, arra
                             <?php endif; ?>
 
                             <label class="iss-archive-browser__field">
-                                <span><?php esc_html_e('Objektfamilie', 'iss-wf-import'); ?></span>
+                                <span><?php esc_html_e('Bereich', 'iss-wf-import'); ?></span>
                                 <select class="iss-archive-browser__select" name="familie">
-                                    <option value=""><?php esc_html_e('Alle Objektfamilien', 'iss-wf-import'); ?></option>
+                                    <option value=""><?php esc_html_e('Alle Bereiche', 'iss-wf-import'); ?></option>
                                     <?php foreach ($family_options as $term) : ?>
                                         <option value="<?php echo esc_attr($term->slug); ?>" <?php selected((string) ($state['family'] ?? ''), $term->slug); ?>><?php echo esc_html($term->name . ' (' . $term->count . ')'); ?></option>
                                     <?php endforeach; ?>
@@ -1592,8 +1584,8 @@ function iss_wf_import_render_archive_object_browser_markup(array $payload, arra
                         </form>
 
                         <?php if (!empty($config['discoveryLinks'])) : ?>
-                            <?php $discovery_title = trim((string) ($config['discoveryTitle'] ?? __('Weiterentdecken', 'iss-wf-import'))); ?>
-                            <nav class="iss-archive-browser__discovery" aria-label="<?php echo esc_attr($discovery_title !== '' ? $discovery_title : __('Weiterentdecken', 'iss-wf-import')); ?>">
+                            <?php $discovery_title = trim((string) ($config['discoveryTitle'] ?? __('Weiter entdecken', 'iss-wf-import'))); ?>
+                            <nav class="iss-archive-browser__discovery" aria-label="<?php echo esc_attr($discovery_title !== '' ? $discovery_title : __('Weiter entdecken', 'iss-wf-import')); ?>">
                                 <?php if ($discovery_title !== '') : ?>
                                     <h3 class="iss-archive-browser__discovery-title"><?php echo esc_html($discovery_title); ?></h3>
                                 <?php endif; ?>
@@ -1663,7 +1655,7 @@ function iss_wf_import_render_archive_object_browser_markup(array $payload, arra
                                 <p class="iss-archive-entry__eyebrow"><?php esc_html_e('Nachweis', 'iss-wf-import'); ?></p>
                                 <h3 class="iss-archive-entry__title"><?php echo esc_html(iss_wf_import_get_public_source_label($term->slug, $term->name)); ?></h3>
                                 <p class="iss-archive-entry__text"><?php esc_html_e('Archivobjekte mit diesem digitalen Nachweis direkt im lokalen Bestand durchsuchen.', 'iss-wf-import'); ?></p>
-                                <div class="iss-archive-entry__meta"><span><?php echo esc_html(sprintf(_n('%d Objekt', '%d Objekte', (int) $term->count, 'iss-wf-import'), (int) $term->count)); ?></span></div>
+                                <div class="iss-archive-entry__meta"><span><?php echo esc_html(sprintf(_n('%d Objekt ansehen', '%d Objekte ansehen', (int) $term->count, 'iss-wf-import'), (int) $term->count)); ?></span></div>
                             </a>
                         <?php endforeach; ?>
                     <?php endif; ?>
@@ -1678,10 +1670,19 @@ function iss_wf_import_render_archive_object_browser_markup(array $payload, arra
                             'search' => '',
                             'page' => 1,
                         ], true, $state, $base_url)); ?>">
-                            <p class="iss-archive-entry__eyebrow"><?php esc_html_e('Objektfamilie', 'iss-wf-import'); ?></p>
+                            <p class="iss-archive-entry__eyebrow"><?php esc_html_e('Bereich', 'iss-wf-import'); ?></p>
                             <h3 class="iss-archive-entry__title"><?php echo esc_html($term->name); ?></h3>
-                            <p class="iss-archive-entry__text"><?php esc_html_e('Alle veröffentlichten Objekte dieser Art ansehen.', 'iss-wf-import'); ?></p>
-                            <div class="iss-archive-entry__meta"><span><?php echo esc_html(sprintf(_n('%d Objekt', '%d Objekte', (int) $term->count, 'iss-wf-import'), (int) $term->count)); ?></span></div>
+                            <p class="iss-archive-entry__text"><?php
+                                echo esc_html(match ($term->slug) {
+                                    'geraet' => __('Geräte aus Entwicklung, Fertigung und Alltag der Werke.', 'iss-wf-import'),
+                                    'arbeitsplatz' => __('Werkbänke, Maschinen und die Menschen an ihrem Arbeitsplatz.', 'iss-wf-import'),
+                                    'bauteil' => __('Einzelteile der Technik: von der Röhre bis zum elektronischen Bauteil.', 'iss-wf-import'),
+                                    'messgeraet' => __('Instrumente zum Messen, Prüfen und Kontrollieren.', 'iss-wf-import'),
+                                    'menschen-im-wf' => __('Beschäftigte des Werks für Fernsehelektronik bei der Arbeit und im Alltag.', 'iss-wf-import'),
+                                    default => sprintf(__('Entdecken Sie Fotos und Objekte zum Bereich %s.', 'iss-wf-import'), $term->name),
+                                });
+                                ?></p>
+                            <div class="iss-archive-entry__meta"><span><?php echo esc_html(sprintf(_n('%d Objekt ansehen', '%d Objekte ansehen', (int) $term->count, 'iss-wf-import'), (int) $term->count)); ?></span></div>
                         </a>
                     <?php endforeach; ?>
                 </div>

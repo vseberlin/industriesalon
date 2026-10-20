@@ -107,7 +107,7 @@
 }
 
 .iss-landing-editorial--skin-territorial .iss-landing-section__title {
-  max-width: 18ch;
+  max-width: 28ch;
   font-size: 3rem;
   line-height: 1;
 }
@@ -125,25 +125,19 @@
 }
 
 .iss-landing-editorial--skin-territorial .iss-landing-story-split__title {
-  max-width: 12ch;
+  max-width: 28ch;
   margin: 0;
-  font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
+
+  font-family: var(--iss-landing-serif);
   font-size: 3rem;
   line-height: 0.95;
   letter-spacing: 0;
 }
 
 .iss-landing-editorial--skin-territorial .iss-landing-story-split__body {
-  column-count: 3;
-  column-gap: clamp(1.25rem, 2.5vw, 2.5rem);
   color: var(--iss-landing-muted);
   font-size: 0.95rem;
   line-height: 1.55;
-}
-
-.iss-landing-editorial--skin-territorial .iss-landing-story-split__body > p:first-child,
-.iss-landing-editorial--skin-territorial .iss-landing-story-split__body > p:last-child {
-  column-span: all;
 }
 
 .iss-landing-editorial--skin-territorial .iss-landing-story-split__body > p:first-child {
@@ -162,7 +156,7 @@
   .iss-landing-section--treatment-text-bild-reihe-chronology,
   .iss-landing-section--treatment-gateway-atlas-plates
 ) .iss-landing-section__title {
-  font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
+  font-family: var(--iss-landing-serif);
   font-weight: 700;
 }
 
@@ -287,31 +281,12 @@
   padding: clamp(1.5rem, 2.4vw, 2rem) clamp(1.35rem, 2.1vw, 1.8rem) clamp(1.35rem, 2.2vw, 1.9rem);
   color: var(--iss-black, #1e1e1e);
   border: 1px solid color-mix(in srgb, var(--iss-black, #1e1e1e) 12%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--iss-white, #fff) 92%, var(--iss-black, #1e1e1e) 8%) 0 3.25rem, var(--iss-white, #fff) 3.25rem 100%);
-  box-shadow:
-    0 0.45rem 0 color-mix(in srgb, var(--iss-black, #1e1e1e) 14%, transparent),
-    0 1.2rem 1.8rem color-mix(in srgb, var(--iss-black, #1e1e1e) 18%, transparent);
-  transform: rotate(-1.25deg);
-}
 
-.iss-landing-editorial--skin-frontpage .iss-front-project-note:nth-child(even) {
-  transform: rotate(1deg);
-}
+  background: var(--iss-surface-paper);
 
-.iss-landing-editorial--skin-frontpage .iss-front-project-note::before {
-  content: "";
-  position: absolute;
-  top: 1rem;
-  left: 50%;
-  width: 1.2rem;
-  height: 1.2rem;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--iss-white, #fff) 28%, transparent), transparent 35%), var(--iss-red, #b22);
-  box-shadow:
-    0 0.18rem 0 color-mix(in srgb, var(--iss-black, #1e1e1e) 22%, transparent),
-    0 0.7rem 0.85rem color-mix(in srgb, var(--iss-black, #1e1e1e) 18%, transparent);
-  transform: translateX(-50%);
+  box-shadow: none;
+
+  transform: none;
 }
 
 .home .iss-front-project-note__marker,
@@ -341,7 +316,7 @@
 }
 
 .iss-landing-editorial--skin-frontpage .iss-front-project-note__kicker {
-  margin: 1.6rem 0 0;
+  margin: 0;
   color: color-mix(in srgb, var(--iss-black, #1e1e1e) 68%, transparent);
   font-size: 0.76rem;
   font-weight: 700;
@@ -386,11 +361,11 @@
   align-content: center;
   min-height: 31rem;
   padding: clamp(2rem, 3.7vw, 3.5rem);
-  border-left: 6px solid var(--iss-red, #b22);
+  border: 1px solid var(--iss-surface-rule);
 }
 
 .iss-landing-editorial--skin-frontpage .iss-landing-section--treatment-feature-media-panel .iss-landing-section__title {
-  max-width: 10ch;
+  max-width: 28ch;
   font-size: 2.7rem;
   line-height: 0.96;
 }
@@ -545,10 +520,6 @@
     grid-column: auto;
     grid-row: auto;
   }
-
-  .iss-landing-editorial--skin-territorial .iss-landing-story-split__body {
-    column-count: 1;
-  }
 }
 
 @media (max-width: 720px) {
@@ -563,6 +534,7 @@
     max-width: none;
     font-size: 2rem;
     line-height: 1.05;
+    font-family: var(--iss-landing-serif);
   }
 
   .iss-landing-editorial--skin-territorial .iss-landing-section--treatment-feature-media-text .iss-media-text__layout {
@@ -600,15 +572,11 @@
     min-height: 8.8rem;
     gap: 0.4rem;
     padding: 1rem 7.7rem 1.05rem 1.1rem;
-    transform: rotate(-0.65deg);
-  }
-
-  .iss-landing-editorial--skin-frontpage .iss-front-project-note:nth-child(even) {
-    transform: rotate(0.55deg);
+    transform: none;
   }
 
   .iss-landing-editorial--skin-frontpage .iss-front-project-note__kicker {
-    margin-top: 1.35rem;
+    margin-top: 0;
   }
 
   .iss-landing-editorial--skin-frontpage .iss-front-project-note__title {
@@ -712,10 +680,10 @@
 }
 
 .iss-project-stage__intro h1 {
-  max-width: 12ch;
+  max-width: 28ch;
   margin-block: 1.5rem;
   color: var(--iss-project-ink);
-  font-family: var(--wp--preset--font-family--plex, sans-serif);
+  font-family: var(--wp--preset--font-family--plex-serif, serif);
   font-size: clamp(3.3rem, 7vw, 7rem);
   font-weight: 600;
   line-height: 0.98;
@@ -764,7 +732,7 @@
   --iss-landing-surface: var(--iss-project-paper, var(--iss-surface-bg));
   --iss-landing-ink: var(--iss-project-ink, var(--iss-surface-fg));
   --iss-landing-muted: color-mix(in srgb, var(--iss-landing-ink) 78%, transparent);
-  --iss-landing-serif: var(--wp--preset--font-family--plex, sans-serif);
+  --iss-landing-serif: var(--wp--preset--font-family--plex-serif, serif);
   --iss-landing-text-image-title-font-family: var(--iss-landing-serif);
   --iss-landing-text-image-columns: repeat(4, minmax(0, 1fr));
   --iss-landing-text-image-compact-columns: repeat(2, minmax(0, 1fr));

@@ -78,7 +78,7 @@
         {
           "name": "Scarlet Red",
           "slug": "scarlet-red",
-          "color": "#e81d25"
+          "color": "#d51b23"
         },
         {
           "name": "Vaporous White",
@@ -245,7 +245,8 @@
         "typography": {
           "fontSize": "clamp(2.2rem, 4vw, 3.9rem)",
           "fontWeight": "700",
-          "lineHeight": "1.14"
+          "lineHeight": "1.14",
+          "fontFamily": "var:preset|font-family|plex-serif"
         },
         "spacing": {
           "margin": {
@@ -257,7 +258,8 @@
         "typography": {
           "fontSize": "clamp(1.75rem, 3vw, 2.7rem)",
           "fontWeight": "700",
-          "lineHeight": "1.13"
+          "lineHeight": "1.13",
+          "fontFamily": "var:preset|font-family|plex-serif"
         },
         "spacing": {
           "margin": {

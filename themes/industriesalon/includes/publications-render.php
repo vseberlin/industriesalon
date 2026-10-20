@@ -1890,7 +1890,7 @@ function industriesalon_publications_render_featured_publication(array $context)
 
     $html = '<article class="iss-publications-feature">';
     $html .= '<div class="iss-publications-feature__cover">';
-    $html .= '<a class="iss-media-card iss-media-card--cover iss-media-card--flat iss-publications-feature__media" href="' . esc_url($permalink) . '">';
+    $html .= '<a class="iss-media-card iss-media-card--cover iss-media-card--flat iss-publications-feature__media" href="' . esc_url($permalink) . '" aria-label="' . esc_attr(get_the_title($post_id)) . '">';
     if (has_post_thumbnail($post_id)) {
         $html .= (string) get_the_post_thumbnail($post_id, 'large');
     }

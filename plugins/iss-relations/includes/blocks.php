@@ -453,7 +453,7 @@ function iss_relations_render_generic_card(WP_Post $post, array $copy, array $op
         <?php if ($show_image) : ?>
             <div class="iss-related-feed__media-shell iss-media-card iss-media-card--cover iss-media-card--soft iss-media-card--rail-thin">
                 <?php if ($has_media) : ?>
-                    <a class="iss-card__media" href="<?php echo esc_url($permalink); ?>">
+                    <a class="iss-card__media" href="<?php echo esc_url($permalink); ?>" aria-label="<?php echo esc_attr($title); ?>">
                         <?php echo get_the_post_thumbnail($post, 'large'); ?>
                     </a>
                 <?php else : ?>

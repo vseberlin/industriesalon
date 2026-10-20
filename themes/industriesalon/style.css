@@ -130,37 +130,14 @@ Tags: block-theme, full-site-editing, custom-colors, custom-spacing, editor-styl
    -> patterns.css -> renderer/page/skin CSS -> plugin CSS
    ===================================================================== */
 
-.iss-scheme-red {
-  --iss-accent: var(--iss-red);
-  --iss-accent-rgb: 232, 29, 37;
-  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
-  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
-}
-
-.iss-scheme-blue {
-  --iss-accent: var(--iss-blue);
-  --iss-accent-rgb: 134, 159, 186;
-  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
-  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
-}
-
-.iss-scheme-green {
-  --iss-accent: var(--iss-green);
-  --iss-accent-rgb: 87, 158, 125;
-  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
-  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
-}
-
-.iss-scheme-yellow {
-  --iss-accent: var(--iss-yellow);
-  --iss-accent-rgb: 235, 188, 30;
-  --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
-  --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
-}
-
+/* Saved Gutenberg scheme classes remain valid; public accents share signal red. */
+.iss-scheme-red,
+.iss-scheme-blue,
+.iss-scheme-green,
+.iss-scheme-yellow,
 .iss-scheme-brown {
-  --iss-accent: var(--iss-brown);
-  --iss-accent-rgb: 117, 58, 24;
+  --iss-accent: var(--iss-red);
+  --iss-accent-rgb: 213, 27, 35;
   --iss-accent-soft: rgba(var(--iss-accent-rgb), 0.16);
   --iss-accent-border: rgba(var(--iss-accent-rgb), 0.28);
 }
@@ -652,7 +629,8 @@ body.iss-header-mode-offset .iss-header-context__title,
   padding: 0.5rem 1.5rem;
   border: 1px solid rgba(255, 255, 255, 0.25);
   border-radius: var(--iss-radius-pill);
-  background: rgba(30, 30, 30, 0.4);
+
+  background: var(--iss-black);
   color: var(--iss-white);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -1605,19 +1583,10 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
   text-transform: uppercase;
 
   color: var(--iss-kicker-color, var(--iss-black));
-  opacity: 0.85;
+
+  opacity: 1;
 }
 
-/* Optional prefix element (dot / line / icon) */
-/* .iss-kicker: Base class for iss kicker; apply on primary wrapper/scope. */
-.iss-kicker::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  background: var(--iss-kicker-accent, var(--iss-accent));
-  border-radius: 50%;
-  flex-shrink: 0;
-}
 
 /* Dense variant (for cards / lists) */
 /* .iss-kicker--compact: Modifier class for `iss-kicker`; combine for `compact` variant. */
@@ -1656,19 +1625,19 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
 }
 /* .iss-kicker--green: Modifier class for `iss-kicker`; combine for `green` variant. */
 .iss-kicker--green {
-  --iss-kicker-accent: var(--iss-green);
+  --iss-kicker-accent: var(--iss-red);
 }
 /* .iss-kicker--blue: Modifier class for `iss-kicker`; combine for `blue` variant. */
 .iss-kicker--blue  {
-  --iss-kicker-accent: var(--iss-blue);
+  --iss-kicker-accent: var(--iss-red);
 }
 /* .iss-kicker--yellow: Modifier class for `iss-kicker`; combine for `yellow` variant. */
 .iss-kicker--yellow{
-  --iss-kicker-accent: var(--iss-yellow);
+  --iss-kicker-accent: var(--iss-red);
 }
 /* .iss-kicker--brown: Modifier class for `iss-kicker`; combine for `brown` variant. */
 .iss-kicker--brown {
-  --iss-kicker-accent: var(--iss-brown);
+  --iss-kicker-accent: var(--iss-red);
 }
 
 /* .iss-info-panel: Base class for iss info panel; apply on primary wrapper/scope. */

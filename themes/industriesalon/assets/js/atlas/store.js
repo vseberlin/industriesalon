@@ -200,6 +200,7 @@
       slug: text(era.slug),
       name: text(era.name),
       caption: text(era.caption),
+      periodLabel: text(era.period_label),
       legacyId: text(era.legacy_id),
       legacyLabel: text(era.legacy_label),
       legacyShortLabel: text(era.legacy_short_label),

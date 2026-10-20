@@ -150,6 +150,7 @@
 
     eras.forEach(function (era) {
       var label = era.name || era.legacyLabel || era.slug;
+      if (era.periodLabel) { label += " · " + era.periodLabel; }
 
       container.appendChild(buildFilterButton({
         label: label,

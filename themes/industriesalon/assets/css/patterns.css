@@ -207,6 +207,7 @@
 
 .iss-site-footer__plugin {
   width: 100%;
+  display: flow-root;
 }
 
 /* .iss-site-footer__socials: Element class for `iss-site-footer`; apply on `socials` element. */
@@ -279,7 +280,7 @@
   display: inline-block;
   margin: 0 0 1.15rem;
   padding-bottom: 0.45rem;
-  border-bottom: 2px solid var(--iss-red, #e81d25);
+  border-bottom: 1px solid var(--iss-footer-rule);
   color: var(--iss-footer-fg);
   font-size: 0.94rem;
   font-weight: 700;
@@ -506,7 +507,7 @@
   display: inline-block;
   margin: 0 0 1rem;
   padding-bottom: 0.45rem;
-  border-bottom: 2px solid var(--iss-red, #e81d25);
+  border-bottom: 1px solid var(--iss-footer-rule);
   color: var(--iss-footer-fg);
   font-size: 0.94rem;
   font-weight: 700;
@@ -750,7 +751,7 @@
 
 .iss-front-hero__text {
   max-width: 40rem;
-  font-size: clamp(1rem, 1vw + 0.8rem, 1.2rem);
+  font-size: clamp(1.125rem, 1vw + 0.8rem, 1.2rem);
   line-height: 1.55;
   color: rgba(249, 249, 250, 0.9);
 }
@@ -2623,13 +2624,13 @@ iss-info-panel--brown
 /* .iss-info-panel--red: Modifier class for `iss-info-panel`; combine for `red` variant. */
 .iss-info-panel--red { --iss-info-accent: var(--iss-red); }
 /* .iss-info-panel--green: Modifier class for `iss-info-panel`; combine for `green` variant. */
-.iss-info-panel--green { --iss-info-accent: var(--iss-green); }
+.iss-info-panel--green { --iss-info-accent: var(--iss-red); }
 /* .iss-info-panel--blue: Modifier class for `iss-info-panel`; combine for `blue` variant. */
-.iss-info-panel--blue { --iss-info-accent: var(--iss-blue); }
+.iss-info-panel--blue { --iss-info-accent: var(--iss-red); }
 /* .iss-info-panel--yellow: Modifier class for `iss-info-panel`; combine for `yellow` variant. */
-.iss-info-panel--yellow { --iss-info-accent: var(--iss-yellow); }
+.iss-info-panel--yellow { --iss-info-accent: var(--iss-red); }
 /* .iss-info-panel--brown: Modifier class for `iss-info-panel`; combine for `brown` variant. */
-.iss-info-panel--brown { --iss-info-accent: var(--iss-brown); }
+.iss-info-panel--brown { --iss-info-accent: var(--iss-red); }
 
 .iss-info-panel--skin-plain {
   --iss-info-panel-shell-pad: 0;
@@ -4140,13 +4141,17 @@ iss-info-panel--brown
   min-height: 3.75rem;
   font: inherit;
   font-size: 1.05rem;
+  border-radius: var(--iss-radius-sm);
+  background: var(--iss-button-primary-bg);
+  color: var(--iss-button-primary-fg);
 }
 
 .iss-newsletter-form .tnp-email {
   width: 100%;
   padding: 0 1.3rem;
   border: 1px solid transparent;
-  border-radius: 999px;
+
+  border-radius: var(--iss-radius-sm);
   background: rgba(255, 255, 255, 0.42);
   color: var(--iss-black, #1e1e1e);
   box-shadow: inset 0 0 0 1px rgba(30, 30, 30, 0.06);
@@ -4168,9 +4173,12 @@ iss-info-panel--brown
   min-width: 10rem;
   padding: 0 1.6rem;
   border: 0;
-  border-radius: 999px;
-  background: var(--iss-accent, #e81d25);
-  color: var(--iss-white, #f9f9fa);
+
+  border-radius: var(--iss-radius-sm);
+
+  background: var(--iss-button-primary-bg);
+
+  color: var(--iss-button-primary-fg);
   font-weight: 600;
   line-height: 1;
   cursor: pointer;
@@ -4283,8 +4291,10 @@ iss-info-panel--brown
 .iss-newsletter-band__partner-logo img {
   display: block;
   width: 100%;
-  max-height: 5.25rem;
-  height: auto;
+
+  max-height: 3.5rem;
+
+  height: 3.5rem;
   object-fit: contain;
   object-position: left center;
 }
@@ -7288,7 +7298,7 @@ iss-info-panel--brown
 
 .iss-related-place-map__entry-kicker {
   margin-bottom: 0.3rem;
-  color: rgba(30, 30, 30, 0.58);
+  color: var(--iss-surface-muted);
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.08em;

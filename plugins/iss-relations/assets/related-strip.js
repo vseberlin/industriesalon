@@ -62,6 +62,8 @@
     }
 
     strip.dataset.issRelatedStripBound = '1';
+    // Keep image-only strips reachable with native keyboard scrolling.
+    if (!strip.hasAttribute('tabindex')) { strip.tabIndex = 0; }
 
     var carousel = strip.closest('[data-related-carousel], [data-iss-strip-carousel]');
     var prevButton = carousel ? carousel.querySelector('[data-related-carousel-prev], [data-iss-strip-carousel-prev]') : null;

@@ -35,12 +35,13 @@
 }
 
 .iss-landing-section__title {
-  max-width: 14ch;
+  max-width: 28ch;
   color: var(--iss-landing-ink);
   font-family: var(--iss-landing-serif);
   font-size: clamp(2rem, 4.2vw, 4.4rem);
   font-weight: 600;
   line-height: 0.98;
+  text-wrap: balance;
 }
 
 .iss-landing-section__body {
@@ -564,7 +565,7 @@
 }
 
 .iss-landing-section--treatment-gateway-link-list .iss-landing-section__inner {
-  grid-template-columns: minmax(0, 0.85fr) minmax(18rem, 1.15fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
@@ -581,7 +582,7 @@
 }
 
 .iss-landing-section--treatment-gateway-link-list .iss-landing-gateway__link::after {
-  content: "->";
+  content: "→";
   align-self: center;
   padding-right: 1rem;
 }
@@ -909,7 +910,7 @@
   font-size: var(--iss-quote-font-size);
   padding: 1rem 0 0;
   border-left: 0;
-  border-top: 3px solid var(--iss-accent);
+  border-top: 1px solid var(--iss-landing-rule);
 }
 
 .iss-landing-section--treatment-zitat-source-stage {
@@ -1000,17 +1001,18 @@
 }
 
 .iss-landing-section--treatment-galerie-sequence .iss-landing-gallery__carousel {
-  --iss-related-feed-carousel-control-top: 42%;
-
   position: relative;
+  min-width: 0;
 }
 
 .iss-landing-section--treatment-galerie-sequence .iss-landing-gallery__track {
   grid-auto-flow: column;
   grid-auto-columns: minmax(24rem, 32vw);
   overflow-x: auto;
-  padding: 0.15rem calc(var(--iss-related-feed-carousel-control-size, 3.35rem) + 0.7rem) 0.65rem;
-  scroll-padding-inline: calc(var(--iss-related-feed-carousel-control-size, 3.35rem) + 0.7rem);
+
+  padding: 0.15rem 0 0.65rem;
+
+  scroll-padding-inline: 0;
   scroll-snap-type: x mandatory;
   scrollbar-width: thin;
 }
@@ -1207,7 +1209,7 @@
 }
 
 .iss-landing-origin-story__title {
-  max-width: 13ch;
+  max-width: 28ch;
   margin: 0;
   font-family: var(--iss-landing-serif);
   font-size: 3.75rem;
@@ -1257,14 +1259,11 @@
 }
 
 .iss-landing-origin-story__body {
-  column-count: 2;
-  column-gap: clamp(1.25rem, 2.5vw, 2.5rem);
   color: var(--iss-landing-muted);
   line-height: 1.58;
 }
 
 .iss-landing-origin-story__body blockquote {
-  column-span: all;
   margin: 0 0 1.15rem;
   padding-left: 1rem;
   color: var(--iss-landing-ink);
@@ -1288,7 +1287,8 @@
 
 .iss-landing-story-split {
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(17rem, 0.72fr);
+
+  grid-template-columns: minmax(16rem, 0.8fr) minmax(0, 1.2fr);
   gap: clamp(2rem, 5vw, 5.5rem);
   align-items: start;
 }
@@ -1297,28 +1297,8 @@
   grid-template-columns: minmax(17rem, 0.72fr) minmax(0, 1.22fr);
 }
 
-.iss-landing-section--treatment-text-story-split .iss-landing-story-split__heading {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.iss-landing-section--treatment-text-story-split .iss-landing-story-split__content {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.iss-landing-section--treatment-text-story-split-flip .iss-landing-story-split__heading {
-  grid-column: 1;
-  grid-row: 1;
-}
-
-.iss-landing-section--treatment-text-story-split-flip .iss-landing-story-split__content {
-  grid-column: 2;
-  grid-row: 1;
-}
-
 .iss-landing-story-split__title {
-  max-width: 14ch;
+  max-width: 28ch;
   margin: 0;
   color: var(--iss-landing-ink);
   font-family: var(--iss-landing-serif);
@@ -1329,8 +1309,6 @@
 
 .iss-landing-story-split__body {
   max-width: none;
-  column-count: 2;
-  column-gap: clamp(1.5rem, 3vw, 3rem);
   color: var(--iss-landing-muted);
   font-size: 1rem;
   line-height: 1.62;
@@ -1342,7 +1320,6 @@
 }
 
 .iss-landing-story-split__body > p:first-child {
-  column-span: all;
   margin-top: 0;
   font-family: var(--iss-landing-serif);
   font-size: 1.35rem;
@@ -1350,7 +1327,6 @@
 }
 
 .iss-landing-story-split__body > p:last-child {
-  column-span: all;
   padding-top: 0.85rem;
   margin-bottom: 0;
   border-top: 1px solid var(--iss-landing-rule);
@@ -1478,7 +1454,7 @@
   gap: 1rem 2rem;
   align-items: start;
   padding-top: 1rem;
-  border-top: 2px solid var(--iss-landing-ink);
+  border-top: 1px solid var(--iss-landing-rule);
 }
 
 .iss-fuehrungen-catalog__group-head h3,
@@ -1537,10 +1513,6 @@
     grid-row: auto;
   }
 
-  .iss-landing-story-split__body {
-    column-count: 1;
-  }
-
   .iss-landing-story-split__title {
     max-width: none;
     font-size: 2rem;
@@ -1564,10 +1536,6 @@
     max-width: none;
     font-size: 2rem;
     line-height: 1.05;
-  }
-
-  .iss-landing-origin-story__body {
-    column-count: 1;
   }
 
   .iss-landing-section--treatment-feature-media-text .iss-media-text__layout {
@@ -1704,7 +1672,7 @@
 
 .iss-landing-section--treatment-text-bild-reihe-editorial .iss-landing-text-image-row__item {
   padding-top: 1.4rem;
-  border-top: 2px solid var(--iss-landing-rule);
+  border-top: 1px solid var(--iss-landing-rule);
 }
 
 .iss-landing-text-image-row__eyebrow {

@@ -115,7 +115,7 @@
           var linkFilter = String(link.getAttribute('data-ausstellungen-filter') || '');
           var isActive = linkFilter === activeFilter;
           link.classList.toggle('is-active', isActive);
-          link.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+          link.setAttribute('aria-current', isActive ? 'page' : 'false');
           link.href = buildStateUrl(normalizeFilter(linkFilter, activeFilter), activeSearch, root).toString();
         });
       }

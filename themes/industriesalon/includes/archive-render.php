@@ -24,7 +24,7 @@ function industriesalon_archive_render_featured_object(array $context): string
     }
 
     $html = '<article class="iss-archive-featured-object">';
-    $html .= '<a class="iss-media-card iss-media-card--cover iss-media-card--flat iss-archive-featured-object__media" href="' . esc_url($permalink) . '">';
+    $html .= '<a class="iss-media-card iss-media-card--cover iss-media-card--flat iss-archive-featured-object__media" href="' . esc_url($permalink) . '" aria-label="' . esc_attr($title) . '">';
     if (has_post_thumbnail($post_id)) {
         $html .= (string) get_the_post_thumbnail($post_id, 'large');
     }

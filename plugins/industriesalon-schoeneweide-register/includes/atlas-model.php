@@ -30,6 +30,7 @@ function iss_register_get_atlas_era_definitions(): array
     return [
         'kaiserzeit' => [
             'slug' => 'kaiserzeit',
+            'period_label' => '1880–1918',
             'name' => 'Kaiserzeit',
             'caption' => 'Elektropolis im Aufbau',
             'legacy_id' => '1890-1910',
@@ -39,6 +40,7 @@ function iss_register_get_atlas_era_definitions(): array
         ],
         'weimar' => [
             'slug' => 'weimar',
+            'period_label' => '1918–1933',
             'name' => 'Weimarer Republik',
             'caption' => 'Industrie und Moderne',
             'legacy_id' => '1910-1930',
@@ -48,6 +50,7 @@ function iss_register_get_atlas_era_definitions(): array
         ],
         'ns-zeit' => [
             'slug' => 'ns-zeit',
+            'period_label' => '1933–1945',
             'name' => 'NS-Zeit',
             'caption' => 'Krieg und Gewalt',
             'legacy_id' => '1930-1945',
@@ -57,6 +60,7 @@ function iss_register_get_atlas_era_definitions(): array
         ],
         'nachkriegszeit' => [
             'slug' => 'nachkriegszeit',
+            'period_label' => '1945–1949',
             'name' => 'Nachkriegszeit',
             'caption' => 'Besatzung und Neubeginn',
             'legacy_id' => '1945-1960',
@@ -66,6 +70,7 @@ function iss_register_get_atlas_era_definitions(): array
         ],
         'ddr' => [
             'slug' => 'ddr',
+            'period_label' => '1949–1990',
             'name' => 'DDR',
             'caption' => 'Produktion und Betriebskultur',
             'legacy_id' => '1960-1990',
@@ -75,6 +80,7 @@ function iss_register_get_atlas_era_definitions(): array
         ],
         'nach-1990' => [
             'slug' => 'nach-1990',
+            'period_label' => '1990–heute',
             'name' => 'Nach 1990',
             'caption' => 'Transformation',
             'legacy_id' => 'heute',
@@ -224,6 +230,7 @@ function iss_register_get_editorial_era_payload_from_slug(string $slug): array
         'slug' => (string) $definition['slug'],
         'name' => (string) $definition['name'],
         'caption' => (string) $definition['caption'],
+        'period_label' => (string) $definition['period_label'],
         'legacy_id' => (string) $definition['legacy_id'],
         'legacy_label' => (string) $definition['legacy_label'],
         'legacy_short_label' => (string) $definition['legacy_short_label'],
@@ -371,6 +378,7 @@ function iss_register_build_atlas_context_data(array $places): array
             'slug' => $slug,
             'name' => (string) $definition['name'],
             'caption' => (string) $definition['caption'],
+            'period_label' => (string) $definition['period_label'],
             'legacy_id' => (string) $definition['legacy_id'],
             'legacy_label' => (string) $definition['legacy_label'],
             'legacy_short_label' => (string) $definition['legacy_short_label'],

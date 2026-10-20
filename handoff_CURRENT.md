@@ -1,71 +1,61 @@
 # Current handoff — 20 October 2026
 
-## Website audit completion
+## Audit polish: local verification complete, release in progress
 
-The remaining code/content corrections from the
-[combined audit plan](docs/project/website-correction-plan-2026-10-20.md)
-are deployed and verified through GitHub main on staging: implementation
-**dbbe547**, Repair-Café notice follow-up **f700a36**, baseline **5c2c605**.
-This receipt follows the same fast-forward synchronization path. Website code: `/home/vladimir/wp-website`;
-staging: `/srv/industriesalon/stage/repo`. The mixed/archive checkout is untouched.
+Website checkout: `/home/vladimir/wp-website`; baseline local/GitHub/staging
+`56fba9a`. The mixed/archive checkout `/home/vladimir/wp` remains untouched.
+The user authorized the remaining copy, cross-links, archive wording/sidebar,
+visual consolidation, layout, homepage, periodisation and acceptance package.
+**Hero button positions are explicitly excluded and preserved.**
 
-This package covers project status/actions and stable project ordering, clear
-visitor copy, one exhibition browser, archive search/facts/image links, video
-labels/dates, compact header, mobile/tablet layout fixes, newsletter accessibility,
-confirmed rental and Repair-Café details, and removal of technical captions and
-generic social destinations. About triptych, Futura logo, archive provenance and
-all previous tour/admission corrections are preserved.
+The [correction plan](docs/project/website-correction-plan-2026-10-20.md)
+now lists actual scope and retracts the previous blanket completion claim.
+Sammlungen and tour cross-links are rewritten; three collection links to a
+private women exhibition draft now reach its published counterpart. H1/H2 use
+serif; public accents, cards, dividers and spacing are consolidated. Home project
+titles/Futura logo and About triptych remain. All three period views use six
+matching names/dates without rewriting historical place facts or legacy IDs.
+Shared accessibility fixes name image links, focus galleries, correct exhibition
+filter ARIA and improve contrast. Archive filters use page scrolling.
 
-User-confirmed rental terms: up to 100 seated overall, from €400, hours/catering
-on request. Repair Café: first and second Wednesday, free, household-sized items,
-no large machinery; published calendar dates/times remain authoritative. KiezKarte
-retains €49, 20 partner offers and expiry 31 December 2026. Exact Kiezfonds share
-remains unconfirmed; do not invent a percentage or extend the pilot.
+## Verification and release requirements
 
-## Checks and release dependencies
+Local: 34 + 42 + 42 audit checks and 27 visitor checks; nine registries;
+191 valid canonical documents, 184 existing media references. Chrome and Firefox:
+13 routes at 390/768/1348/1720 px without page overflow. No axe WCAG A/AA violations
+on those 13 routes. 53 internal destinations/anchors pass. Menu, galleries,
+archive filters/empty state and Atlas search/period/fullscreen tested in Firefox.
+Newsletter invalid-input/required-consent checks send nothing. About saved editor
+preview works at desktop and phone width. Six additional detail pages pass the same Firefox width/axe checks. Targeted
+PHP syntax, PHPCS/PHPStan, ESLint/Stylelint and three CSS contracts pass.
+Deployment and staging checks are in progress.
 
-Local and staging: 42 new + 42 existing audit + 27 visitor checks; nine registries;
-191 valid canonical documents; 184 existing media references. Targeted lint/static
-checks and three CSS contracts pass. `videos.php` retains its 24 pre-existing
-PHPCS findings, with no new findings from this change. Chrome: twelve routes at
-390/768/1348/1720 px, no page overflow after final fixes; menu Tab/Escape/focus,
-archive search/empty state, atlas search/epoch/fullscreen and About appearance.
-Staging: 21 HTTP checks, 24 mobile/desktop route checks, noindex and legal anchors
-verified. All 191 canonical documents match after URL normalization; existing
-project image hashes and About/home template authority match. All 269 factual
-place-state rows match the backup; native save rebuilt only the corrected place's
-projection IDs/timestamps. Three old ordinary revisions of the edited Walk of Fame project
-were pruned by native retention; the verified backup retains them. Private drafts
-and unrelated posts are unchanged. No real messages, newsletter submissions,
-bookings or orders sent.
+Private folder: `var/audit-polish-20261020/` on each machine. Fresh read-tested and
+hashed staging backup:
+`/srv/industriesalon/stage/backups/iss-backup-20261020T144249Z/`
+(119 tables, seven artifacts). Local SQL backup is private and gzip-tested.
 
-Verified staging backup:
-`/srv/industriesalon/stage/backups/iss-backup-20261020T133735Z/`
-(seven read-tested/hashed artifacts, 119 tables, existing backups retained).
-Private inputs/snapshots/evidence: `var/audit-completion-20261020/` on each machine.
-Applied and verified after fast-forwarding staging:
+Paired migration: `ops/migrations/2026-10-20-audit-polish.php`, applied/verified
+locally with `input-local.json`; staging needs `input-stage.json` after code
+fast-forward. Exactly four existing landing documents; receipt
+`iss_backup_20261020_audit_polish` keeps before-images and private draft hashes.
+Existing revisions retained. No schema or upload transfer. **No SQL/content/media
+artifacts on GitHub.** Before-images guard against intervening editorial edits.
 
-1. `ops/migrations/2026-10-20-audit-completion.php` with `input-stage.json`.
-2. Same migration with `place-input-stage.json`.
-3. `ops/migrations/2026-10-20-archive-labels.php`.
-4. Completion migration with `repair-input-stage.json` (calendar-owned times).
+Next: finish detail acceptance; commit/push code, tests and docs; fast-forward
+staging, apply/verify private API input; verify canonical parity, preservation,
+public pages and noindex; replace this checkpoint with the release receipt.
 
-Scope: thirteen content records, two settings, two preserved template overrides,
-twelve taxonomy display labels. Before-images are saved in non-autoloaded options
-`iss_backup_20261020_audit_completion`, `iss_backup_20261020_audit_place_copy`,
-`iss_backup_20261020_archive_labels`, `iss_backup_20261020_audit_repair_notice`.
-Rollback uses owner APIs against these
-receipts after checking later edits. No whole-DB replacement, schema or upload
-transfer. SQL, content inputs, backups and media never go to GitHub.
+## Preserved boundaries and human gates
 
-## Boundaries and remaining acceptance
+Keep staging noindex, production untouched, mail routing, core/DB/uploads/intake,
+Futura/ZiG private drafts and user 328's Projects-only create/edit/media rights.
+Previous programme/admission, room (100 seated, from €400, hours/catering on
+request), Repair Café (first/second Wednesday, household items, free, times from
+calendar) and KiezKarte pilot terms remain. Kiezfonds exact share is unconfirmed.
 
-Staging remains noindex. Keep credentials, mail routing, core/DB/uploads/intake,
-private drafts and user 328's Projects-only create/edit/media rights. Earlier
-programme and visitor receipts/backups remain under their existing private folders.
-
-Before production, complete human Firefox, screenreader, touch, actual 200% zoom
-and editor acceptance, plus source-rights review where not already established.
-This release is not a claim of accessibility certification or production launch.
-The exact Kiezfonds share is the only outstanding fact requested in this audit.
-Maintenance activation remains a separate task in `TODO.md`.
+Two audited children's photos have source links but no recorded publication
+rights; user confirmation/credit requested. Actual 200% browser zoom, physical
+touch and a real screenreader pass remain before production. Automated axe and
+viewport tests do not replace those gates. No real mail, subscriptions, bookings
+or orders sent. Maintenance activation remains separate in `TODO.md`.
