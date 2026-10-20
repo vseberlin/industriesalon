@@ -14,6 +14,8 @@ $before = [get_post($id)->to_array(), get_post_meta($id), wp_get_object_terms($i
 $control = Industriesalon_Steuerung::instance();
 $settings = $control->get_all_data();
 $before_settings = $settings;
+$expect(($settings['prices']['note'] ?? '') === 'Eintritt frei.', 'Confirmed museum admission is stored centrally.');
+$expect(str_contains($control->render_visit_info(['show_admission' => true]), 'Eintritt frei.'), 'Confirmed free admission reaches the shared visitor block.');
 $today = '2026-10-20';
 $meta = ['iss_start_date' => '2026-10-09', 'iss_end_date' => '2026-11-07', 'iss_location' => $settings['general']['site_name']];
 $date_filter = static function ($date, $format) use (&$today) { return $format === 'Y-m-d' ? $today : $date; };
