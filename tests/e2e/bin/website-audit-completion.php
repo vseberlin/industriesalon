@@ -7,6 +7,9 @@ $expect = static function (bool $ok, string $message) use (&$checks): void {
     if (!$ok) { throw new RuntimeException(esc_html($message)); }
 };
 $expect(defined('DISABLE_WP_CRON') && DISABLE_WP_CRON, 'Cron disabled.');
+$repair_notice = get_page_by_path('repair-cafe', OBJECT, 'iss_notice');
+$expect($repair_notice instanceof WP_Post && str_contains($repair_notice->post_content, '/kalender/')
+    && !str_contains($repair_notice->post_content, '17–20'), 'Repair Cafe notice delegates changing times to the calendar.');
 foreach (['page-projekte', 'page-publikationen', 'page-sammlungen', 'page-archiv', 'page-ausstellungen', 'page-kalender', 'page-salon-vermietung', 'page-videos', 'single-archivobjekt'] as $slug) {
     $template = get_block_template('industriesalon//' . $slug, 'wp_template');
     $expect($template && $template->source === 'theme', 'Template authority: ' . $slug);

@@ -21,7 +21,7 @@ $expect(current_user_can('manage_options'), 'Administrator required.');
 $input = json_decode(file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
 $expect(($input['home_url'] ?? '') === home_url(), 'Input belongs to another site.');
 $batch = $input['batch'] ?? 'completion';
-$expect(in_array($batch, ['completion', 'place-copy'], true), 'Unknown batch.');
+$expect(in_array($batch, ['completion', 'place-copy', 'repair-notice'], true), 'Unknown batch.');
 $scope = [
     'page/home-2', 'page/fuehrungen', 'projekt/futura-biennale-2027-2',
     'projekt/schoeneweider-kiezkarte', 'projekt/zukunft-im-gespraech', 'page/about',
@@ -29,8 +29,13 @@ $scope = [
     'video/mueller-wf', 'video/abriss-der-denkmalgeschutzten-fernmeldekabelfabrik-architekt-ernst-ziesel-im-jahr-2007',
 ];
 if ($batch === 'place-copy') { $scope = ['page/schoneweide', 'register_place/industriesalon-schoneweide-reinbeckstrasse']; }
+if ($batch === 'repair-notice') { $scope = ['iss_notice/repair-cafe']; }
 $expect(array_map(static fn(array $row): string => $row['post_type'] . '/' . $row['slug'], $input['records']) === $scope, 'Unexpected migration scope.');
-$receipt_key = $batch === 'completion' ? 'iss_backup_20261020_audit_completion' : 'iss_backup_20261020_audit_place_copy';
+$receipt_key = match ($batch) {
+    'completion' => 'iss_backup_20261020_audit_completion',
+    'place-copy' => 'iss_backup_20261020_audit_place_copy',
+    'repair-notice' => 'iss_backup_20261020_audit_repair_notice',
+};
 $receipt = get_option($receipt_key);
 $hash = static fn($value): string => hash('sha256', wp_json_encode($value));
 $draft_hash = static function (int $id) use ($hash): string {
