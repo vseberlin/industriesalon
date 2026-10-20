@@ -81,6 +81,7 @@ try {
         $expect($special && (int) $special['source_post_id'] === $tour_id && $special['title'] === 'Fixture Tour Spezial', 'Series matching preserves appointment title');
         $display = $owner->format_timeline_row($special);
         $expect($display['title'] === 'Fixture Tour Spezial' && $display['time_label'] === '14:00 – 15:30 Uhr', 'Public special label and actual duration survive formatting');
+        $expect($owner->get_series_by_key('tour:fixture-tour')['supersaas_title'] === 'Fixture Tour', 'Special appointment must not rename the matched series');
         $expect(!$owner->get_occurrence_by_external('supersaas', 'public:individual')
             && $owner->get_series_by_key('tour:fixture-tour-individuell')['review_state'] === 'ignored', 'Ignored individual series cannot rematch to regular public tour');
     }

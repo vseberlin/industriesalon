@@ -15,7 +15,7 @@ evergreen Kiez/bus copy, private calendar exclusions and special appointment
 labels. Prices/durations follow the user's confirmation and existing published
 facts. Behrensbau interiors remain closed. No external appointments changed.
 
-Local verification: 42 audit, 160 isolated commerce, 29 isolated occurrence and
+Local verification: 42 audit, 160 isolated commerce, 31 isolated occurrence and
 seven booking-JS checks; existing programme-preview/native-booking acceptance,
 scoped PHP/CSS/JS checks and browser checks. Real requests and private drafts
 were retained. No real form submission or notification was sent.

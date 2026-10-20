@@ -1570,6 +1570,7 @@ function iss_supersaas_sync_occurrences() {
             'source_post_type' => 'fuehrung',
             'kind' => 'tour',
             'title' => wp_strip_all_tags($appointment_title !== '' ? $appointment_title : $clean_title),
+            'supersaas_title' => wp_strip_all_tags($clean_title),
             'starts_at' => $start,
             'ends_at' => $end,
             'date_source' => 'supersaas',
