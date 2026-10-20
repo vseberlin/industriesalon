@@ -10,8 +10,8 @@ Der Plan umfasst Texte, Bilder und Gestaltung sowie funktionale und datenbezogen
 
 Die frühere pauschale Aussage, alle Code- und Inhaltskorrekturen seien abgeschlossen,
 war zu weit gefasst. Das vom Nutzer anschließend benannte Restpaket ist jetzt lokal
-umgesetzt und geprüft; Veröffentlichung und Staging-Abnahme folgen über den bestehenden
-Git-Austauschweg. Der verbindliche Release-Stand steht im [Handoff](../../handoff_CURRENT.md).
+umgesetzt, über GitHub veröffentlicht und auf Staging geprüft
+(Implementierung `23642a2`). Der verbindliche Release-Stand steht im [Handoff](../../handoff_CURRENT.md).
 Die weiter unten erhaltenen Auditbefunde beschreiben den Ausgangszustand.
 
 | Angefragtes Restpaket | Korrektur |
@@ -40,18 +40,21 @@ Raumvermietung: insgesamt bis zu 100 Sitzplätze, ab 400 €, Zeiten und Caterin
 auf Anfrage. KiezKarte: 49 €, 20 Partnerangebote, bis 31.12.2026; veröffentlichte
 Pilotbedingungen beibehalten. Der genaue Kiezfondsanteil bleibt unbestätigt.
 
-**Lokale Prüfung:** 34 neue + 42 + 42 bestehende Auditprüfungen und 27 Besuchsprüfungen;
+**Lokale und Staging-Prüfung:** 34 neue + 42 + 42 bestehende Auditprüfungen und 27 Besuchsprüfungen;
 neun konsistente Registries, 191 gültige kanonische Dokumente, 184 vorhandene
 Medienreferenzen. Chrome und Firefox: 13 Hauptseiten bei 390/768/1348/1720 px ohne
 Seitenüberlauf. Firefox/axe: auf diesen Seiten keine automatisiert erkannten
-WCAG-A/AA-Verstöße. 53 interne Zielseiten und deren Sprungmarken erreichbar.
+WCAG-A/AA-Verstöße. 53 interne Zielseiten und deren Sprungmarken erreichbar; auf Staging musste
+ein einzelner Timeout erneut angefragt werden (danach HTTP 200 in 0,45 s).
 Galerien, Menü mit Tab/Escape und Fokusrückgabe, Archivsuche/Leerzustand/Filter,
 Atlas-Suche mit Epoche sowie Vollbild/Rückkehr bedient. Newsletter lehnt ungültige
 Adresse und fehlende Einwilligung ab, ohne eine Anmeldung abzusenden.
 Über-uns-Editor lädt die gespeicherte Fassung sowie Desktop-/Telefonvorschau.
 Zusätzlich bestehen sechs exemplarische Detailseiten in Firefox dieselben Breiten-
 und axe-Prüfungen. Gezielte PHP-Syntax, PHPCS/PHPStan, ESLint/Stylelint und drei
-CSS-Vertragstests bestehen. Staging-Abnahme folgt im Release-Checkpoint.
+CSS-Vertragstests bestehen. Staging: alle 19 Seiten bestehen die Firefox-Breiten- und axe-Prüfungen; sieben
+geänderte Hauptseiten zusätzlich in Chrome auf Telefon- und Desktopbreite,
+einschließlich `noindex`. Die genannten Firefox-Funktionstests bestehen dort ebenfalls.
 
 **Privater Datentransfer dieses Pakets:** `ops/migrations/2026-10-20-audit-polish.php`
 ändert genau vier vorhandene Landing-Dokumente über `iss-editorial`:
@@ -61,7 +64,12 @@ liegen ausschließlich unter `var/audit-polish-20261020/`; Before-Image-Receipt:
 `/srv/industriesalon/stage/backups/iss-backup-20261020T144249Z/`
 (119 Tabellen, sieben gelesene/gehashte Sicherungsartefakte).
 Keine vollständige DB-Überschreibung, kein Schema- oder Uploadtransfer.
-Vorhandene Medien sind auf beiden Systemen vorhanden. SQL, Inhalts-JSON,
+Alle 191 kanonischen Dokumente stimmen nach URL-Normalisierung überein.
+Genau vier Seiten-Metadatensätze geändert und vier native Revisionen ergänzt;
+alle vorhandenen Beiträge und Revisionen, private Entwürfe, Rechte des Benutzers
+328 und Buchungsanfragen erhalten. Beide Ortsprojektionen bleiben unverändert
+(193 Epochen, 269 Ortszustände). Home-/About-Templatequellen und bestehende
+Projektbild-Hashes stimmen. Vorhandene Medien sind auf beiden Systemen vorhanden. SQL, Inhalts-JSON,
 Sicherungen und Medien gelangen nicht auf GitHub.
 
 **Verbleibende fachliche und menschliche Freigaben:** Für „Kinder mit Erzieherin

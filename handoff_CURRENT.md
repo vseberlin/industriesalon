@@ -1,61 +1,73 @@
 # Current handoff — 20 October 2026
 
-## Audit polish: local verification complete, release in progress
+## Requested audit polish deployed
 
-Website checkout: `/home/vladimir/wp-website`; baseline local/GitHub/staging
-`56fba9a`. The mixed/archive checkout `/home/vladimir/wp` remains untouched.
-The user authorized the remaining copy, cross-links, archive wording/sidebar,
-visual consolidation, layout, homepage, periodisation and acceptance package.
-**Hero button positions are explicitly excluded and preserved.**
+Implementation **23642a2** is committed, pushed to GitHub main and fast-forwarded
+to staging. This documentation receipt follows the same exchange path.
+Website: `/home/vladimir/wp-website`; staging: `/srv/industriesalon/stage/repo`.
+The mixed/archive checkout `/home/vladimir/wp` is untouched.
 
-The [correction plan](docs/project/website-correction-plan-2026-10-20.md)
-now lists actual scope and retracts the previous blanket completion claim.
-Sammlungen and tour cross-links are rewritten; three collection links to a
-private women exhibition draft now reach its published counterpart. H1/H2 use
-serif; public accents, cards, dividers and spacing are consolidated. Home project
-titles/Futura logo and About triptych remain. All three period views use six
-matching names/dates without rewriting historical place facts or legacy IDs.
-Shared accessibility fixes name image links, focus galleries, correct exhibition
-filter ARIA and improve contrast. Archive filters use page scrolling.
+Completed the requested Sammlungen copy, tour cross-links, wording, archive
+terminology/sidebar, shared visual consolidation, layout, homepage details and
+six-period alignment. **Hero button positions are preserved.** Home project
+titles/Futura logo and About triptych remain. Three broken collection links now
+reach the published women exhibition, preserving the old private draft.
+Shared fixes cover image-link names, gallery keyboard access, filter ARIA,
+text contrast, card spacing and mobile overflow. The
+[correction plan](docs/project/website-correction-plan-2026-10-20.md)
+records actual scope and retracts the earlier blanket completion claim.
 
-## Verification and release requirements
+## Verification
 
-Local: 34 + 42 + 42 audit checks and 27 visitor checks; nine registries;
-191 valid canonical documents, 184 existing media references. Chrome and Firefox:
-13 routes at 390/768/1348/1720 px without page overflow. No axe WCAG A/AA violations
-on those 13 routes. 53 internal destinations/anchors pass. Menu, galleries,
-archive filters/empty state and Atlas search/period/fullscreen tested in Firefox.
-Newsletter invalid-input/required-consent checks send nothing. About saved editor
-preview works at desktop and phone width. Six additional detail pages pass the same Firefox width/axe checks. Targeted
-PHP syntax, PHPCS/PHPStan, ESLint/Stylelint and three CSS contracts pass.
-Deployment and staging checks are in progress.
+Local and staging: **145** audit/visitor checks (34 + 42 + 42 + 27), nine registries,
+191 valid canonical documents and 184 existing media references. Targeted PHP
+syntax, PHPCS/PHPStan, ESLint/Stylelint and three CSS contracts pass.
 
-Private folder: `var/audit-polish-20261020/` on each machine. Fresh read-tested and
-hashed staging backup:
+Chrome locally: 13 main routes at 390/768/1348/1720 px, without overflow or broken
+loaded images. Firefox locally and on staging: those 13 routes plus six detail
+pages at all four widths, no page overflow and no axe WCAG A/AA findings.
+Staging Chrome: seven changed main routes at phone/desktop widths, noindex intact.
+53 internal destinations/anchors pass on both sites; one staging request timed
+out during the batch and returned HTTP 200 in 0.45 s on targeted retry.
+
+Firefox functional checks pass locally and on staging: menu Tab/Escape and focus
+return, both gallery controls, archive search/empty result/filter/reset/final
+mobile control, Atlas search with period and full-screen return. Newsletter
+invalid-address/required-consent checks send nothing. About saved editor preview
+was verified locally at desktop/phone width, without publishing or changing drafts.
+Actual 200% zoom, physical touch and real screenreader checks remain human gates.
+
+## Private content release and preservation
+
+Private evidence/inputs: `var/audit-polish-20261020/` on both machines.
+Read-tested/hashed staging backup:
 `/srv/industriesalon/stage/backups/iss-backup-20261020T144249Z/`
-(119 tables, seven artifacts). Local SQL backup is private and gzip-tested.
+(119 tables, seven artifacts). Local private SQL backup is gzip-tested.
 
-Paired migration: `ops/migrations/2026-10-20-audit-polish.php`, applied/verified
-locally with `input-local.json`; staging needs `input-stage.json` after code
-fast-forward. Exactly four existing landing documents; receipt
-`iss_backup_20261020_audit_polish` keeps before-images and private draft hashes.
-Existing revisions retained. No schema or upload transfer. **No SQL/content/media
-artifacts on GitHub.** Before-images guard against intervening editorial edits.
+`ops/migrations/2026-10-20-audit-polish.php` applied and verified on both systems
+with site-specific private input. Exactly four existing landing documents:
+Home, Führungen, Schöneweide, About. Receipt `iss_backup_20261020_audit_polish`
+contains before-images and private draft hashes. Restore through the same owner
+API only after checking for later editorial edits. No schema or upload transfer,
+no full DB replacement. **No SQL/content/media artifacts entered GitHub.**
 
-Next: finish detail acceptance; commit/push code, tests and docs; fast-forward
-staging, apply/verify private API input; verify canonical parity, preservation,
-public pages and noindex; replace this checkpoint with the release receipt.
+All 191 canonical documents match after URL normalization. Exactly four existing
+page metadata groups changed; four native revisions added. All prior posts and
+revisions remain. Private drafts, user 328's Projects-only capabilities and booking
+requests are unchanged. Both place projections match exactly (193 epochs and
+269 states). Home/About template authority and project image hashes match.
+Containers are healthy; no failed services or recent app/database errors.
 
-## Preserved boundaries and human gates
+## Remaining human/factual gates before production
 
-Keep staging noindex, production untouched, mail routing, core/DB/uploads/intake,
-Futura/ZiG private drafts and user 328's Projects-only create/edit/media rights.
-Previous programme/admission, room (100 seated, from €400, hours/catering on
-request), Repair Café (first/second Wednesday, household items, free, times from
-calendar) and KiezKarte pilot terms remain. Kiezfonds exact share is unconfirmed.
+Keep staging noindex and production untouched. No real messages, newsletter
+subscriptions, bookings or orders sent. Earlier confirmed tour/admission, rental,
+Repair-Café and KiezKarte pilot terms are preserved. Kiezfonds exact share remains
+unconfirmed; retain the approved published wording.
 
-Two audited children's photos have source links but no recorded publication
-rights; user confirmation/credit requested. Actual 200% browser zoom, physical
-touch and a real screenreader pass remain before production. Automated axe and
-viewport tests do not replace those gates. No real mail, subscriptions, bookings
-or orders sent. Maintenance activation remains separate in `TODO.md`.
+Publication rights/credits for the two audited children's photos remain requested
+from the user: source links exist but rights fields are empty. No rights invented.
+Complete actual 200% browser zoom, physical touch and screenreader acceptance
+before production. The current browser control did not change real zoom when
+sent zoom keys; viewport tests are not a substitute. Maintenance activation
+remains separate in `TODO.md`.
