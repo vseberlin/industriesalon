@@ -9,8 +9,9 @@ Der Plan umfasst Texte, Bilder und Gestaltung sowie funktionale und datenbezogen
 ## Aktueller Umsetzungsstand — 20. Oktober 2026
 
 Das zusätzliche Paket aus dem Word-Audit (Sammlungen/Archiv S. 5, Projekte/ZiG
-S. 6–7, Ausstellungsdetail S. 7 und Behrensbau S. 9) ist lokal umgesetzt und
-geprüft; die Staging-Veröffentlichung folgt im aktuellen Handoff.
+S. 6–7, Ausstellungsdetail S. 7 und Behrensbau S. 9) ist umgesetzt, über GitHub
+veröffentlicht und mit den privaten Inhaltsmigrationen auf Staging geprüft
+(Implementierung `889af3d`). Der aktuelle Stand steht im Handoff.
 
 - Vier bebilderte Sammlungseinstiege; wiederholte Navigation entfernt, Galerie
   und Epochen erhalten. Archivstückart (z. B. Foto) und Motiv/Bereich (z. B.
@@ -26,12 +27,18 @@ geprüft; die Staging-Veröffentlichung folgt im aktuellen Handoff.
   intern weiter. Quellen bleiben dokumentiert. 17 bisher externe PDFs werden
   lokal bereitgestellt; Quizinhalte werden als Teil des Rückblicks beschrieben.
 
-Lokale Prüfung: 412 öffentliche Seiten mit HTTP 200 ohne solche externen Links;
-211 lesende Audit-/Buchungsprüfungen und 73 isolierte Event-/Feedbackprüfungen.
-191 gültige Dokumente, 184 Medienreferenzen. Zehn betroffene Routen bestehen die
-vier Prüfbreiten und axe. Historische Daten bleiben erhalten; die bestehenden
-Owner-APIs aktualisieren lediglich die zugehörigen Linkprojektionen.
-Gezielte Inhaltsmigrationen und Medien bleiben privat, ohne SQL auf GitHub.
+Lokale und Staging-Prüfung: jeweils 412 öffentliche Seiten mit HTTP 200 ohne solche
+externen Links; 211 lesende Audit-/Buchungsprüfungen, zusätzlich lokal 73 isolierte
+Event-/Feedbackprüfungen. Die 132 zunächst durch das Staging-Anfragelimit gebremsten
+Seiten wurden einzeln langsamer erfolgreich geprüft. 191 gültige Dokumente stimmen
+nach URL-Normalisierung überein; 184 Medienreferenzen sind vorhanden. Zehn betroffene
+Routen bestehen auf beiden Systemen die vier Prüfbreiten und axe. Interner Checkout,
+Fokusrückgabe und getrennte Gruppenanfrage bestehen ohne echte Buchung oder Nachricht.
+Historische Daten bleiben erhalten; die bestehenden Owner-APIs aktualisieren die
+zugehörigen Linkprojektionen. Alle 194 referenzierten Download-Dateien sind auf
+Staging per Hash geprüft. Gezielte Inhaltsmigrationen und Medien bleiben privat,
+ohne SQL auf GitHub. Die abschließende Breitenkorrektur des Sammlungsfotos benötigt
+keinen zusätzlichen Daten- oder Medientransfer.
 Der aktuelle Release- und Abnahmestand steht im [Handoff](../../handoff_CURRENT.md).
 
 ### Vorheriges Restpaket

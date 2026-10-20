@@ -1,11 +1,12 @@
 # Current handoff — 20 October 2026
 
-## Audit follow-up ready for staging
+## Audit follow-up deployed and verified
 
 Website checkout: `/home/vladimir/wp-website`; staging:
-`/srv/industriesalon/stage/repo`. Base release: `f7ff81d`.
-This checkpoint implements the requested Word audit pp. 5–7 and 9 corrections.
-Commit/push and the prepared staging release are the next authorized operations.
+`/srv/industriesalon/stage/repo`. Implementation: `889af3d`, published through
+GitHub and applied on staging with both private content migrations.
+This checkpoint closes the requested Word audit pp. 5–7 and 9 corrections and
+adds the final collection-photo width fix; that CSS fix needs no data/media artifact.
 
 - Sammlungen: four illustrated entry points, fewer repeated navigation boxes;
   retained gallery and six periods. Archive cards distinguish object type from
@@ -23,13 +24,16 @@ Commit/push and the prepared staging release are the next authorized operations.
 
 ## Verification and private release
 
-Local: 211 read-only audit/booking checks, 73 isolated event/feedback assertions,
-191 valid canonical documents, 184 existing media references, consistent registries.
-412 public pages return 200; no old-site/minisite/SuperSaaS links remain in their
-HTML. All 3053 object bodies contain no embedded legacy links; archive renderers
+Local and staging: 211 read-only audit/booking checks, 191 valid canonical
+documents, 184 existing media references, consistent registries. Local additionally
+passes 73 isolated event/feedback assertions with fixtures removed.
+All 412 public pages return 200 on both hosts, without old-site/minisite/SuperSaaS
+links. Staging initially rate-limited 132 requests; a slower serial retry passed
+all of them without changing rate limits. All 3053 object bodies contain no
+embedded legacy links; archive renderers
 use local copies while keeping source credits. Firefox checks cover ten affected
 routes at 390/768/1348/1720 px, with no overflow or remaining axe findings.
-Checkout, Escape/focus return, group inquiry and archive/gallery controls pass;
+Checkout, Escape/focus return, group inquiry and archive/gallery controls pass on both hosts;
 no external provider requests or real submissions. Chrome checkout and key page
 visuals inspected. Targeted PHP/CSS checks pass.
 
@@ -47,9 +51,11 @@ Verified staging backup (119 tables, seven artifacts):
 `/srv/industriesalon/stage/backups/iss-backup-20261020T162319Z/`.
 SQL, content JSON, media, manifests and backups remain private, outside GitHub.
 
-All prior local posts/revisions remain. Place owner APIs rebuilt 16 epoch and 29
-state projection rows; 193 epochs/269 states retain all historical dates, labels,
-media and meanings. Only source URLs, derived IDs and timestamps changed.
+All prior posts/revisions remain on both hosts, and all 191 canonical documents
+match after site-URL normalization. Only the authorized records changed.
+Local before/after comparison confirms that place owner APIs rebuilt 16 epoch
+and 29 state projection rows; 193 epochs/269 states retain all historical dates,
+labels, media and meanings. Only source URLs, derived IDs and timestamps changed.
 Restore receipts through owner APIs only after checking for newer editorial edits.
 
 ## Remaining gates

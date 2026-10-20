@@ -114,6 +114,7 @@
 
 .iss-sammlungen-focus__media {
     margin: 0;
+    width: 100%;
     aspect-ratio: 2 / 1;
     max-height: 18rem;
 }
