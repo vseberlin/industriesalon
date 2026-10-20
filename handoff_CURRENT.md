@@ -3,30 +3,31 @@
 ## Released and verified
 
 Exhibition visitor information is deployed from local through GitHub `main` to
-staging: implementation **f6fc8a3**, baseline **4b02fdd**. This checkpoint follows
+staging: visitor implementation **f6fc8a3**, confirmed admission **76898e4**,
+baseline **4b02fdd**. This checkpoint follows
 the same synchronization path. Website code: `/home/vladimir/wp-website`;
 staging: `/srv/industriesalon/stage/repo`. Do not edit the mixed/archive checkout.
 
 The overview reuses the central visit block. Current exhibitions with an explicit
-museum venue show shared address, museum hours and access; online, external,
+museum venue show shared address, museum hours, free admission and access; online, external,
 future and past exhibitions do not inherit those conditions. Ended exhibitions
 are labelled. The existing venue field is editor-visible; thematic Place links
 remain distinct. The duplicate single-exhibition template override is preserved
 under a retired slug as a draft; the theme now owns the active composition.
 
-Admission is **still unconfirmed**: the central price fields are empty. The user
-was asked whether museum admission and the current Jüdisches Leben exhibition
-are free. No price/free-admission claim was added. The shared visit block now
-supports central admission information once confirmed. F04 remains open for this
-fact; next independent audit slice is F06 (project status and actions).
+The user confirmed that museum admission and the current Jüdisches Leben
+exhibition are both free. **Eintritt frei.** is now stored once in central
+settings and shown in both visitor panels. F04 is complete; next independent
+audit slice is F06 (project status and actions).
 
-Verification: **25 visitor checks + 42 prior audit checks** pass locally and on
+Verification: **27 visitor checks + 42 prior audit checks** pass locally and on
 staging. PHP lint/PHPCS/PHPStan, targeted ESLint/stylelint and three CSS contracts
 pass. Chrome: overview/current/off-site/past/digital cases at 390/1440 px, no
 horizontal overflow; native editor venue field checked without saving. Five
 public routes return 200/noindex. No failed services or release PHP errors.
-All 36 exhibition records/documents and central settings are preserved, apart
-from normal local editor lock metadata. Active templates and central facts match
+All 36 exhibition records/documents and existing address/hours/access settings
+are preserved, apart from normal local editor lock metadata. The only changed
+central fact is the confirmed admission note. Active templates and central facts match
 between environments. No messages or real requests submitted.
 
 ## Private data and rollback
@@ -34,14 +35,18 @@ between environments. No messages or real requests submitted.
 Verified pre-release staging backup:
 `/srv/industriesalon/stage/backups/iss-backup-20261020T124900Z/`
 (seven hashed/read-tested artifacts, 119 tables, baseline **4b02fdd**).
-All existing managed backups retained. Migration:
-`ops/migrations/2026-10-20-exhibition-visit-info.php`.
+All existing managed backups retained. Apply and verify in order:
+`ops/migrations/2026-10-20-exhibition-visit-info.php`, then
+`ops/migrations/2026-10-20-museum-admission.php`. The second intentionally
+supersedes the first price snapshot; verify admission after the final step.
 Private environment-specific inputs, snapshots and receipts:
 `var/visitor-info-20261020/` on each machine. Before-image option:
-`iss_backup_20261020_exhibition_visit_info` (non-autoload).
-The prices were deliberately unchanged. Restore the recorded template name and
+`iss_backup_20261020_exhibition_visit_info` and
+`iss_backup_20261020_museum_admission` (non-autoload). Restore the recorded template name and
 status through `wp_update_post` only after checking later edits; no template was
-deleted. Detailed verification: `preservation.json`, `http.json` and release logs.
+deleted. Admission rollback uses the recorded option before-image (absent before
+this release). Detailed verification: `preservation.json`,
+`admission-preservation.json`, `http.json` and release logs.
 No SQL, content JSON, backups or uploads belong in GitHub; no schema/upload
 transfer or full database replacement was needed.
 
