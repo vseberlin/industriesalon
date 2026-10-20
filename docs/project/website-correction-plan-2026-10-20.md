@@ -8,7 +8,8 @@ Der Plan umfasst Texte, Bilder und Gestaltung sowie funktionale und datenbezogen
 
 ## Abschluss des Korrekturpakets — 20. Oktober 2026
 
-Die umsetzbaren Korrekturen aus beiden Audits sind lokal abgeschlossen. Der aktuelle
+Die umsetzbaren Korrekturen aus beiden Audits sind lokal und auf Staging veröffentlicht
+(Implementierung `dbbe547`, Kalenderhinweis `f700a36`). Der aktuelle
 Veröffentlichungs- und Prüfstand steht im [Handoff](../../handoff_CURRENT.md).
 Die unten erhaltenen Auditbefunde beschreiben den Ausgangszustand, keine neue offene Arbeitsliste.
 
@@ -38,8 +39,8 @@ Gründung und Auszeichnung wurden mit den veröffentlichten Vereinsquellen
 [Gründungsgeschichte](https://www.industriesalon.de/industriesalon/verein/) und
 [Auszeichnungen](https://www.industriesalon.de/auszeichnungen/) abgeglichen.
 
-**Prüfung und Grenzen:** 41 neue, 42 bestehende Audit- und 27 Besuchsprüfungen
-bestehen lokal; neun Registries, 191 gültige Dokumente und 184 vorhandene
+**Prüfung und Grenzen:** 42 neue, 42 bestehende Audit- und 27 Besuchsprüfungen
+bestehen lokal und auf Staging; neun Registries, 191 gültige Dokumente und 184 vorhandene
 Medienreferenzen. Syntax, gezieltes PHPCS/PHPStan, ESLint, Stylelint und drei
 CSS-Vertragstests bestehen. Die 24 bestehenden PHPCS-Meldungen in `videos.php`
 sind gegenüber dem Ausgangsstand unverändert; die kleine Labelkorrektur fügt
@@ -51,17 +52,30 @@ Diese menschliche Freigabe bleibt vor einer Produktionsveröffentlichung nötig.
 Es wurden keine echten Formulare, E-Mails oder Buchungen ausgelöst.
 
 **Privater Datentransfer:** `2026-10-20-audit-completion.php` mit
-`input-stage.json`, dann mit `place-input-stage.json`; anschließend
+`input-stage.json`, dann mit `place-input-stage.json` und `repair-input-stage.json`; anschließend
 `2026-10-20-archive-labels.php`. Vorherzustände und Eingaben liegen unter
-`var/audit-completion-20261020/`, Receipts in den drei nicht automatisch geladenen
+`var/audit-completion-20261020/`, Receipts in den vier nicht automatisch geladenen
 Optionen `iss_backup_20261020_audit_completion`,
-`iss_backup_20261020_audit_place_copy` und `iss_backup_20261020_archive_labels`.
-Zwölf Inhaltsdatensätze, zwei Einstellungen, zwei als Entwurf erhaltene
+`iss_backup_20261020_audit_place_copy`, `iss_backup_20261020_audit_repair_notice`
+und `iss_backup_20261020_archive_labels`.
+Dreizehn Inhaltsdatensätze, zwei Einstellungen, zwei als Entwurf erhaltene
 Templateübersteuerungen und zwölf Anzeigenamen sind der gezielte Umfang.
 Native und zuständige Plugin-APIs bewahren private Entwürfe; keine vollständige
 Datenbanküberschreibung. Alle verwendeten Bilder existieren auf beiden Systemen;
 kein Upload- oder Schematransfer. GitHub erhält Code, Tests und Dokumentation,
 keine SQL-/Inhalts-/Medienartefakte.
+
+Staging: 21 öffentliche HTTP-Prüfungen einschließlich erwarteter 404 der internen
+Arbeitsnotiz und vorhandener Rechtsanker, 24 zusätzliche Breitenprüfungen ohne
+Überlauf/defekte geladene Bilder, 191 identische kanonische Dokumente nach
+URL-Normalisierung. Bildhashes und geschützte Home-/About-Templates stimmen.
+Die Eigentümer-API erzeugt beim korrigierten Ortsnamen neue Projektions-IDs und
+Zeitstempel; sämtliche 269 inhaltlichen Ortszustände stimmen mit der geprüften
+Sicherung überein. WordPress hat drei alte normale Revisionen des bearbeiteten
+Projekts Walk of Fame nach seiner Aufbewahrungsgrenze entfernt; sie bleiben in der Sicherung.
+Private Entwürfe und unbeteiligte Beiträge blieben unverändert. Repair-Café-Hinweis
+verweist jetzt ebenfalls auf den Kalender, ohne die veraltete Uhrzeit 17–20.
+
 
 ## Bereits veröffentlichtes Programm- und Besuchspaket
 

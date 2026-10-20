@@ -68,10 +68,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   Current audit leftovers are non-blocking: unmapped inert series have zero
   occurrence rows, and `Stadtrallye für Erwachsene` is mapped but has no future
   SuperSaaS rows.
-- Repair-Café staging schedule: recheck intended future dates against the
-  full local snapshot delivered on 16 October; the September target observation
-  is obsolete. Do not blindly replay the June canonical-event SQL. The Apache
-  stack on `8082` is the active local website, not a retirement candidate.
 - Front-page client experiment decision: original baseline is captured in
   `ops/sql/2026-06-29-frontpage-baseline.sql`; current DB override content is
   synced to `themes/industriesalon/templates/front-page.html` for review. After
