@@ -693,6 +693,7 @@ final class Industriesalon_Steuerung {
                 'show_office_hours'  => ['type' => 'boolean', 'default' => true],
                 'show_arrival'       => ['type' => 'boolean', 'default' => true],
                 'show_accessibility' => ['type' => 'boolean', 'default' => true],
+                'show_admission'     => ['type' => 'boolean', 'default' => false],
                 'show_contact'       => ['type' => 'boolean', 'default' => false],
                 'show_contact_phone' => ['type' => 'boolean', 'default' => true],
                 'show_contact_email' => ['type' => 'boolean', 'default' => true],
@@ -866,6 +867,12 @@ final class Industriesalon_Steuerung {
         }
         if ($show_museum) {
             $rows[] = $this->build_visit_info_hours_row('museum');
+        }
+        if (!empty($attributes['show_admission'])) {
+            $admission = $this->visit_info_admission_summary();
+            if ($admission !== '') {
+                $rows[] = $this->render_visit_info_row('admission', __('Eintritt', 'industriesalon-steuerung'), $admission);
+            }
         }
         if ($show_office) {
             $rows[] = $this->build_visit_info_hours_row('office');
@@ -1133,16 +1140,17 @@ final class Industriesalon_Steuerung {
         );
     }
 
-    private function build_visit_info_hours_row(string $type): string {
+    private function visit_info_hours_summary(string $type): string {
         $type = $this->normalize_visit_type($type);
         $group = $this->visit_group_for_type($this->get_visit_schedule(), $type);
         $summary = $this->build_visit_summary($group, true);
-        if ($summary === '') {
-            $summary = __('Keine Zeiten eingetragen.', 'industriesalon-steuerung');
-        }
+        return $summary !== '' ? $summary : __('Keine Zeiten eingetragen.', 'industriesalon-steuerung');
+    }
 
+    private function build_visit_info_hours_row(string $type): string {
+        $type = $this->normalize_visit_type($type);
         $label = $this->visit_type_label($type);
-        $text = '<strong>' . esc_html($label) . ':</strong> ' . esc_html($summary);
+        $text = '<strong>' . esc_html($label) . ':</strong> ' . esc_html($this->visit_info_hours_summary($type));
         $notice = $this->build_visit_info_exception_notice($type);
         if ($notice !== '') {
             $text .= $notice;
@@ -1325,6 +1333,41 @@ final class Industriesalon_Steuerung {
         return $summary;
     }
 
+    private function visit_info_admission_summary(): string {
+        $prices = get_option(self::OPTION_PRICES, $this->default_prices());
+        $parts = [];
+        foreach ([
+            'adult' => __('Regulär', 'industriesalon-steuerung'),
+            'reduced' => __('Ermäßigt', 'industriesalon-steuerung'),
+            'group' => __('Gruppen', 'industriesalon-steuerung'),
+            'school' => __('Schulklassen', 'industriesalon-steuerung'),
+        ] as $key => $label) {
+            $value = trim((string) ($prices[$key] ?? ''));
+            if ($value !== '') {
+                $parts[] = $label . ': ' . $value;
+            }
+        }
+        $note = trim((string) ($prices['note'] ?? ''));
+        if ($note !== '') {
+            $parts[] = $note;
+        }
+        return implode(' · ', $parts);
+    }
+
+    /** Shared museum facts for existing metadata panels; no exhibition-specific copies. */
+    public function get_museum_visit_rows(): array {
+        return array_values(array_filter([
+            ['label' => __('Adresse', 'industriesalon-steuerung'), 'value' => trim($this->compose_full_address())],
+            [
+                'label' => __('Museumsöffnungszeiten', 'industriesalon-steuerung'),
+                'value' => esc_html($this->visit_info_hours_summary('museum')) . $this->build_visit_info_exception_notice('museum'),
+                'html' => true,
+            ],
+            ['label' => __('Eintritt', 'industriesalon-steuerung'), 'value' => $this->visit_info_admission_summary()],
+            ['label' => __('Zugang', 'industriesalon-steuerung'), 'value' => $this->visit_info_accessibility_summary()],
+        ], static fn(array $row): bool => $row['value'] !== ''));
+    }
+
     private function visit_info_icon(string $icon): string {
         $icons = [
             'address' => 'location',
@@ -1332,6 +1375,7 @@ final class Industriesalon_Steuerung {
             'office-hours' => 'calendar',
             'arrival' => 'location',
             'accessibility' => 'accessibility',
+            'admission' => 'ticket',
             'contact' => 'group',
         ];
 

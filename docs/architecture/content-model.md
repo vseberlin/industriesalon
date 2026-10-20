@@ -1,5 +1,16 @@
 # Content Model
 
+Exhibition visitor facts use the existing `iss_location` venue metadata, exposed
+in the native and ACF editors. The `iss/content-meta` renderer reads central
+museum address, hours, exceptions, admission and access through
+`Industriesalon_Steuerung::get_museum_visit_rows()` only for a current exhibition
+whose explicit venue matches the configured institution name. Permanent
+exhibitions need that explicit venue too. Thematic Place relations do not establish
+a visitor venue. Online, external, future and historical special exhibitions
+retain their own metadata without inheriting current museum conditions.
+The overview reuses `industriesalon/visit-info`; its optional `show_admission`
+setting reads the same central prices. Empty prices never mean free admission.
+
 This repo uses WordPress editorial content as the primary authoring surface. Custom plugins define CPTs, fields, dynamic blocks, imports, and data contracts; the theme owns public composition and visual presentation.
 
 ## Ownership

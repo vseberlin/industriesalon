@@ -5,7 +5,8 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 ## Next
 
 - Continue the [website correction plan](docs/project/website-correction-plan-2026-10-20.md#umsetzung--programm-und-erstes-korrekturpaket)
-  with visitor information (remaining F04), then the next agreed text/visual slice.
+  with the pending admission confirmation (remaining F04: museum and current
+  exhibition; central prices are empty), then project status/actions (F06).
   Keep separate public/group offers, confirmed €14/€10 fares, individual-calendar
   exclusions and the dated Behrensbau interior-closure notice. See the current
   handoff for release evidence; private data artifacts never go to GitHub.

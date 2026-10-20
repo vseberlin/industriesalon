@@ -114,6 +114,7 @@ function iss_content_model_meta_definitions() {
             'iss_booking_gateway_description' => ['type' => 'string', 'sanitize' => 'sanitize_textarea_field', 'default' => ''],
         ],
         ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE => [
+            'iss_location' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_start_date' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_end_date' => ['type' => 'string', 'sanitize' => 'sanitize_text_field', 'default' => ''],
             'iss_public_overview_enabled' => ['type' => 'boolean', 'sanitize' => 'rest_sanitize_boolean', 'default' => false],

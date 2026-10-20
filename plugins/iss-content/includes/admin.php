@@ -1688,7 +1688,9 @@ function iss_content_model_render_ausstellung_box($post) {
     echo '<p><label for="iss_end_date"><strong>' . esc_html__('Enddatum', 'iss-content-model') . '</strong></label>';
     echo '<input class="widefat" type="date" id="iss_end_date" name="iss_content_model[iss_end_date]" value="' . esc_attr($end) . '"></p>';
 
-    echo '<p class="description">' . esc_html__('Sammlungsbereich und Themen werden in den Taxonomie-Boxen verwaltet. Orte werden ueber "Ort hinzufuegen" verbunden.', 'iss-content-model') . '</p>';
+    echo '<p><label for="iss_location"><strong>' . esc_html__('Ausstellungsort', 'iss-content-model') . '</strong></label>';
+    echo '<input class="widefat" type="text" id="iss_location" name="iss_content_model[iss_location]" value="' . esc_attr((string) get_post_meta($post->ID, 'iss_location', true)) . '"></p>';
+    echo '<p class="description">' . esc_html__('Tatsächlicher Besuchsort; bei Onlineausstellungen leer lassen. Für Industriesalon Schöneweide werden während der Laufzeit die zentralen Besuchsinformationen ergänzt. Thematische Ortsbezüge werden über „Ort hinzufügen“ verbunden.', 'iss-content-model') . '</p>';
 
     echo '<fieldset><legend><strong>' . esc_html__('Ausstellungsart', 'iss-content-model') . '</strong></legend>';
     foreach (iss_content_model_get_ausstellung_type_options() as $slug => $label) {

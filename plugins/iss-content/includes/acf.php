@@ -44,6 +44,13 @@ function iss_content_model_register_acf_ausstellung_fields(): void
                 'wrapper' => ['width' => '50'],
             ],
             [
+                'key' => 'field_iss_ausstellung_location',
+                'label' => __('Ausstellungsort', 'iss-content-model'),
+                'name' => 'iss_location',
+                'type' => 'text',
+                'instructions' => __('Tatsächlicher Besuchsort; bei Onlineausstellungen leer lassen. Für Industriesalon Schöneweide werden während der Laufzeit die zentralen Besuchsinformationen ergänzt. Thematische Ortsbezüge werden über „Ort hinzufügen“ verbunden.', 'iss-content-model'),
+            ],
+            [
                 'key' => 'field_iss_public_overview_enabled',
                 'label' => __('In Ausstellungsübersichten anzeigen', 'iss-content-model'),
                 'name' => 'iss_public_overview_enabled',

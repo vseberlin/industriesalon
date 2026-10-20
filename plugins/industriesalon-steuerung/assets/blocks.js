@@ -254,6 +254,7 @@
       show_office_hours: { type: 'boolean', default: true },
       show_arrival: { type: 'boolean', default: true },
       show_accessibility: { type: 'boolean', default: true },
+      show_admission: { type: 'boolean', default: false },
       show_contact: { type: 'boolean', default: false },
       show_contact_phone: { type: 'boolean', default: true },
       show_contact_email: { type: 'boolean', default: true },
@@ -302,6 +303,11 @@
               label: 'ÖPNV zeigen',
               checked: !!props.attributes.show_arrival,
               onChange: function (value) { props.setAttributes({ show_arrival: value }); }
+            }),
+            el(ToggleControl, {
+              label: 'Eintritt zeigen',
+              checked: !!props.attributes.show_admission,
+              onChange: function (value) { props.setAttributes({ show_admission: value }); }
             }),
             el(ToggleControl, {
               label: 'Barrierefreiheit zeigen',

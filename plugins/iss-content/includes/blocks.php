@@ -280,6 +280,11 @@ function iss_content_model_get_meta_rows_for_post($post_id, array $options = [])
             $rows[] = ['label' => __('Thema', 'iss-content-model'), 'value' => implode(', ', $topic_terms)];
         }
     } elseif ($post_type === ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE) {
+        $start_date = iss_content_model_sanitize_iso_date(get_post_meta($post_id, 'iss_start_date', true));
+        $end_date = iss_content_model_sanitize_iso_date(get_post_meta($post_id, 'iss_end_date', true));
+        $today = wp_date('Y-m-d');
+        $is_digital = has_term('digitaleausstellungen', ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY, $post_id);
+        $location = trim((string) get_post_meta($post_id, 'iss_location', true));
         $start = iss_content_model_format_date(get_post_meta($post_id, 'iss_start_date', true));
         $end = iss_content_model_format_date(get_post_meta($post_id, 'iss_end_date', true));
         $type_terms = iss_content_model_get_term_name_list($post_id, ISS_CONTENT_MODEL_AUSSTELLUNG_TYPE_TAXONOMY);
@@ -300,6 +305,24 @@ function iss_content_model_get_meta_rows_for_post($post_id, array $options = [])
             $rows[] = ['label' => $is_permanent ? __('Seit', 'iss-content-model') : __('Beginn', 'iss-content-model'), 'value' => $start];
         } elseif ($end !== '') {
             $rows[] = ['label' => __('Bis', 'iss-content-model'), 'value' => $end];
+        }
+
+        if (!$is_digital && $end_date !== '' && $end_date < $today) {
+            $rows[] = ['label' => __('Status', 'iss-content-model'), 'value' => __('Beendet', 'iss-content-model')];
+        }
+        if (!$is_digital && $location !== '') {
+            $rows[] = ['label' => __('Ausstellungsort', 'iss-content-model'), 'value' => $location];
+            // A thematic Place relation does not establish the visitor venue.
+            // Undated or open-ended historical records cannot promise a current visit.
+            $is_current = ($is_permanent && ($start_date === '' || $start_date <= $today) && ($end_date === '' || $end_date >= $today))
+                || ($start_date !== '' && $start_date <= $today && $end_date !== '' && $end_date >= $today);
+            if ($is_current && class_exists('Industriesalon_Steuerung')) {
+                $control = Industriesalon_Steuerung::instance();
+                $museum_name = trim((string) $control->get_field_value('general.site_name'));
+                if ($museum_name !== '' && mb_strtolower($location) === mb_strtolower($museum_name)) {
+                    $rows = array_merge($rows, $control->get_museum_visit_rows());
+                }
+            }
         }
 
         if (!empty($collection_terms)) {
@@ -379,7 +402,9 @@ function iss_content_model_get_meta_rows_for_post($post_id, array $options = [])
 
         if ($render_related_places_row) {
             $rows[] = [
-                'label' => count($related_places) > 1 ? __('Orte', 'iss-content-model') : __('Ort', 'iss-content-model'),
+                'label' => $post_type === ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE
+                    ? __('Ortsbezug', 'iss-content-model')
+                    : (count($related_places) > 1 ? __('Orte', 'iss-content-model') : __('Ort', 'iss-content-model')),
                 'value' => $related_links,
                 'html' => true,
             ];

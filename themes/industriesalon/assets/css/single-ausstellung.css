@@ -200,11 +200,6 @@
   line-height: 1.22;
 }
 
-.iss-ausstellung-hero__meta-col .iss-info-row__text strong {
-  display: block;
-  margin-bottom: 0.15rem;
-}
-
 .iss-ausstellung-no-thumb .iss-ausstellung-hero__media {
   display: none;
 }
