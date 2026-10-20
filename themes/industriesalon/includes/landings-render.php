@@ -1220,10 +1220,17 @@ function industriesalon_render_front_projects_slot(): string
         <div class="iss-front-project-notes__items">
             <?php if ($query->have_posts()) : ?>
                 <?php while ($query->have_posts()) : $query->the_post(); ?>
+                    <?php
+                    $project_id = (int) get_the_ID();
+                    $document = industriesalon_editorial_project_is_enabled($project_id)
+                        ? iss_editorial_get_document($project_id, 'projekt', false)
+                        : [];
+                    $logo_id = absint($document['features']['identity']['media_refs'][0]['id'] ?? 0) ?: get_post_thumbnail_id($project_id);
+                    ?>
                     <article class="iss-hero-note iss-front-project-note">
                         <span class="iss-hero-note__marker iss-front-project-note__marker" aria-hidden="true"></span>
-                        <?php if (has_post_thumbnail()) : ?>
-                            <a class="iss-front-project-note__logo" href="<?php the_permalink(); ?>"><?php the_post_thumbnail('medium'); ?></a>
+                        <?php if ($logo_id) : ?>
+                            <a class="iss-front-project-note__logo" href="<?php the_permalink(); ?>" aria-label="<?php the_title_attribute(); ?>"><?php echo wp_get_attachment_image($logo_id, 'medium', false, ['loading' => 'lazy']); ?></a>
                         <?php endif; ?>
                         <p class="iss-hero-note__kicker iss-front-project-note__kicker"><?php esc_html_e('Projekt', 'industriesalon'); ?></p>
                         <h3 class="iss-hero-note__title iss-front-project-note__title"><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>

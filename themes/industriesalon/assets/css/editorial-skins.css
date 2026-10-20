@@ -353,6 +353,7 @@
 .iss-landing-editorial--skin-frontpage .iss-front-project-note__title {
   max-width: min(16ch, 68%);
   margin: 0;
+  color: inherit;
   font-size: clamp(1.25rem, 1.2rem + 0.45vw, 1.7rem);
   line-height: 1.12;
   text-wrap: balance;

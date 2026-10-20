@@ -1,11 +1,22 @@
-# Current handoff — 19 October 2026
+# Current handoff — 20 October 2026
 
-## Local checkpoint
+## Release in progress
 
-Futura, Zukunft im Gespräch (ZiG) and automatic event Rückblicke are committed
-with this checkpoint in `/home/vladimir/wp-website`. No push or deployment was
-requested. Fetched `origin/main` remains **299058d**; that is also the last verified
-staging release (17 October). See that commit for the previous release receipt.
+The user authorized local -> GitHub -> staging synchronization, including required
+database state, with all SQL/content/media artifacts kept out of GitHub. Pending
+release includes **37489f2**, readable front-page project-note titles and the saved
+Futura identity logo, plus a higher About triptych with taller desktop images.
+Desktop/tablet/phone checks and targeted PHP/CSS checks passed.
+
+Staging starts at **299058d**, with a clean checkout. Backup
+`backups/iss-backup-20261020T082447Z/` is verified (seven artifacts, 119 tables).
+Staging has no newer affected content edits. Existing logo/triptych files match.
+The three 19 October migrations below are required, plus
+`ops/migrations/2026-10-20-landing-sync.php` for the saved Führungen, Schöneweide
+and About documents. Private payloads and comparison evidence are in
+`var/release-20261020/`; apply through owner APIs after code delivery.
+Preserve target private drafts and infrastructure settings. No uploads or schema
+migration is needed. Replace this in-progress checkpoint with verified results.
 
 ## Delivered locally
 

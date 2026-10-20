@@ -33,7 +33,7 @@ test("/about/ renders its JSON dossier and live Team directory", async ({ page }
     const images = [...(triptych?.querySelectorAll("img") || [])];
     return hero?.contains(triptych) && title && images.length === 3
       && images.every((image) => image.complete && image.naturalWidth > 0)
-      && images.every((image) => Math.abs(image.clientHeight / image.clientWidth - 3.3 / 4) < 0.01)
+      && images.every((image) => Math.abs(image.clientHeight / image.clientWidth - 1) < 0.01)
       && title.getBoundingClientRect().bottom < images[0].getBoundingClientRect().top
       && title.getBoundingClientRect().right < images[2].getBoundingClientRect().right - 80;
   })).toBe(true);

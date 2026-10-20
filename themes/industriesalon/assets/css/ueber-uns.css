@@ -1,5 +1,4 @@
-/* Template-owned About opening. JSON items use the shared visual-row renderer.
-   Geometry restored from the triptych preceding c170e4d (11 July 2026). */
+/* Template-owned About opening. JSON items use the shared visual-row renderer. */
 
 .iss-about-page {
   background: var(--iss-white);
@@ -14,7 +13,7 @@
 .iss-about-hero {
   --iss-dossier-visual-padding-block: 0;
   --iss-dossier-visual-border-top: 0;
-  --iss-dossier-visual-media-ratio: 4 / 3.3;
+  --iss-dossier-visual-media-ratio: 1;
   --iss-dossier-visual-body-padding-top: 0.65rem;
   --iss-dossier-visual-title-font-family: var(--wp--preset--font-family--plex, sans-serif);
   --iss-dossier-visual-title-font-size: 0.7rem;
@@ -36,10 +35,9 @@
 
 .iss-about-hero__inner {
   display: grid;
-  align-content: end;
+  align-content: start;
   gap: clamp(1.2rem, 2.2vw, 1.8rem);
-  min-height: 100svh;
-  padding-top: calc(var(--iss-header-height) + 6.25rem);
+  padding-top: calc(var(--iss-header-height) + 1rem);
   padding-bottom: clamp(1.1rem, 2.4vw, 1.75rem);
 }
 
@@ -74,9 +72,7 @@
 
 @media (max-width: 1024px) {
   .iss-about-hero__inner {
-    min-height: auto;
     gap: 1.2rem;
-    padding-top: calc(var(--iss-header-height) + 4.9rem);
   }
 
   .iss-about-hero__intro-row {
@@ -91,7 +87,6 @@
 
   .iss-about-hero__inner {
     gap: 1.35rem;
-    padding-top: calc(var(--iss-header-height) + 4.1rem);
     padding-bottom: 1.5rem;
   }
 
