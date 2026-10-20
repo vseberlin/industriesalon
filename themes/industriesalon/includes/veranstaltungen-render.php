@@ -493,37 +493,9 @@ function industriesalon_event_ticket_action(int $id, array $row): array
     if (in_array($row['availability_state'] ?? '', ['cancelled', 'sold_out'], true)) {
         return [];
     }
-    $format = $id > 0 && function_exists('iss_editorial_get_format_for_post') ? iss_editorial_get_format_for_post($id) : [];
-    if ($format) {
-        // Only the canonical editorial URL is shared by occurrences. Keep row state live.
-        static $tickets = [];
-        $key = get_current_blog_id() . ':' . $id . ':' . $format['slug'] . ':' . get_locale();
-        $stored = get_post_meta($id, iss_editorial_get_document_meta_key($format['slug']), true);
-        if (!isset($tickets[$key]) || $tickets[$key]['stored'] !== $stored) {
-            $url = '';
-            $document = iss_editorial_get_document($id, $format['slug']);
-            foreach (($document['sections'] ?? []) as $section) {
-                if (($section['type'] ?? '') !== 'material') {
-                    continue;
-                }
-                foreach (($section['links'] ?? []) as $link) {
-                    if (industriesalon_event_link_is_ticket($link)) {
-                        $url = $link['url'];
-                        break 2;
-                    }
-                }
-            }
-            // WordPress already caches this meta read; comparing it also observes saves/deletes.
-            $tickets[$key] = ['stored' => $stored, 'url' => $url];
-        }
-        if ($tickets[$key]['url'] !== '') {
-            return ['url' => $tickets[$key]['url'], 'label' => __('Tickets', 'industriesalon')];
-        }
-    }
-    if (!empty($row['booking_url'])) {
-        return ['url' => $row['booking_url'], 'label' => __('Buchen', 'industriesalon')];
-    }
-    return [];
+    $row['source_post_id'] = $id;
+    $row['source_post_type'] = get_post_type($id);
+    return iss_timeline_get_ticket_action_for_occurrence($row);
 }
 
 /** Repair-Cafe programme images follow its effective landing hero, including editor overrides. */
@@ -596,7 +568,7 @@ function industriesalon_programme_entry(array $row, string $variant, string $now
     if ($location !== '') {
         $html .= '<p class="iss-card__meta">' . esc_html($location) . '</p>';
     }
-    $html .= '<p class="iss-card__footer"><a class="' . ($is_feature ? 'iss-button' : 'iss-action-link') . '" href="' . esc_url($action_url) . '">' . esc_html($label) . '<span class="screen-reader-text">: ' . esc_html($title) . '</span></a></p>';
+    $html .= '<p class="iss-card__footer"><a class="' . ($is_feature ? 'iss-button' : 'iss-action-link') . '" href="' . esc_url($action_url) . '"' . iss_timeline_render_attr_list($action['attrs'] ?? []) . '>' . esc_html($label) . '<span class="screen-reader-text">: ' . esc_html($title) . '</span></a></p>';
     return $html . '</div></article>';
 }
 
@@ -823,7 +795,7 @@ add_filter('iss_content_meta_presentation', static function ($html, int $id, arr
         }
         $out .= '<div class="iss-event-actions">';
         if ($action) {
-            $out .= '<a class="iss-button iss-button--filled" href="' . esc_url($action['url']) . '">' . esc_html($action['label']) . '</a>';
+            $out .= '<a class="iss-button iss-button--filled" href="' . esc_url($action['url']) . '"' . iss_timeline_render_attr_list($action['attrs'] ?? []) . '>' . esc_html($action['label']) . '</a>';
         }
         if ($past && ($url = iss_content_upload_url($id)) !== '') {
             $out .= '<a class="iss-action-link" href="' . esc_url($url) . '">' . esc_html__('Erinnerung beitragen', 'industriesalon') . '</a>';

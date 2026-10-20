@@ -112,62 +112,28 @@ function iss_content_model_get_project_status_display(int $post_id): array
         return [];
     }
 
+    $terms = get_the_terms($post_id, ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY);
+    $states = ['in-vorbereitung' => ['In Planung', 'upcoming'], 'in-planung' => ['In Planung', 'upcoming'], 'laufend' => ['Läuft', 'running'], 'abgeschlossen' => ['Abgeschlossen', 'completed']];
+    if (is_array($terms)) {
+        foreach ($terms as $term) {
+            if (isset($states[$term->slug])) {
+                return ['label' => __('Status', 'iss-content-model'), 'value' => $states[$term->slug][0], 'state' => $states[$term->slug][1]];
+            }
+        }
+    }
+
     $start = iss_content_model_parse_iso_date(get_post_meta($post_id, 'iss_start_date', true));
     $end = iss_content_model_parse_iso_date(get_post_meta($post_id, 'iss_end_date', true));
     $today = new DateTimeImmutable('today', wp_timezone());
-
     if ($end instanceof DateTimeImmutable && $end < $today) {
-        return [
-            'label' => __('Status', 'iss-content-model'),
-            'value' => __('Abgeschlossen', 'iss-content-model'),
-            'state' => 'completed',
-        ];
+        return ['label' => __('Status', 'iss-content-model'), 'value' => __('Abgeschlossen', 'iss-content-model'), 'state' => 'completed'];
     }
-
-    if ($start instanceof DateTimeImmutable && $end instanceof DateTimeImmutable) {
-        return [
-            'label' => __('Zeitraum', 'iss-content-model'),
-            'value' => iss_content_model_format_date_long_de($start) . ' – ' . iss_content_model_format_date_long_de($end),
-            'state' => 'date-range',
-        ];
+    if ($start instanceof DateTimeImmutable && $start > $today) {
+        return ['label' => __('Status', 'iss-content-model'), 'value' => __('In Planung', 'iss-content-model'), 'state' => 'upcoming'];
     }
-
-    if ($start instanceof DateTimeImmutable) {
-        $prefix = $start > $today ? __('Ab', 'iss-content-model') : __('Seit', 'iss-content-model');
-
-        return [
-            'label' => __('Zeitraum', 'iss-content-model'),
-            'value' => $prefix . ' ' . iss_content_model_format_date_long_de($start),
-            'state' => $start > $today ? 'upcoming' : 'running',
-        ];
+    if ($start instanceof DateTimeImmutable || $end instanceof DateTimeImmutable) {
+        return ['label' => __('Status', 'iss-content-model'), 'value' => __('Läuft', 'iss-content-model'), 'state' => 'running'];
     }
-
-    if ($end instanceof DateTimeImmutable) {
-        return [
-            'label' => __('Zeitraum', 'iss-content-model'),
-            'value' => __('Bis', 'iss-content-model') . ' ' . iss_content_model_format_date_long_de($end),
-            'state' => 'until',
-        ];
-    }
-
-    $status_terms = get_the_terms($post_id, ISS_CONTENT_MODEL_PROJECT_STATUS_TAXONOMY);
-    if (is_array($status_terms) && !empty($status_terms)) {
-        return [
-            'label' => __('Status', 'iss-content-model'),
-            'value' => implode(', ', wp_list_pluck($status_terms, 'name')),
-            'state' => 'taxonomy',
-        ];
-    }
-
-    $period = trim((string) get_post_meta($post_id, 'iss_period_label', true));
-    if ($period !== '') {
-        return [
-            'label' => __('Zeitraum', 'iss-content-model'),
-            'value' => $period,
-            'state' => 'period',
-        ];
-    }
-
     return [];
 }
 

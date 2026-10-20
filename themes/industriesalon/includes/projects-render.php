@@ -774,6 +774,7 @@ function industriesalon_render_project_opening(array $document, int $post_id): s
                     <?php if ($logo_id) { echo wp_get_attachment_image($logo_id, 'thumbnail', false, ['alt' => '', 'loading' => 'eager']); } ?>
                     <p><?php echo esc_html(get_the_title($post_id)); ?></p>
                 </div>
+                <?php echo iss_content_model_render_project_status_block(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared escaped status renderer. ?>
                 <p class="iss-kicker iss-landing-section__kicker"<?php echo industriesalon_landing_field_attrs($section, 'kicker'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($section['kicker'] ?? ''); ?></p>
                 <h1<?php echo industriesalon_landing_field_attrs($section, 'title'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo esc_html($section['title']); ?></h1>
                 <div class="iss-project-stage__lead"<?php echo industriesalon_landing_field_attrs($section, 'lead'); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Escaped preview attributes. ?>><?php echo industriesalon_landing_prose($section['lead'] ?? '', $section); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Versioned prose allowlist. ?></div>

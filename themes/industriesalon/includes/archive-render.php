@@ -79,7 +79,12 @@ add_filter('iss_content_meta_presentation', static function ($html, int $post_id
     if (!$object) {
         return '';
     }
+    $object['object_type_label'] = iss_wf_import_get_archive_object_browser_kicker($post_id);
+    $subjects = wp_get_post_terms($post_id, ISS_WF_IMPORT_FAMILY_TAXONOMY, ['fields' => 'names']);
+    $object['subject_label'] = is_array($subjects) ? implode(', ', $subjects) : '';
     $facts = [
+        'object_type_label' => __('Art des Archivstücks', 'industriesalon'),
+        'subject_label' => __('Motiv / Bereich', 'industriesalon'),
         'year_label' => __('Datierung', 'industriesalon'),
         'creator_label' => __('Urheber', 'industriesalon'),
         'inventory_number' => __('Inventarnummer', 'industriesalon'),
@@ -100,9 +105,13 @@ add_filter('iss_content_meta_presentation', static function ($html, int $post_id
             $items .= '<div class="iss-info-row"><div class="iss-info-row__main"><p class="iss-info-row__text"><strong>' . esc_html($label) . '</strong><br>' . esc_html($value) . '</p></div></div>';
         }
     }
-    $source = esc_url((string) ($object['source_url'] ?? ''));
+    $original_source = (string) ($object['source_url'] ?? '');
+    $source = iss_wf_import_get_archive_source_link_url($original_source, (int) get_post_thumbnail_id($post_id));
     if ($source !== '') {
-        $items .= '<p><a class="iss-action-link" href="' . $source . '">' . esc_html__('Zum Originalnachweis', 'industriesalon') . '</a></p>';
+        $items .= '<p><a class="iss-action-link" href="' . esc_url($source) . '">' . esc_html($source === $original_source ? __('Zum Originalnachweis', 'industriesalon') : __('Bild vergrößern', 'industriesalon')) . '</a></p>';
+    }
+    if ($original_source !== '' && $source !== $original_source) {
+        $items .= '<p><strong>' . esc_html__('Originalnachweis', 'industriesalon') . ':</strong> ' . esc_html((string) wp_parse_url($original_source, PHP_URL_HOST)) . '</p>';
     }
     $relations = iss_wf_import_get_relation_service()->get_projection_for_post($post_id);
     foreach (['series' => __('Serie', 'industriesalon'), 'collections' => __('Bestand', 'industriesalon')] as $family => $label) {
@@ -111,8 +120,8 @@ add_filter('iss_content_meta_presentation', static function ($html, int $post_id
             if ($name === '') {
                 continue;
             }
-            $url = esc_url((string) ($relation['source_url'] ?? ''));
-            $items .= '<p><strong>' . esc_html($label) . ':</strong> ' . ($url !== '' ? '<a href="' . $url . '">' . esc_html($name) . '</a>' : esc_html($name)) . '</p>';
+            $url = iss_wf_import_get_archive_source_link_url((string) ($relation['source_url'] ?? ''));
+            $items .= '<p><strong>' . esc_html($label) . ':</strong> ' . ($url !== '' ? '<a href="' . esc_url($url) . '">' . esc_html($name) . '</a>' : esc_html($name)) . '</p>';
         }
     }
     return $items !== '' ? '<aside class="iss-info-panel"><h2 class="iss-info-panel__title">' . esc_html__('Zum Objekt', 'industriesalon') . '</h2><div class="iss-info-panel__rows">' . $items . '</div></aside>' : '';

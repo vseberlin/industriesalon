@@ -109,7 +109,7 @@ function iss_programm_render_tour_calendar_shell($title, $booking_url, $post_id 
     $payload = iss_occurrences_build_booking_slots_payload('occurrences', $slots, $source['id'], $source['type']);
     wp_interactivity_state('iss/booking', ['catalog' => [iss_programm_booking_scope($source) => $payload]]);
     $contact_id = wp_unique_id('iss-booking-contact-');
-    $fallback = $booking_url && !iss_programm_tour_url_is_same_page_anchor($booking_url, $source['id']) ? $booking_url : '#' . $contact_id;
+    $fallback = '#' . $contact_id;
     $out = '<div ' . $wrapper_attributes . '><div class="is-tour-calendar__inner"><div class="is-tour-calendar__header">';
     $out .= '<h3 class="is-tour-calendar__heading">' . esc_html($title ?: __('Termine wählen', 'iss-programm')) . '</h3></div>';
     if ($slots) { $out .= iss_programm_render_availability_calendar($source); }
@@ -130,9 +130,6 @@ function iss_programm_render_tour_calendar_shell($title, $booking_url, $post_id 
             $out .= '<li>' . esc_html($label) . '</li>';
         }
         $out .= '</ul></details>';
-    }
-    if ($booking_url && !iss_programm_tour_url_is_same_page_anchor($booking_url, $source['id'])) {
-        $out .= '<p class="is-tour-calendar__fallback"><a href="' . esc_url($booking_url) . '">' . esc_html__('Direkt buchen', 'iss-programm') . '</a></p>';
     }
     $out .= '<div id="' . esc_attr($contact_id) . '" class="is-tour-calendar__fallback">' . iss_programm_booking_contact() . '</div>';
     return $out . '</div></div>';
@@ -219,7 +216,7 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
             $label_html = '<span class="iss-tour-dates__date">' . esc_html($fallback_label) . '</span>';
         }
 
-        $booking_url = isset($data['booking_url']) ? (string) $data['booking_url'] : '';
+        $booking_url = iss_timeline_get_booking_url_for_row($data);
         $is_sold_out = isset($data['availability']) && (string) $data['availability'] === 'sold_out';
         $slot_id = trim((string) ($data['slot_id'] ?? ''));
         $slot_start = isset($data['start_raw']) ? trim((string) $data['start_raw']) : '';
@@ -243,7 +240,7 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
         } elseif ($booking_url !== '') {
             $link_classes = 'iss-tour-dates__link';
             $link_attrs = '';
-            if (($data['cta_mode'] ?? '') !== 'external' && $slot_id !== '' && $slot_start !== '') {
+            if ($slot_id !== '' && $slot_start !== '') {
                 $link_attrs = iss_timeline_render_attr_list(iss_programm_booking_trigger_attributes([
                     'source_post_id' => $post_id, 'source_post_type' => $post_type, 'slot_id' => $slot_id, 'title' => $slot_title,
                 ]));

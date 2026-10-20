@@ -5602,8 +5602,7 @@ iss-info-panel--brown
   gap: 0.2rem;
 }
 
-.iss-schoneweide-map__detail-fact-label,
-.iss-register-place__fact-label {
+.iss-schoneweide-map__detail-fact-label {
   margin: 0;
   color: rgba(30, 30, 30, 0.48);
 }
@@ -5803,7 +5802,7 @@ iss-info-panel--brown
 
 .iss-register-place__fact-label {
   margin: 0;
-  color: rgba(30, 30, 30, 0.5);
+  color: var(--iss-surface-muted);
   font-size: 0.76rem;
 }
 
@@ -6444,7 +6443,7 @@ iss-info-panel--brown
 }
 
 .iss-register-place__comparison-year {
-  color: rgba(30, 30, 30, 0.54);
+  color: var(--iss-surface-muted);
   font-weight: 700;
 }
 
@@ -6545,7 +6544,7 @@ iss-info-panel--brown
 .iss-register-place__data-label,
 .iss-register-place__interpretation-label {
   margin: 0;
-  color: rgba(30, 30, 30, 0.54);
+  color: var(--iss-surface-muted);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0;

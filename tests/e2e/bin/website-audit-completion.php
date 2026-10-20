@@ -43,7 +43,8 @@ $expect(str_contains($form, 'tnp-privacy') && str_contains($form, 'required'), '
 $object = get_page_by_path('kinder-mit-erzieherin-am-sandkasten-vor-dem-wf-gebaude', OBJECT, 'archivobjekt');
 $projection = iss_wf_import_get_object_service()->get_projection_for_post($object->ID);
 $html = apply_filters('iss_content_meta_presentation', null, $object->ID, [], ['presentation' => 'archive-object']);
-$expect(str_contains($html, esc_url($projection['source_url'])) && str_contains($html, 'Originalnachweis'), 'Known photograph source is visible.');
+$expect(str_contains($html, (string) wp_parse_url($projection['source_url'], PHP_URL_HOST)) && str_contains($html, 'Originalnachweis'), 'Known photograph source credit is visible.');
+$expect(!preg_match('~href="https?://(?:www\.)?(?:wf-museum|industriesalon)\.de~', $html), 'Legacy source credit cannot send visitors to the old site.');
 $expect(!str_contains($html, 'Inventarnummer') && !str_contains($html, 'Urheber'), 'Missing object facts are not invented.');
 $sampled = 0;
 foreach (get_posts(['post_type' => 'archivobjekt', 'post_status' => 'publish', 'numberposts' => 100]) as $post) {

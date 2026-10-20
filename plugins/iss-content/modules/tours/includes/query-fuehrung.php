@@ -66,25 +66,9 @@ function iss_fuehrung_get_event_start_label($event) {
 }
 
 function iss_fuehrung_get_event_booking_url($event, $post_id = 0) {
-    if (is_array($event)) {
-        $url = trim((string) ($event['booking_url'] ?? ''));
-    } else {
-        $event_id = ($event instanceof WP_Post) ? (int) $event->ID : (int) $event;
-        $url = (string) get_post_meta($event_id, 'booking_url', true);
-    }
-
-    if ($url !== '') {
-        return $url;
-    }
-
-    if ($post_id > 0) {
-        $url = (string) get_post_meta($post_id, 'fallback_url', true);
-        if ($url !== '') {
-            return $url;
-        }
-    }
-
-    return '';
+    $post_id = (int) $post_id ?: (int) (is_array($event) ? ($event['source_post_id'] ?? 0) : 0);
+    // SuperSaaS supplies dates only. Even without JavaScript, stay on the tour.
+    return $post_id > 0 ? get_permalink($post_id) . '#buchung' : '';
 }
 
 function iss_fuehrung_get_card_meta($post_id) {

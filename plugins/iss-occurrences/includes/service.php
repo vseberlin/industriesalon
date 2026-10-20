@@ -2157,7 +2157,9 @@ final class ISS_Occurrences_Service
             'cta_mode' => $target_url !== '' ? 'external' : 'details',
             'cta_url' => $target_url,
             'cta_label' => __('Mehr erfahren', 'iss-occurrences'),
-            'booking_url' => isset($row['booking_url']) ? (string) $row['booking_url'] : '',
+            // Imported provider URLs are provenance, never public checkout destinations.
+            'booking_url' => $source_post_id > 0 && ($source_post_type === 'fuehrung' || ($source_post_type === 'veranstaltung' && get_post_meta($source_post_id, 'iss_booking_enabled', true)))
+                ? get_permalink($source_post_id) . ($source_post_type === 'veranstaltung' ? '#besuch' : '#buchung') : '',
             'slot_id' => $slot_id,
             'slot_start' => $starts_at,
             'source_post_id' => $source_post_id,

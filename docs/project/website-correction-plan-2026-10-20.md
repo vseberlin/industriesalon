@@ -8,6 +8,34 @@ Der Plan umfasst Texte, Bilder und Gestaltung sowie funktionale und datenbezogen
 
 ## Aktueller Umsetzungsstand — 20. Oktober 2026
 
+Das zusätzliche Paket aus dem Word-Audit (Sammlungen/Archiv S. 5, Projekte/ZiG
+S. 6–7, Ausstellungsdetail S. 7 und Behrensbau S. 9) ist lokal umgesetzt und
+geprüft; die Staging-Veröffentlichung folgt im aktuellen Handoff.
+
+- Vier bebilderte Sammlungseinstiege; wiederholte Navigation entfernt, Galerie
+  und Epochen erhalten. Archivstückart (z. B. Foto) und Motiv/Bereich (z. B.
+  Messgerät) getrennt dargestellt. Anzeigenamen vereinheitlicht; keine automatische
+  Zusammenlegung oder Umklassifizierung überlappender Themen.
+- Einheitliche Projektzustände: Futura „In Planung“, KiezKarte und ZiG „Läuft“.
+  Anne Rabe verweist auf die interne Reihenseite. Der genaue Fondsanteil bleibt offen.
+- Behrensbau als Haupttitel, Adresse als Zusatz und vorhandenes Foto im Einstieg.
+  Hellerer Ausstellungshintergrund, ruhige Besuchsfläche und korrigierter Fließtext.
+- **SuperSaaS liefert ausschließlich Termine.** Buchungsaktionen und Fallbacks
+  bleiben im internen Checkout; keine Weiterleitung oder Buchung bei SuperSaaS.
+- Verweise auf alte Industriesalon-/WF-Seiten und Projekt-Miniwebsites führen
+  intern weiter. Quellen bleiben dokumentiert. 17 bisher externe PDFs werden
+  lokal bereitgestellt; Quizinhalte werden als Teil des Rückblicks beschrieben.
+
+Lokale Prüfung: 412 öffentliche Seiten mit HTTP 200 ohne solche externen Links;
+211 lesende Audit-/Buchungsprüfungen und 73 isolierte Event-/Feedbackprüfungen.
+191 gültige Dokumente, 184 Medienreferenzen. Zehn betroffene Routen bestehen die
+vier Prüfbreiten und axe. Historische Daten bleiben erhalten; die bestehenden
+Owner-APIs aktualisieren lediglich die zugehörigen Linkprojektionen.
+Gezielte Inhaltsmigrationen und Medien bleiben privat, ohne SQL auf GitHub.
+Der aktuelle Release- und Abnahmestand steht im [Handoff](../../handoff_CURRENT.md).
+
+### Vorheriges Restpaket
+
 Die frühere pauschale Aussage, alle Code- und Inhaltskorrekturen seien abgeschlossen,
 war zu weit gefasst. Das vom Nutzer anschließend benannte Restpaket ist jetzt lokal
 umgesetzt, über GitHub veröffentlicht und auf Staging geprüft
@@ -19,7 +47,7 @@ Die weiter unten erhaltenen Auditbefunde beschreiben den Ausgangszustand.
 | Sammlungen | Konkrete Besuchersprache, benannte Linkziele, einheitliche Bildunterschriften und kürzere Erklärtexte. Drei Links auf den unveröffentlichten Frauen-Entwurf führen jetzt zur veröffentlichten Ausstellung „Frauen im Werk für Fernmeldewesen“. |
 | Führungen: Querverweise | „Nach der Führung geht es weiter“ mit verständlichen Angeboten für Film, Ausstellungen, Bücher, Veranstaltungen, Archiv und Ortskarte; kein Rückverweis auf die gleiche Führungsübersicht. Katalogkicker unterscheiden öffentliche Führung und Gruppenführung auf Anfrage. |
 | Kleine Sprachunterschiede | „Raum mieten“, eigenständige Hero-Kicker, verständliche Medienbeschriftungen, echte Pfeile, geschützte Einheiten und gleichartige Jahresangaben. |
-| Archivsprache und Filter | „Bereich“ und „Weiter entdecken“, konkrete Bereichsteaser mit tatsächlichen Objektzahlen; Kartenkicker nutzen den Bereich, nicht wechselnde Themen oder Quellennamen. Der Originalnachweis bleibt als Quellenangabe erhalten. |
+| Archivsprache und Filter | „Weiter entdecken“ und konkrete Bereichsteaser mit tatsächlichen Objektzahlen; im Folgepaket unterscheiden Kartenkicker die Archivstückart vom Motiv / Bereich. Der Originalnachweis bleibt als Quellenangabe erhalten. |
 | Archivseitenleiste | Kein eigener innerer Scrollbereich; Filter und letzte Handlung sind mit Seitenscroll und Tastatur erreichbar. |
 | Gemeinsame Gestaltung | Serif für H1/H2, Sans für Lesetext und Bedienung; roter öffentlicher Akzent, neutrale Flächen und Haarlinien. Bestehende Farbklassen bleiben kompatibel, ohne konkurrierende Seitenfarben. Kleine rote Texte erhalten den kontraststärkeren Rotwert. Projektlogos behalten ihre eigenen Farben. |
 | Layout | Breitere Überschriften, geschlossene Textabsätze statt CSS-Zeitungsspalten, keine leere linke Schöneweide-Spalte, normale Bild-/Textabstände auf Karten. Ruhige Projektkarten ohne Rotation oder Stecknadeln. Galerien haben eine eindeutige Scrollbedienung. **Hero-Handlungen bleiben an ihrer bisherigen Position.** |

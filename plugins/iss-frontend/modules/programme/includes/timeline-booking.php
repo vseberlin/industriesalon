@@ -39,18 +39,13 @@ function iss_timeline_get_booking_url_for_row($row): string {
         return '';
     }
 
-    $booking_url = isset($row['booking_url']) ? trim((string) $row['booking_url']) : '';
-    if ($booking_url !== '') {
-        return $booking_url;
-    }
-
     $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
     $source_post_type = sanitize_key((string) ($row['source_post_type'] ?? ''));
-    if ($source_post_type !== 'veranstaltung' || $source_post_id <= 0) {
+    if ($source_post_id <= 0 || !in_array($source_post_type, ['fuehrung', 'veranstaltung'], true)) {
         return '';
     }
 
-    if (empty(get_post_meta($source_post_id, 'iss_booking_enabled', true))) {
+    if ($source_post_type === 'veranstaltung' && empty(get_post_meta($source_post_id, 'iss_booking_enabled', true))) {
         return '';
     }
 
@@ -59,11 +54,11 @@ function iss_timeline_get_booking_url_for_row($row): string {
         return '#buchung';
     }
 
-    return $permalink . '#buchung';
+    return $permalink . ($source_post_type === 'veranstaltung' ? '#besuch' : '#buchung');
 }
 
 function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
-    if (!is_array($row)) {
+    if (!is_array($row) || in_array($row['availability_state'] ?? $row['availability'] ?? '', ['cancelled', 'sold_out'], true)) {
         return [];
     }
 
@@ -73,10 +68,6 @@ function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
     }
 
     $booking_url = iss_timeline_get_booking_url_for_row($row);
-    $tickets_override = isset($opts['ticketsButtonUrl']) ? esc_url_raw((string) $opts['ticketsButtonUrl']) : '';
-    if ($tickets_override !== '') {
-        $booking_url = $tickets_override;
-    }
     if ($booking_url === '') {
         return [];
     }
@@ -88,8 +79,6 @@ function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
 
     $source_post_id = isset($row['source_post_id']) ? (int) $row['source_post_id'] : 0;
     $source_post_type = trim((string) ($row['source_post_type'] ?? ''));
-    $slot_id = trim((string) ($row['slot_id'] ?? ''));
-    $slot_start = trim((string) ($row['slot_start'] ?? ''));
 
     $action = [
         'url' => $booking_url,
@@ -97,7 +86,7 @@ function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
         'variant' => 'primary',
     ];
 
-    if ($tickets_override === '' && ($row['cta_mode'] ?? '') !== 'external' && $source_post_id > 0 && $source_post_type !== '' && $slot_id !== '' && $slot_start !== '') {
+    if ($source_post_id > 0 && $source_post_type !== '') {
         $action['attrs'] = array_merge(
             iss_timeline_get_calendar_trigger_attrs($row),
             iss_timeline_get_booking_action_attrs($row)

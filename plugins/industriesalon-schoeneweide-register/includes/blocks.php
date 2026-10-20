@@ -615,7 +615,13 @@ function iss_register_render_place_context(array $attributes = []): string
         $archive_html = iss_register_render_place_context_comparison_image($archive_image, 'Archiv');
         $current_html = iss_register_render_place_context_comparison_image($current_image, 'Spätere Ansicht');
         if ($archive_html === '' && $current_html === '') {
-            return '';
+            // The public featured image is still useful when no dated pair is assigned.
+            // Do not infer an archival/current classification or date from it.
+            $archive_html = iss_register_render_place_context_comparison_image(
+                ['media_id' => (int) get_post_thumbnail_id((int) $post_id)],
+                'Ansicht des Ortes'
+            );
+            if ($archive_html === '') { return ''; }
         }
 
         $paired = $archive_html !== '' && $current_html !== '';

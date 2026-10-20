@@ -30,9 +30,12 @@ $expect(isset($catalog[iss_programm_booking_scope($context)]['slots']), 'Known c
 $row = ['source_post_id' => $source->ID, 'source_post_type' => 'fuehrung', 'slot_id' => 'fixture', 'slot_start' => '2030-10-11 10:00:00', 'booking_url' => 'https://example.invalid/tickets'];
 $expect(isset(iss_timeline_get_ticket_action_for_occurrence($row)['attrs']['data-wp-on--click']), 'Direct slot action uses shared dialog');
 $row['cta_mode'] = 'external';
-$expect(!isset(iss_timeline_get_ticket_action_for_occurrence($row)['attrs']), 'Explicit external ticket destination remains navigation');
+$expect(isset(iss_timeline_get_ticket_action_for_occurrence($row)['attrs']), 'Legacy external mode cannot bypass the internal checkout');
 unset($row['cta_mode']);
-$expect(!isset(iss_timeline_get_ticket_action_for_occurrence($row, ['ticketsButtonUrl' => 'https://example.invalid/override'])['attrs']), 'Editorial URL override remains navigation');
+$overridden = iss_timeline_get_ticket_action_for_occurrence($row, ['ticketsButtonUrl' => 'https://example.invalid/override']);
+$expect(isset($overridden['attrs']) && $overridden['url'] === get_permalink($source->ID) . '#buchung', 'Editorial URL override cannot bypass internal checkout or its internal fallback');
+$html = iss_programm_render_tour_calendar_shell('Fixture', 'https://www.supersaas.de/schedule/legacy', $source->ID, 'fuehrung', 'class="is-tour-calendar"');
+$expect(!str_contains($html, 'supersaas.de'), 'Calendar never exposes a provider booking destination');
 ob_start(); iss_programm_render_calendar_modal_host(); $dialog = ob_get_clean();
 $expect(substr_count($dialog, '<dialog ') === 1 && substr_count($dialog, '<form ') === 1 && str_contains($dialog, 'type="date"') && str_contains($dialog, 'type="time"'), 'All request intents share one PHP-authored native dialog');
 ob_start(); iss_programm_render_calendar_modal_host(); $repeated = ob_get_clean();

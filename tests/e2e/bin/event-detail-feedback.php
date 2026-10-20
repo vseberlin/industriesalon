@@ -109,20 +109,17 @@ try {
     $expect(iss_editorial_save_document($id, 'veranstaltung', $document) && iss_content_model_veranstaltung_content_document($id)['hero_subtitle'] === '', 'Editors can clear optional title fields');
     $rows = iss_content_model_get_meta_rows_for_post($id);
     $summary = apply_filters('iss_content_meta_presentation', null, $id, $rows, ['presentation' => 'event-summary']);
-    $expect(str_contains($summary, 'https://example.org/book') && str_contains($summary, 'Tickets'), 'Upcoming event uses its real external ticket action');
+    $expect(!str_contains($summary, 'https://example.org/book'), 'External editorial ticket URL is not a booking destination');
+    update_post_meta($id, 'iss_booking_enabled', '1');
+    $summary = apply_filters('iss_content_meta_presentation', null, $id, $rows, ['presentation' => 'event-summary']);
+    $expect(str_contains($summary, 'data-wp-on--click="actions.open"') && str_contains($summary, '#besuch'), 'Enabled event opens internal checkout with a local fallback');
     $changed_document = $document;
     $changed_document['sections'][0]['links'][0]['url'] = 'https://example.org/changed';
-    $expect(iss_editorial_save_document($id, 'veranstaltung', $changed_document), 'Save a replacement ticket through the document API');
-    $expect(industriesalon_event_ticket_action($id, [])['url'] === 'https://example.org/changed', 'API save refreshes the warm ticket cache in the same request');
-    $changed_document['sections'] = [];
     $expect(iss_editorial_save_document($id, 'veranstaltung', $changed_document)
-        && industriesalon_event_ticket_action($id, ['booking_url' => 'https://example.org/date'])['url'] === 'https://example.org/date', 'Removing tickets restores the occurrence booking fallback');
-    $expect(iss_editorial_save_document($id, 'veranstaltung', $document)
-        && industriesalon_event_ticket_action($id, [])['url'] === 'https://example.org/book', 'Restoring the document refreshes a cached absence');
-    $expect(delete_post_meta($id, iss_editorial_get_document_meta_key('veranstaltung'))
-        && industriesalon_event_ticket_action($id, []) === [], 'Native metadata deletion cannot retain a cached ticket');
-    $expect(iss_editorial_save_document($id, 'veranstaltung', $document)
-        && industriesalon_event_ticket_action($id, [])['url'] === 'https://example.org/book', 'Native metadata re-addition is visible immediately');
+        && industriesalon_event_ticket_action($id, [])['url'] === get_permalink($id) . '#besuch', 'Editing a legacy URL cannot bypass checkout');
+    $expect(iss_editorial_save_document($id, 'veranstaltung', $document), 'Restore the fixture document');
+    delete_post_meta($id, 'iss_booking_enabled');
+    $expect(industriesalon_event_ticket_action($id, ['booking_url' => 'https://example.org/date']) === [], 'Disabled event never falls back to external booking');
     $visit = apply_filters('iss_content_meta_presentation', null, $id, $rows, ['presentation' => 'event-visit']);
     $expect(str_contains($visit, 'id="besuch"') && !str_contains($visit, 'maps/search'), 'Unknown venue has no invented directions');
     add_filter('iss_occurrences_query_now', $past_clock, 100);
@@ -136,7 +133,7 @@ try {
     $expect(!str_contains($rendered, 'https://example.org/book'), 'Past announcement has no active ticket links');
     $expect(str_contains($rendered, 'Stimmen zur Veranstaltung') && str_contains($rendered, 'Die Ankündigung') && strpos($rendered, 'Stimmen zur Veranstaltung') < strpos($rendered, 'Die Ankündigung'), 'Past event places visitor voices before original announcement');
     $expect(substr_count($rendered, 'id="rueckblicke"') === 1 && str_contains($rendered, 'noch kein Bericht') && strpos($rendered, 'id="rueckblicke"') < strpos($rendered, 'Die Ankündigung'), 'An event without a report automatically has one retrospective section before its announcement');
-    $expect(str_contains($summary, 'href="#rueckblicke"'), 'Past summary links to its retrospective before a written report exists');
+    $expect(str_contains($summary, 'href="#ankuendigung"') && str_contains($summary, 'Ankündigung lesen'), 'Past summary identifies the announcement when no written report exists');
     $kicker_block = '<!-- wp:paragraph {"className":"iss-event-hero__kicker iss-kicker"} --><p class="iss-event-hero__kicker iss-kicker">Veranstaltung</p><!-- /wp:paragraph -->';
     $expect(str_contains(do_blocks($kicker_block), 'Rückblick · Series'), 'Past opening identifies the retrospective and retains the editorial series');
     $permalink = get_permalink($id);
@@ -163,7 +160,7 @@ try {
     delete_post_meta($id, 'iss_event_status');
     iss_content_set_upload_open($id, false);
     $closed_summary = apply_filters('iss_content_meta_presentation', null, $id, $rows, ['presentation' => 'event-summary']);
-    $expect(str_contains($closed_summary, 'href="#rueckblicke"') && !str_contains($closed_summary, 'Erinnerung beitragen'), 'Closed contribution intake still exposes the retrospective without reopening uploads');
+    $expect(str_contains($closed_summary, 'href="#ankuendigung"') && !str_contains($closed_summary, 'Erinnerung beitragen'), 'Closed contribution intake still exposes the announcement without reopening uploads');
     $report = iss_content_create_report($id);
     $expect(!is_wp_error($report) && $report > 0, 'Report created from the original event');
     $ids[] = $report;

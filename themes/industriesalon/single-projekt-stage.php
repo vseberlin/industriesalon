@@ -33,6 +33,7 @@ $side_rail = !empty($rail['rail_feature']['enabled']) && in_array($placement, ['
                 <div class="iss-project-stage__intro">
                     <p class="iss-kicker"><a href="<?php echo esc_url(home_url('/projekte/')); ?>"><?php esc_html_e('Projekte im Industriesalon', 'industriesalon'); ?></a></p>
                     <h1><?php the_title(); ?></h1>
+                    <?php echo iss_content_model_render_project_status_block(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared escaped status renderer. ?>
                     <?php if (has_excerpt()) : ?><p class="iss-project-stage__lead"><?php echo esc_html(get_the_excerpt()); ?></p><?php endif; ?>
                 </div>
                 <?php if ($logo_id && wp_attachment_is_image($logo_id)) : ?>

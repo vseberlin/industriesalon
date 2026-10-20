@@ -329,7 +329,6 @@ function iss_timeline_build_actions($row, $opts = []) {
 
     $details_override = isset($opts['detailsButtonUrl']) ? esc_url_raw((string) $opts['detailsButtonUrl']) : '';
     $recommend_override = isset($opts['recommendButtonUrl']) ? esc_url_raw((string) $opts['recommendButtonUrl']) : '';
-    $tickets_override = isset($opts['ticketsButtonUrl']) ? esc_url_raw((string) $opts['ticketsButtonUrl']) : '';
     $details_label = isset($opts['detailsButtonText']) ? trim(sanitize_text_field((string) $opts['detailsButtonText'])) : '';
     $recommend_label = isset($opts['recommendButtonText']) ? trim(sanitize_text_field((string) $opts['recommendButtonText'])) : '';
     $tickets_label = isset($opts['ticketsButtonText']) ? trim(sanitize_text_field((string) $opts['ticketsButtonText'])) : '';
@@ -354,9 +353,6 @@ function iss_timeline_build_actions($row, $opts = []) {
     if ($recommend_override !== '') {
         $recommend_url = $recommend_override;
     }
-    if ($tickets_override !== '') {
-        $booking_url = $tickets_override;
-    }
 
     $actions = [];
     if ($show_details && $details_url !== '') {
@@ -374,21 +370,7 @@ function iss_timeline_build_actions($row, $opts = []) {
         ];
     }
     if ($show_tickets && $booking_url !== '') {
-        $ticket_action = [
-            'url' => $booking_url,
-            'label' => $tickets_label,
-            'variant' => 'primary',
-        ];
-        $slot_id = trim((string) ($row['slot_id'] ?? ''));
-        $slot_start = trim((string) ($row['slot_start'] ?? ''));
-        $source_post_type = trim((string) ($row['source_post_type'] ?? ''));
-        if ($tickets_override === '' && ($row['cta_mode'] ?? '') !== 'external' && $source_post_id > 0 && $source_post_type !== '' && $slot_id !== '' && $slot_start !== '') {
-            $ticket_action['attrs'] = array_merge(
-                iss_timeline_get_calendar_trigger_attrs($row),
-                iss_timeline_get_booking_action_attrs($row)
-            );
-        }
-        $actions[] = $ticket_action;
+        $actions[] = iss_timeline_get_ticket_action_for_occurrence($row, array_merge($opts, ['ticketsButtonText' => $tickets_label]));
     }
 
     return $actions;

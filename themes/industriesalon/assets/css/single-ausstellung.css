@@ -78,9 +78,7 @@
   position: absolute;
   inset: 0;
   z-index: 1;
-  background:
-    linear-gradient(90deg, rgba(14, 16, 17, 0.84) 0%, rgba(14, 16, 17, 0.5) 46%, rgba(14, 16, 17, 0.18) 100%),
-    linear-gradient(180deg, rgba(14, 16, 17, 0.22) 0%, rgba(14, 16, 17, 0.1) 42%, rgba(14, 16, 17, 0.76) 100%);
+  background: linear-gradient(90deg, rgba(14, 16, 17, 0.72) 0%, rgba(14, 16, 17, 0.58) 40%, rgba(14, 16, 17, 0.08) 75%);
   pointer-events: none;
 }
 
@@ -152,7 +150,7 @@
 
 .iss-ausstellung-hero__lede {
   max-width: 46rem;
-  color: rgba(249, 249, 250, 0.82);
+  color: var(--iss-ausstellung-light);
   font-size: clamp(1.16rem, 1vw + 0.95rem, 1.5rem);
   line-height: 1.55;
 }
@@ -168,22 +166,20 @@
 .iss-ausstellung-hero__meta-col .iss-info-panel {
   --iss-info-accent: var(--iss-ausstellung-accent);
   --iss-info-panel-shell-pad: clamp(1rem, 1.8vw, 1.35rem);
-  --iss-info-panel-shell-bg: rgba(14, 16, 17, 0.62);
+  --iss-info-panel-shell-bg: var(--iss-surface-paper);
   --iss-info-panel-shell-border-left: 3px solid var(--iss-ausstellung-accent);
   --iss-info-panel-title-size: clamp(1.2rem, 1rem + 0.65vw, 1.75rem);
   --iss-info-panel-row-gap: 0.7rem;
   --iss-info-panel-heading-gap: 0.3rem;
   --iss-info-panel-stack-gap: 0.65rem;
-  --iss-info-rule: rgba(249, 249, 250, 0.22);
+  --iss-info-rule: var(--iss-border);
 
   max-width: none;
-  color: var(--iss-ausstellung-light);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  color: var(--iss-ausstellung-dark);
 }
 
 .iss-ausstellung-hero__meta-col .iss-info-panel__title {
-  color: var(--iss-ausstellung-light);
+  color: var(--iss-ausstellung-dark);
 }
 
 .iss-ausstellung-hero__meta-col .iss-info-row {
@@ -192,7 +188,7 @@
 
 .iss-ausstellung-hero__meta-col .iss-info-row__text,
 .iss-ausstellung-hero__meta-col .iss-info-row__text strong {
-  color: rgba(249, 249, 250, 0.88);
+  color: var(--iss-ausstellung-dark);
 }
 
 .iss-ausstellung-hero__meta-col .iss-info-row__text {

@@ -105,7 +105,7 @@ function iss_fuehrung_render_booking_box($post_id) {
     $archive_link = get_post_type_archive_link(ISS_FUEHRUNGEN_POST_TYPE);
 
     ob_start();
-    echo '<aside class="iss-fuehrung-booking">';
+    echo '<aside id="buchung" class="iss-fuehrung-booking">';
     echo '<div class="iss-fuehrung-booking__inner">';
     echo '<p class="iss-kicker iss-kicker--compact">Buchung</p>';
 

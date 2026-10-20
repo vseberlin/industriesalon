@@ -89,6 +89,16 @@ function iss_wf_import_get_archive_image_meta_line(array $image): string
     return implode(' · ', array_slice($parts, 0, 3));
 }
 
+/** Keep legacy source provenance; public actions use the attached local copy. */
+function iss_wf_import_get_archive_source_link_url(string $source_url, int $attachment_id = 0): string
+{
+    $host = strtolower((string) wp_parse_url($source_url, PHP_URL_HOST));
+    if (in_array($host, ['wf-museum.de', 'www.wf-museum.de', 'industriesalon.de', 'www.industriesalon.de'], true)) {
+        return $attachment_id > 0 ? (string) wp_get_attachment_url($attachment_id) : '';
+    }
+    return esc_url_raw($source_url);
+}
+
 function iss_wf_import_get_archive_image_display(array $image, string $size = 'large'): array
 {
     $attachment_id = absint($image['preview_attachment_id'] ?? 0);
@@ -102,7 +112,7 @@ function iss_wf_import_get_archive_image_display(array $image, string $size = 'l
     }
 
     if ($href === '') {
-        $href = esc_url_raw((string) ($image['source_url'] ?? ($image['preview_url'] ?? '')));
+        $href = iss_wf_import_get_archive_source_link_url((string) ($image['source_url'] ?? ($image['preview_url'] ?? '')));
     }
 
     if ($attachment_id > 0) {
@@ -548,7 +558,7 @@ function iss_wf_import_render_archive_album_item(array $item, int $index): strin
             'decoding' => 'async',
         ]);
     }
-    $source_url = trim((string) ($item['source_url'] ?? ''));
+    $source_url = iss_wf_import_get_archive_source_link_url(trim((string) ($item['source_url'] ?? '')), $thumbnail_id);
 
     ob_start();
     ?>
@@ -570,7 +580,7 @@ function iss_wf_import_render_archive_album_item(array $item, int $index): strin
                     <?php endif; ?>
                     <?php if ($source_url !== '') : ?>
                         <p class="iss-archive-album__item-actions">
-                            <a class="iss-action-link" href="<?php echo esc_url($source_url); ?>"><?php esc_html_e('Original ansehen', 'iss-wf-import'); ?></a>
+                            <a class="iss-action-link" href="<?php echo esc_url($source_url); ?>"><?php esc_html_e('Bild vergrößern', 'iss-wf-import'); ?></a>
                         </p>
                     <?php endif; ?>
                 </figcaption>
@@ -650,7 +660,8 @@ function iss_wf_import_render_archive_album_block($attributes = [], $content = '
     if ($source_links) {
         $link_parts = [];
         foreach ($source_links as $link) {
-            $link_parts[] = '<a href="' . esc_url($link['url']) . '">' . esc_html($link['label']) . '</a>';
+            $url = iss_wf_import_get_archive_source_link_url($link['url']);
+            $link_parts[] = $url !== '' ? '<a href="' . esc_url($url) . '">' . esc_html($link['label']) . '</a>' : esc_html($link['label']);
         }
         $out .= '<div class="iss-info-row"><div class="iss-info-row__main"><p class="iss-info-row__text"><strong>' . esc_html__('Original', 'iss-wf-import') . '</strong></p><p class="iss-info-row__text">' . implode(' · ', $link_parts) . '</p></div></div>';
     }
@@ -967,7 +978,7 @@ function iss_wf_import_get_archive_object_browser_result_meta(int $post_id): arr
 
     $family_names = wp_get_post_terms($post_id, ISS_WF_IMPORT_FAMILY_TAXONOMY, ['fields' => 'names']);
     if (is_array($family_names) && $family_names) {
-        $meta[] = implode(', ', array_slice(array_map('strval', $family_names), 0, 2));
+        $meta[] = __('Motiv / Bereich:', 'iss-wf-import') . ' ' . implode(', ', array_slice(array_map('strval', $family_names), 0, 2));
     }
 
     return $meta;
@@ -975,12 +986,15 @@ function iss_wf_import_get_archive_object_browser_result_meta(int $post_id): arr
 
 function iss_wf_import_get_archive_object_browser_kicker(int $post_id): string
 {
-    $names = wp_get_post_terms($post_id, ISS_WF_IMPORT_FAMILY_TAXONOMY, ['fields' => 'names']);
-    if (is_array($names) && !empty($names[0]) && is_string($names[0])) {
-        return $names[0];
-    }
-
-    return __('Archivobjekt', 'iss-wf-import');
+    $object = iss_wf_import_get_object_service()->get_projection_for_post($post_id);
+    $type = trim((string) ($object['object_type_label'] ?? ''));
+    // Describe the archived item, not a device or person depicted in its image.
+    return match ($type) {
+        'document_page' => __('Dokumentseite', 'iss-wf-import'),
+        'image' => __('Bild', 'iss-wf-import'),
+        '' => __('Archivobjekt', 'iss-wf-import'),
+        default => $type,
+    };
 }
 
 function iss_wf_import_render_archive_object_browser_card(WP_Post $post): string
@@ -1073,7 +1087,7 @@ function iss_wf_import_get_featured_archive_object_id(): int
 
 function iss_wf_import_get_archive_object_feature_meta(int $post_id): array
 {
-    $meta = [];
+    $meta = [__('Art des Archivstücks', 'iss-wf-import') => iss_wf_import_get_archive_object_browser_kicker($post_id)];
 
     $field_names = wp_get_post_terms($post_id, ISS_WF_IMPORT_FIELD_TAXONOMY, ['fields' => 'names']);
     if (is_array($field_names) && $field_names) {
@@ -1082,7 +1096,7 @@ function iss_wf_import_get_archive_object_feature_meta(int $post_id): array
 
     $family_names = wp_get_post_terms($post_id, ISS_WF_IMPORT_FAMILY_TAXONOMY, ['fields' => 'names']);
     if (is_array($family_names) && $family_names) {
-        $meta[__('Bereich', 'iss-wf-import')] = implode(', ', array_slice(array_map('strval', $family_names), 0, 2));
+        $meta[__('Motiv / Bereich', 'iss-wf-import')] = implode(', ', array_slice(array_map('strval', $family_names), 0, 2));
     }
 
     $projection = iss_wf_import_get_object_service()->ensure_projection_for_post($post_id);
@@ -1536,7 +1550,7 @@ function iss_wf_import_render_archive_object_browser_markup(array $payload, arra
                             <?php endif; ?>
 
                             <label class="iss-archive-browser__field">
-                                <span><?php esc_html_e('Bereich', 'iss-wf-import'); ?></span>
+                                <span><?php esc_html_e('Motiv / Bereich', 'iss-wf-import'); ?></span>
                                 <select class="iss-archive-browser__select" name="familie">
                                     <option value=""><?php esc_html_e('Alle Bereiche', 'iss-wf-import'); ?></option>
                                     <?php foreach ($family_options as $term) : ?>
