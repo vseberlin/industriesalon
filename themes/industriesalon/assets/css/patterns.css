@@ -4129,6 +4129,12 @@ iss-info-panel--brown
   min-width: 0;
 }
 
+.iss-newsletter-form .tnp-field-button {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: end;
+}
+
 .iss-newsletter-form .tnp-email,
 .iss-newsletter-form .tnp-submit {
   min-height: 3.75rem;
@@ -4147,7 +4153,7 @@ iss-info-panel--brown
 }
 
 .iss-newsletter-form .tnp-email::placeholder {
-  color: rgba(30, 30, 30, 0.45);
+  color: rgba(30, 30, 30, 0.72);
 }
 
 .iss-newsletter-form .tnp-email:focus {
@@ -4302,6 +4308,11 @@ iss-info-panel--brown
 
   .iss-newsletter-form form {
     grid-template-columns: 1fr;
+  }
+
+  .iss-newsletter-form .tnp-field-button {
+    grid-column: 1;
+    grid-row: auto;
   }
 
   .iss-newsletter-form .tnp-submit {

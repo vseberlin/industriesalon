@@ -586,7 +586,7 @@ function iss_content_model_render_video_card(array $card, array $options = []): 
                 <span class="iss-video-card__meta">
                     <?php
                     $meta_bits = array_filter([
-                        $card['year'],
+                        $card['year'] !== '' ? __('Zeitbezug:', 'iss-content-model') . ' ' . $card['year'] : '',
                         $card['source_label'],
                     ]);
                     echo esc_html(implode(' · ', $meta_bits));
@@ -811,11 +811,11 @@ function iss_content_model_render_video_library_feature(array $featured): string
                     <aside class="iss-video-library__feature-side">
                         <dl class="iss-video-library__feature-facts">
                             <div class="iss-video-library__feature-fact" data-video-player-original-date-wrap <?php echo $featured['original_date_label'] === '' ? 'hidden' : ''; ?>>
-                                <dt><?php esc_html_e('Datum', 'iss-content-model'); ?></dt>
+                                <dt><?php esc_html_e('Veröffentlichung der Quelle', 'iss-content-model'); ?></dt>
                                 <dd data-video-player-original-date><?php echo esc_html($featured['original_date_label']); ?></dd>
                             </div>
                             <div class="iss-video-library__feature-fact" data-video-player-year-wrap <?php echo $featured['year'] === '' ? 'hidden' : ''; ?>>
-                                <dt><?php esc_html_e('Jahr', 'iss-content-model'); ?></dt>
+                                <dt><?php esc_html_e('Zeitbezug', 'iss-content-model'); ?></dt>
                                 <dd data-video-player-year><?php echo esc_html($featured['year']); ?></dd>
                             </div>
                             <div class="iss-video-library__feature-fact" data-video-player-duration-wrap <?php echo $featured['duration'] === '' ? 'hidden' : ''; ?>>
@@ -1125,13 +1125,13 @@ function iss_content_model_render_video_player_block($attributes = [], $content 
     $meta_rows = [];
     if ($card['original_date_label'] !== '') {
         $meta_rows[] = [
-            'label' => __('Datum', 'iss-content-model'),
+            'label' => __('Veröffentlichung der Quelle', 'iss-content-model'),
             'value' => $card['original_date_label'],
         ];
     }
     if (($card['year_label'] !== '') || ($card['original_date_label'] === '' && $card['year'] !== '')) {
         $meta_rows[] = [
-            'label' => __('Jahr', 'iss-content-model'),
+            'label' => __('Zeitbezug', 'iss-content-model'),
             'value' => $card['year'],
         ];
     }

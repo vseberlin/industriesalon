@@ -6,9 +6,66 @@ Stand 20. Oktober 2026. Zusammenführung der beiden Websiteaudits mit Gegenprüf
 
 Der Plan umfasst Texte, Bilder und Gestaltung sowie funktionale und datenbezogene Fehler. Er beschreibt die nächsten Korrekturen; er erteilt keine Freigabe für ungeprüfte Sachangaben oder eine vollständige Neugestaltung.
 
-## Umsetzung — Programm und erstes Korrekturpaket
+## Abschluss des Korrekturpakets — 20. Oktober 2026
 
-Stand 20. Oktober 2026, nach der Bestätigung der Führungsangaben. Das erste Korrekturpaket und die Programmkorrekturen sind lokal und auf Staging geprüft und veröffentlicht (Implementierung `0eccd4e`, Serienlabel-Korrektur `805ad9f`). Der übrige Plan bleibt offen; der aktuelle Veröffentlichungsstand steht im [Handoff](../../handoff_CURRENT.md).
+Die umsetzbaren Korrekturen aus beiden Audits sind lokal abgeschlossen. Der aktuelle
+Veröffentlichungs- und Prüfstand steht im [Handoff](../../handoff_CURRENT.md).
+Die unten erhaltenen Auditbefunde beschreiben den Ausgangszustand, keine neue offene Arbeitsliste.
+
+| Bereich | Ergebnis |
+| --- | --- |
+| F01–F05, T01 | Bereits veröffentlicht: Arbeitsnotizen entfernt, vollständige Team-/Fördertexte, getrennte öffentliche und Gruppenführungen, bestätigte Preise und Dauer, Behrensbauhinweis, zentrale Besucherinformationen und freier Eintritt. |
+| F06, T07 | Neutrale Projektbereiche statt falschem „kommend“; stabile Sortierung verhindert doppelte/fehlende Projekte. Futura bleibt ausdrücklich in Planung. KiezKarte behält die bestätigten Pilotbedingungen. Rückblickhandlung führt nur bei vorhandenem Bericht zum Rückblick, sonst zur Ankündigung. ZiG verwendet den aktuellen Newsletterzugang. |
+| F07, T02 | Atlas nennt die Epoche „Historische Perspektive“, erklärt deren Kontextfunktion und zeigt dafür keine irreführenden Trefferzahlen. Bekannte Akteursnamen werden ausgeschrieben. Öffentlicher Kioskknopf entfernt; bestehender Betriebsmodus bleibt erhalten. „Büros“, „Angebot“ und „Jahrzehnt“ ersetzen technische/uneinheitliche Labels. Der leere Trenner im Ortsnamen ist an der Quelle korrigiert. |
+| F08, V02 | Bestehende Bildkarten behalten ihre Zoomschaltflächen; das Scrollrad wird nicht abgefangen. Markerreihenfolge und Ziele stimmen mit den drei Ortskarten überein. Header wird beim Scrollen kompakt, berücksichtigt die Adminleiste und lädt nach Änderungen seine aktuelle Datei. Menüfokus und Escape wurden bedient. |
+| F09, T05 | Archiv beginnt mit Rechercheeinleitung und Suche. Zahlen beziehen sich ausdrücklich auf online veröffentlichte Objekte. Objektseiten zeigen vorhandene Datierung, Urheber, Inventarnummer, Material, Maße, Sammlung, Rechte, Originalnachweis und Serien-/Bestandsbezüge. Fehlende Fakten erzeugen keine erfundenen Werte. Bildvergrößerung verlinkt die bereits öffentliche Bilddatei. Zwölf Filteranzeigenamen korrigiert; IDs, Slugs und Mitgliedschaften erhalten. |
+| F10, V08 | Generische Social-Ziele entfernt; Footer nennt die Zieldomain. Newsletter hat eine sichtbare Beschriftung und „Ihre E-Mail-Adresse“; Einwilligung bleibt erforderlich. Newsletterausrichtung korrigiert. Bestehende Rechtsanker, Startseitenlink und Twinkl-Badge bleiben erhalten. |
+| F11, V05 | Technische Bildunterschriften auf der Schöneweideseite korrigiert; das tatsächlich passende Behrensbau-Eventfoto bleibt erhalten. VIDEO-Platzhalter durch vorhandenes WF-Motiv ersetzt. Leere Archivsuche meldet verständlich fehlende Treffer. Archiv-Bildlinks erhalten einen zugänglichen Namen. Weiße Beschriftung auf Markenrot erhöht den gemessenen Buttonkontrast von 4,31:1 auf 4,53:1. |
+| T03–T06, V03, V06 | Konkrete Besuchereinleitungen auf Startseite, Führungen, Kalender, Sammlung, Archiv und Ausstellungen. Ermäßigungsregeln folgen den Angeboten. Ausstellungen haben eine Filteroberfläche und einen Besuchskasten; wiederholte methodische Essays und die zweite Bildwand entfallen. Publikations-Leerraum reduziert, Absätze bleiben in den Erzählspalten zusammen. |
+| T08 | Gründung und Sammlungsrettung 2009 klar erzählt; Auszeichnung nennt Susanne Reumschüssel, Verdienstmedaille und 23.07.2019. Quellen sind in der Seite verlinkt. Das bereits korrigierte Triptychon bleibt erhalten. |
+| T09 | Raumangebot: 350 m² Fläche statt „Raumhöhe“, bis zu 100 Sitzplätze insgesamt, ab 400 €, Zeiten und Catering auf Anfrage. Keine erfundene Belegungszahl pro Teilraum; bestehende Anfragewege bleiben die Handlung. |
+| T10 | „Schöneweide zum Weiterlesen“ und „Schöneweide in Film und Ton“; Online-Lesen-Bezeichnungen, sachlicher Hinweis auf die unvollständige Röhren-Reihe, Name Winfried Müller aus vorhandenem Inhalt. Veröffentlichungsdatum der Quelle und historischer Zeitbezug getrennt, deutsches Datumsformat. |
+| V01, V04, V07 | Archiv-Kurznavigation, Projektüberschrift und Ermäßigungstitel an ihren Layoutverantwortlichen korrigiert. Zwölf Seiten bei 390/768/1348/1720 px ohne globalen Überlauf. Unterschiedliche Inhaltskarten, Papiergestaltung und bestehende Schriftrollen bewusst erhalten. Suche/Leerzustand, Atlas-Suche plus Epoche, Vollbildschalter und Menütastatur geprüft. |
+
+**Bestätigte Angaben:** Repair-Café am ersten und zweiten Mittwoch, kostenlos,
+vor allem Gegenstände in Haushaltsgröße, keine großen Maschinen; konkrete Zeiten
+und Ausnahmen kommen aus dem Kalender. Raumvermietung wie oben. KiezKarte: 49 €,
+20 Partnerangebote, gültig bis 31.12.2026. Der genaue Kiezfondsanteil bleibt fachlich
+offen; veröffentlicht bleibt die ausdrücklich bestätigte Aussage „ein Teil“.
+Keine automatische Verlängerung und keine erfundene Prozentzahl.
+
+Gründung und Auszeichnung wurden mit den veröffentlichten Vereinsquellen
+[Gründungsgeschichte](https://www.industriesalon.de/industriesalon/verein/) und
+[Auszeichnungen](https://www.industriesalon.de/auszeichnungen/) abgeglichen.
+
+**Prüfung und Grenzen:** 41 neue, 42 bestehende Audit- und 27 Besuchsprüfungen
+bestehen lokal; neun Registries, 191 gültige Dokumente und 184 vorhandene
+Medienreferenzen. Syntax, gezieltes PHPCS/PHPStan, ESLint, Stylelint und drei
+CSS-Vertragstests bestehen. Die 24 bestehenden PHPCS-Meldungen in `videos.php`
+sind gegenüber dem Ausgangsstand unverändert; die kleine Labelkorrektur fügt
+keine hinzu. Chrome: vier Breiten, Menü mit Tab/Escape und zurückgegebenem Fokus,
+Archivsuche/Leerzustand und Atlas-Suche mit historischer Perspektive geprüft.
+Die reine 200%-Zoom-, echte Touch-, Firefox- und Screenreaderabnahme sowie
+redaktionelle Rechteprüfung aller Archivbilder sind damit nicht behauptet.
+Diese menschliche Freigabe bleibt vor einer Produktionsveröffentlichung nötig.
+Es wurden keine echten Formulare, E-Mails oder Buchungen ausgelöst.
+
+**Privater Datentransfer:** `2026-10-20-audit-completion.php` mit
+`input-stage.json`, dann mit `place-input-stage.json`; anschließend
+`2026-10-20-archive-labels.php`. Vorherzustände und Eingaben liegen unter
+`var/audit-completion-20261020/`, Receipts in den drei nicht automatisch geladenen
+Optionen `iss_backup_20261020_audit_completion`,
+`iss_backup_20261020_audit_place_copy` und `iss_backup_20261020_archive_labels`.
+Zwölf Inhaltsdatensätze, zwei Einstellungen, zwei als Entwurf erhaltene
+Templateübersteuerungen und zwölf Anzeigenamen sind der gezielte Umfang.
+Native und zuständige Plugin-APIs bewahren private Entwürfe; keine vollständige
+Datenbanküberschreibung. Alle verwendeten Bilder existieren auf beiden Systemen;
+kein Upload- oder Schematransfer. GitHub erhält Code, Tests und Dokumentation,
+keine SQL-/Inhalts-/Medienartefakte.
+
+## Bereits veröffentlichtes Programm- und Besuchspaket
+
+Stand 20. Oktober 2026, nach der Bestätigung der Führungsangaben. Das erste Korrekturpaket und die Programmkorrekturen sind lokal und auf Staging geprüft und veröffentlicht (Implementierung `0eccd4e`, Serienlabel-Korrektur `805ad9f`). Das anschließende Korrekturpaket ist oben dokumentiert; der aktuelle Veröffentlichungsstand steht im [Handoff](../../handoff_CURRENT.md).
 
 | Paket | Lokales Ergebnis |
 | --- | --- |
@@ -245,4 +302,4 @@ Für spätere Releases gilt die bestehende [Git-Austauschfolge](../runbooks/git-
 6. **Formulare und Buchung:** Newsletter, Raumanfrage und öffentliche beziehungsweise Gruppenbuchung separat bis zum überprüfbaren Ergebnis testen. Dafür vorher Testdaten und einen Weg ohne echte Nachrichten oder Buchungen festlegen; reale Sendungen benötigen ausdrückliche Freigabe.
 7. **Release:** Änderungen nach der [Prüfmatrix](../agent/verification.md) kontrollieren, erforderliche Inhalte/Medien privat mitführen und auf Staging erneut prüfen. `noindex` des Stagings erhalten. HTTP 200 oder ein erfolgreicher Codecheck allein gilt nicht als gestalterische oder fachliche Abnahme.
 
-**Empfohlener erster Umsetzungsschritt:** F01, T01 und der technische Teil von T02 — öffentliche Reservierungsnotiz, falscher Publikationsblock, technische Downloadausgabe und belegte Satzabbrüche. Parallel dazu lediglich die benötigten Sachangaben für F02–F05 zusammentragen. Anschließend Termin- und Buchungsdarstellung sowie den bestätigten Seitenüberlauf in jeweils eigenen, überprüfbaren Änderungen bearbeiten.
+**Weitere fachliche Freigabe:** Den genauen Kiezfondsanteil ergänzen, sobald er bestätigt ist; die oben abgegrenzte menschliche Geräte-, Editor- und Rechteprüfung vor Produktion abschließen. Die Code- und Inhaltskorrekturen des Plans sind umgesetzt.

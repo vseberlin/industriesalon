@@ -37,6 +37,7 @@
 
 .iss-archive-landing--compact {
   --iss-archive-section-gap: clamp(2rem, 4vw, 3.25rem);
+  --iss-archive-quick-columns: 4;
 }
 
 /* .iss-archive-landing: Base class for iss archive landing; apply on primary wrapper/scope. */
@@ -56,7 +57,7 @@
 
 .iss-archive-topband__layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(18rem, 0.95fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: clamp(1.2rem, 2vw, 2rem);
   align-items: start;
   padding-bottom: clamp(1rem, 2vw, 1.4rem);
@@ -77,7 +78,7 @@
 }
 
 .iss-archive-topband__lead {
-  max-width: none;
+  max-width: 75ch;
   margin: 0;
   color: rgba(30, 30, 30, 0.82);
   font-size: clamp(1rem, 0.96rem + 0.24vw, 1.12rem);
@@ -997,11 +998,7 @@
 }
 
 .iss-archive-browser__quick-grid {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.iss-archive-landing--compact .iss-archive-browser__quick-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(var(--iss-archive-quick-columns, 3), minmax(0, 1fr));
 }
 
 .iss-archive-browser__layout {

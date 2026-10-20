@@ -2734,7 +2734,8 @@ final class Industriesalon_Steuerung {
             $items[] = '<p class="iss-site-footer__text"><strong>' . esc_html__('Buchungen', 'industriesalon-steuerung') . ':</strong><br><a href="' . esc_url('mailto:' . antispambot((string) $contact['booking_email'])) . '">' . esc_html((string) $contact['booking_email']) . '</a></p>';
         }
         if (! empty($contact['website'])) {
-            $items[] = '<p class="iss-site-footer__text"><a href="' . esc_url($this->normalize_public_url((string) $contact['website'])) . '" target="_blank" rel="noopener noreferrer">' . esc_html__('Website', 'industriesalon-steuerung') . '</a></p>';
+            $website = $this->normalize_public_url((string) $contact['website']);
+            $items[] = '<p class="iss-site-footer__text"><a href="' . esc_url($website) . '" target="_blank" rel="noopener noreferrer">' . esc_html((string) wp_parse_url($website, PHP_URL_HOST)) . '</a></p>';
         }
 
         if (empty($items)) {

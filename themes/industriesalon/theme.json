@@ -314,7 +314,7 @@
         },
         "color": {
           "background": "var(--wp--preset--color--scarlet-red)",
-          "text": "var(--wp--preset--color--vaporous-white)"
+          "text": "#ffffff"
         },
         "spacing": {
           "padding": {

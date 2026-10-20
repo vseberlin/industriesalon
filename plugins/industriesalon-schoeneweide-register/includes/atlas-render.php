@@ -64,12 +64,11 @@ function iss_register_render_schoneweide_atlas(array $attributes = []): string
     $html .= '<div class="iss-heading iss-heading--uncaged iss-atlas-app__panel-heading">';
     $html .= '<p class="iss-kicker iss-kicker--compact">Index</p>';
     $html .= '<h2 class="iss-heading__title">Orte</h2>';
-    $html .= '<p class="iss-heading__text">Heutige Nutzung filtern, Zeitfenster wechseln und im Korridor suchen.</p>';
+    $html .= '<p class="iss-heading__text">Suchen Sie nach Orten und ihrer Nutzung. Die historische Perspektive zeigt den Wissensstand zur gewählten Epoche; sie begrenzt die Ortsliste nicht.</p>';
     $html .= '</div>';
     $html .= '<div class="iss-atlas-app__layout-controls" data-iss-schoneweide-layout-controls>';
     $html .= '<button class="iss-atlas-app__layout-mode is-active" type="button" data-iss-atlas-layout-mode="embedded" aria-pressed="true">Karte</button>';
     $html .= '<button class="iss-atlas-app__layout-mode" type="button" data-iss-atlas-layout-mode="fullscreen" aria-pressed="false">Vollbild</button>';
-    $html .= '<button class="iss-atlas-app__layout-mode" type="button" data-iss-atlas-layout-mode="kiosk" aria-pressed="false">Kiosk</button>';
     $html .= '</div>';
     $html .= '<p class="iss-atlas-app__scope-note">Ausschnitt: Schöneweide und verbundene Orte.</p>';
     $html .= '<div class="iss-atlas-app__search">';
@@ -89,7 +88,7 @@ function iss_register_render_schoneweide_atlas(array $attributes = []): string
     $html .= '<div class="iss-atlas-app__main">';
     $html .= '<div class="iss-atlas-app__era-strip">';
     $html .= '<div class="iss-atlas-app__era-strip-head">';
-    $html .= '<p class="iss-atlas-app__filter-label">Zeitfenster</p>';
+    $html .= '<p class="iss-atlas-app__filter-label">Historische Perspektive</p>';
     $html .= '</div>';
     $html .= '<div class="iss-atlas-app__era-strip-body" data-iss-schoneweide-era-filters>';
     $html .= '<p class="iss-atlas-loading">Epochen werden geladen.</p>';

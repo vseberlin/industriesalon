@@ -1246,7 +1246,7 @@ function industriesalon_enqueue_assets(): void
             'industriesalon-header',
             get_stylesheet_directory_uri() . $script_rel_path,
             array(),
-            $version,
+            (string) filemtime($script_abs_path),
             true
         );
     }

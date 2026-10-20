@@ -79,7 +79,7 @@ function iss_content_model_format_video_original_date(string $value): string
         return '';
     }
 
-    return wp_date(get_option('date_format'), $date->getTimestamp(), wp_timezone());
+    return $date->format('d.m.Y');
 }
 
 function iss_content_model_get_video_year_label(string $year, string $original_date = ''): string

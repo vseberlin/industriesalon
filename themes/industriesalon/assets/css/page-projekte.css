@@ -318,11 +318,6 @@
   text-decoration: none;
 }
 
-.iss-project-index-card .iss-related-place-links__link::before {
-  content: "/";
-  margin-right: 0.35rem;
-  color: var(--iss-accent);
-}
 
 .iss-project-index__empty {
   padding: 1.25rem 0;
@@ -351,7 +346,7 @@
 @media (max-width: 1080px) {
   .iss-projects-hero__grid,
   .iss-projects-contact__inner {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .iss-projects-hero__rail,
@@ -375,7 +370,7 @@
   }
 
   .iss-projects-hero__title {
-    font-size: clamp(2.15rem, 15vw, 3.45rem);
+    font-size: clamp(2.15rem, 10vw, 3.45rem);
   }
 
   .iss-projects-hero__rail {

@@ -19,7 +19,7 @@
     '': DEFAULT_USE_TYPE_LABEL,
     culture: 'Kultur',
     education: 'Bildung / Forschung',
-    commercial: 'Gewerbe / Bueros',
+    commercial: 'Gewerbe / Büros',
     industrial: 'Produktion',
     residential: 'Wohnen',
     administration: 'Verwaltung',
@@ -400,6 +400,10 @@
     }
 
     var actor = state.actorMap[key];
+    if (actor && actor.name) {
+      return actor.label && actor.label !== actor.name
+        ? actor.name + ' (' + actor.label + ')' : actor.name;
+    }
     if (actor && actor.label) {
       return actor.label;
     }

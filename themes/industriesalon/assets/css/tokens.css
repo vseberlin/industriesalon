@@ -104,7 +104,8 @@
   --iss-button-hover-border: var(--iss-accent);
   --iss-button-hover-fg: var(--iss-black);
   --iss-button-primary-bg: var(--iss-accent);
-  --iss-button-primary-fg: var(--iss-white);
+  /* Pure white reaches 4.53:1 on the brand red; the off-white surface does not. */
+  --iss-button-primary-fg: #fff;
   --iss-button-primary-border: var(--iss-accent);
   --iss-button-primary-hover-bg: var(--iss-black);
   --iss-button-primary-hover-border: var(--iss-black);

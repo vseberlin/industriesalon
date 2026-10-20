@@ -121,11 +121,7 @@
     var eraCounts = {};
     var eras = state.eras.length ? state.eras : deriveFallbackEras(state.places);
 
-    if (ERA_FILTER_CONTEXT_ONLY) {
-      eras.forEach(function (era) {
-        eraCounts[era.slug] = state.places.length;
-      });
-    } else {
+    if (!ERA_FILTER_CONTEXT_ONLY) {
       state.places.forEach(function (place) {
         eras.forEach(function (era) {
           if (matchesEra(place, era.slug)) {
@@ -138,7 +134,7 @@
     container.innerHTML = EMPTY;
     container.appendChild(buildFilterButton({
       label: DEFAULT_ERA_LABEL,
-      count: state.places.length,
+      count: ERA_FILTER_CONTEXT_ONLY ? undefined : state.places.length,
       active: state.era === EMPTY,
       className: 'iss-atlas-app__filter-button--era',
       attributes: {
@@ -157,7 +153,7 @@
 
       container.appendChild(buildFilterButton({
         label: label,
-        count: eraCounts[era.slug] || 0,
+        count: ERA_FILTER_CONTEXT_ONLY ? undefined : (eraCounts[era.slug] || 0),
         active: state.era === era.slug,
         className: 'iss-atlas-app__filter-button--era',
         attributes: {

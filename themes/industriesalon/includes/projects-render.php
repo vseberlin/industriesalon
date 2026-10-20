@@ -4,6 +4,15 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+/** Keep offset project loops stable when editors assign the same menu order. */
+add_filter('query_loop_block_query_vars', static function (array $query): array {
+    if (($query['post_type'] ?? '') === 'projekt' && ($query['orderby'] ?? '') === 'menu_order') {
+        $order = strtoupper((string) ($query['order'] ?? 'ASC')) === 'DESC' ? 'DESC' : 'ASC';
+        $query['orderby'] = ['menu_order' => $order, 'ID' => $order];
+    }
+    return $query;
+});
+
 function industriesalon_get_editorial_project_skins(): array
 {
     return industriesalon_editorial_skin_slugs('projekt');

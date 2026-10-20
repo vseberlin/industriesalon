@@ -5,6 +5,14 @@
     window.__issNavInit = true;
 
     function init() {
+        var header = document.querySelector('.iss-site-header');
+        if (header) {
+            var updateHeader = function () {
+                header.classList.toggle('is-compact', window.scrollY > 96);
+            };
+            updateHeader();
+            window.addEventListener('scroll', updateHeader, { passive: true });
+        }
         var toggles = document.querySelectorAll('.iss-site-header .iss-nav-toggle button, .iss-site-header .iss-nav-toggle a');
         var panel = document.querySelector('.iss-menu-shell');
         var overlay = document.querySelector('.iss-nav-overlay');

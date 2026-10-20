@@ -1322,8 +1322,9 @@
   margin: 0;
   color: var(--iss-landing-ink);
   font-family: var(--iss-landing-serif);
-  font-size: 3rem;
+  font-size: clamp(2rem, 3.2vw, 3rem);
   line-height: 1;
+  overflow-wrap: anywhere;
 }
 
 .iss-landing-story-split__body {
@@ -1333,6 +1334,11 @@
   color: var(--iss-landing-muted);
   font-size: 1rem;
   line-height: 1.62;
+}
+
+.iss-landing-story-split__body > p,
+.iss-landing-origin-story__body > p {
+  break-inside: avoid-column;
 }
 
 .iss-landing-story-split__body > p:first-child {
@@ -1352,6 +1358,8 @@
 
 .iss-landing-story-split__heading {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
   gap: 0.75rem;
 }
 

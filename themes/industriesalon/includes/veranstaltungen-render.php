@@ -815,7 +815,9 @@ add_filter('iss_content_meta_presentation', static function ($html, int $id, arr
     if ($summary) {
         $action = !$past ? industriesalon_event_ticket_action($id, $row) : [];
         if ($past) {
-            $action = ['url' => '#rueckblicke', 'label' => __('Zum Rückblick', 'industriesalon')];
+            $action = iss_content_report_connections($id, true)
+                ? ['url' => '#rueckblicke', 'label' => __('Zum Rückblick', 'industriesalon')]
+                : ['url' => '#ankuendigung', 'label' => __('Ankündigung lesen', 'industriesalon')];
         } elseif (!$action) {
             $action = ['url' => '#besuch', 'label' => in_array($status, ['cancelled', 'sold_out'], true) ? __('Veranstaltungsdetails', 'industriesalon') : __('Besuch planen', 'industriesalon')];
         }

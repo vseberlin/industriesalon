@@ -423,7 +423,7 @@ add_filter('render_block_core/post-content', static function (string $content, a
     }
     if ($is_event) {
         $description_class = 'iss-event-description' . (industriesalon_editorial_has_portable_sections($post_id) ? ' iss-event-description--composition' : '');
-        $content = '<section class="' . esc_attr($description_class) . '"><h2>' . esc_html($past ? __('Die Ankündigung', 'industriesalon') : __('Über die Veranstaltung', 'industriesalon')) . '</h2>' . $content . '</section>';
+        $content = '<section id="ankuendigung" class="' . esc_attr($description_class) . '"><h2>' . esc_html($past ? __('Die Ankündigung', 'industriesalon') : __('Über die Veranstaltung', 'industriesalon')) . '</h2>' . $content . '</section>';
     }
     $content = $past ? $contributions . $content : $content . $contributions;
     if ($is_report) {

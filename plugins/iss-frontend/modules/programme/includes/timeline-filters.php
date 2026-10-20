@@ -625,7 +625,7 @@ function iss_timeline_render_query_block($attributes = [], $content = '', $block
         if ($ui['showTimeModeFilter']) { $out .= $select('time_mode', __('Zeitraum', 'iss-timeline'), $ui['timeModeOptions'], $config['filters']['time_mode']); }
         if ($ui['showItemTypeFilter']) {
             $out .= iss_timeline_render_choice_filter([
-                'name' => $name . '[item_type]', 'filter_key' => 'item_type', 'label' => __('Inhaltstyp', 'iss-timeline'),
+                'name' => $name . '[item_type]', 'filter_key' => 'item_type', 'label' => __('Angebot', 'iss-timeline'),
                 'selected' => $config['filters']['item_type'] ?: 'all', 'options' => $ui['typeOptions'],
                 'links' => is_array($attributes['externalTypeLinks'] ?? null) ? $attributes['externalTypeLinks'] : [], 'className' => 'iss-timeline__filter--type',
             ]);

@@ -21,7 +21,7 @@ function iss_newsletter_render_form_block(): string
             . '</a></p>';
     }
 
-    return do_shortcode('[newsletter_form fields="email,privacy" class="iss-newsletter-form" show_labels="false"]');
+    return do_shortcode('[newsletter_form fields="email,privacy" class="iss-newsletter-form" show_labels="true"]');
 }
 
 function iss_newsletter_register_blocks(): void
@@ -93,7 +93,7 @@ function iss_newsletter_configure_defaults(): void
         'privacy_use_wp_url' => '0',
         'privacy_url' => home_url('/verein/#datenschutz'),
         'email' => __('E-Mail', 'iss-newsletter'),
-        'email_placeholder' => __('name@example.org', 'iss-newsletter'),
+        'email_placeholder' => __('Ihre E-Mail-Adresse', 'iss-newsletter'),
         'name' => __('Vorname', 'iss-newsletter'),
         'surname' => __('Nachname', 'iss-newsletter'),
         'privacy' => __('Ich akzeptiere die Datenschutzerklärung.', 'iss-newsletter'),

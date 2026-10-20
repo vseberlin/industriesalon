@@ -1005,7 +1005,7 @@ function iss_wf_import_render_archive_object_browser_card(WP_Post $post): string
     ?>
     <article class="iss-card iss-card--flat iss-archive-browser__result-card">
         <?php if (has_post_thumbnail($post)) : ?>
-            <a class="iss-card__media" href="<?php echo esc_url($permalink); ?>">
+            <a class="iss-card__media" href="<?php echo esc_url($permalink); ?>" aria-label="<?php echo esc_attr(get_the_title($post)); ?>">
                 <?php echo get_the_post_thumbnail($post, 'large'); ?>
             </a>
         <?php endif; ?>
@@ -1502,50 +1502,6 @@ function iss_wf_import_render_archive_object_browser_markup(array $payload, arra
                 </div>
             <?php endif; ?>
 
-            <div class="iss-archive-browser__quick">
-                <div class="iss-heading iss-archive-browser__section-head">
-                    <p class="iss-kicker iss-kicker--compact"><?php echo esc_html((string) ($config['quickKicker'] ?? '')); ?></p>
-                    <h2 class="iss-heading__title"><?php echo esc_html((string) ($config['quickTitle'] ?? '')); ?></h2>
-                </div>
-                <div class="iss-archive-entry-grid iss-archive-browser__quick-grid">
-                    <?php if (!empty($config['showSourceCards'])) : ?>
-                        <?php foreach (array_slice($source_options, 0, 2) as $term) : ?>
-                            <a class="iss-archive-entry iss-archive-entry--sammlung" href="<?php echo esc_url(iss_wf_import_get_archive_object_browser_url([
-                                'source' => $term->slug,
-                                'field' => '',
-                                'family' => '',
-                                'context' => '',
-                                'decade' => '',
-                                'search' => '',
-                                'page' => 1,
-                            ], true, $state, $base_url)); ?>">
-                                <p class="iss-archive-entry__eyebrow"><?php esc_html_e('Nachweis', 'iss-wf-import'); ?></p>
-                                <h3 class="iss-archive-entry__title"><?php echo esc_html(iss_wf_import_get_public_source_label($term->slug, $term->name)); ?></h3>
-                                <p class="iss-archive-entry__text"><?php esc_html_e('Archivobjekte mit diesem digitalen Nachweis direkt im lokalen Bestand durchsuchen.', 'iss-wf-import'); ?></p>
-                                <div class="iss-archive-entry__meta"><span><?php echo esc_html(sprintf(_n('%d Objekt', '%d Objekte', (int) $term->count, 'iss-wf-import'), (int) $term->count)); ?></span></div>
-                            </a>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-
-                    <?php foreach ($quick_families as $term) : ?>
-                        <a class="iss-archive-entry iss-archive-entry--mediathek" href="<?php echo esc_url(iss_wf_import_get_archive_object_browser_url([
-                            'source' => !empty($config['lockSource']) ? ($state['source'] ?? '') : '',
-                            'field' => '',
-                            'family' => $term->slug,
-                            'context' => '',
-                            'decade' => '',
-                            'search' => '',
-                            'page' => 1,
-                        ], true, $state, $base_url)); ?>">
-                            <p class="iss-archive-entry__eyebrow"><?php esc_html_e('Objektfamilie', 'iss-wf-import'); ?></p>
-                            <h3 class="iss-archive-entry__title"><?php echo esc_html($term->name); ?></h3>
-                            <p class="iss-archive-entry__text"><?php esc_html_e('Bereits editorisch typisierte Objekte dieser Familie direkt öffnen.', 'iss-wf-import'); ?></p>
-                            <div class="iss-archive-entry__meta"><span><?php echo esc_html(sprintf(_n('%d Objekt', '%d Objekte', (int) $term->count, 'iss-wf-import'), (int) $term->count)); ?></span></div>
-                        </a>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-
             <div id="<?php echo esc_attr(iss_wf_import_get_archive_object_browser_target_id()); ?>" class="iss-archive-browser__layout iss-scroll-target">
                 <aside class="iss-archive-browser__sidebar">
                     <div class="iss-archive-browser__filters">
@@ -1599,9 +1555,9 @@ function iss_wf_import_render_archive_object_browser_markup(array $payload, arra
 
                             <?php if (!empty($config['showDecadeFilter'])) : ?>
                                 <label class="iss-archive-browser__field">
-                                    <span><?php esc_html_e('Dekade', 'iss-wf-import'); ?></span>
+                                    <span><?php esc_html_e('Jahrzehnt', 'iss-wf-import'); ?></span>
                                     <select class="iss-archive-browser__select" name="dekade">
-                                        <option value=""><?php esc_html_e('Alle Dekaden', 'iss-wf-import'); ?></option>
+                                        <option value=""><?php esc_html_e('Alle Jahrzehnte', 'iss-wf-import'); ?></option>
                                         <?php foreach ($decade_options as $term) : ?>
                                             <option value="<?php echo esc_attr($term->slug); ?>" <?php selected((string) ($state['decade'] ?? ''), $term->slug); ?>><?php echo esc_html($term->name . ' (' . $term->count . ')'); ?></option>
                                         <?php endforeach; ?>
@@ -1687,6 +1643,50 @@ function iss_wf_import_render_archive_object_browser_markup(array $payload, arra
                     <?php endif; ?>
                 </div>
             </div>
+            <div class="iss-archive-browser__quick">
+                <div class="iss-heading iss-archive-browser__section-head">
+                    <p class="iss-kicker iss-kicker--compact"><?php echo esc_html((string) ($config['quickKicker'] ?? '')); ?></p>
+                    <h2 class="iss-heading__title"><?php echo esc_html((string) ($config['quickTitle'] ?? '')); ?></h2>
+                </div>
+                <div class="iss-archive-entry-grid iss-archive-browser__quick-grid">
+                    <?php if (!empty($config['showSourceCards'])) : ?>
+                        <?php foreach (array_slice($source_options, 0, 2) as $term) : ?>
+                            <a class="iss-archive-entry iss-archive-entry--sammlung" href="<?php echo esc_url(iss_wf_import_get_archive_object_browser_url([
+                                'source' => $term->slug,
+                                'field' => '',
+                                'family' => '',
+                                'context' => '',
+                                'decade' => '',
+                                'search' => '',
+                                'page' => 1,
+                            ], true, $state, $base_url)); ?>">
+                                <p class="iss-archive-entry__eyebrow"><?php esc_html_e('Nachweis', 'iss-wf-import'); ?></p>
+                                <h3 class="iss-archive-entry__title"><?php echo esc_html(iss_wf_import_get_public_source_label($term->slug, $term->name)); ?></h3>
+                                <p class="iss-archive-entry__text"><?php esc_html_e('Archivobjekte mit diesem digitalen Nachweis direkt im lokalen Bestand durchsuchen.', 'iss-wf-import'); ?></p>
+                                <div class="iss-archive-entry__meta"><span><?php echo esc_html(sprintf(_n('%d Objekt', '%d Objekte', (int) $term->count, 'iss-wf-import'), (int) $term->count)); ?></span></div>
+                            </a>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+
+                    <?php foreach ($quick_families as $term) : ?>
+                        <a class="iss-archive-entry iss-archive-entry--mediathek" href="<?php echo esc_url(iss_wf_import_get_archive_object_browser_url([
+                            'source' => !empty($config['lockSource']) ? ($state['source'] ?? '') : '',
+                            'field' => '',
+                            'family' => $term->slug,
+                            'context' => '',
+                            'decade' => '',
+                            'search' => '',
+                            'page' => 1,
+                        ], true, $state, $base_url)); ?>">
+                            <p class="iss-archive-entry__eyebrow"><?php esc_html_e('Objektfamilie', 'iss-wf-import'); ?></p>
+                            <h3 class="iss-archive-entry__title"><?php echo esc_html($term->name); ?></h3>
+                            <p class="iss-archive-entry__text"><?php esc_html_e('Alle veröffentlichten Objekte dieser Art ansehen.', 'iss-wf-import'); ?></p>
+                            <div class="iss-archive-entry__meta"><span><?php echo esc_html(sprintf(_n('%d Objekt', '%d Objekte', (int) $term->count, 'iss-wf-import'), (int) $term->count)); ?></span></div>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+
         <?php if (!empty($options['use_container'])) : ?>
         </div>
         <?php endif; ?>

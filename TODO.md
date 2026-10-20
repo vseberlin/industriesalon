@@ -4,12 +4,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Continue the [website correction plan](docs/project/website-correction-plan-2026-10-20.md#umsetzung--programm-und-erstes-korrekturpaket)
-  with project status and actions (F06); exhibition visitor information (F04)
-  is complete, including confirmed free admission.
-  Keep separate public/group offers, confirmed €14/€10 fares, individual-calendar
-  exclusions and the dated Behrensbau interior-closure notice. See the current
-  handoff for release evidence; private data artifacts never go to GitHub.
+- Complete human Firefox, screenreader, touch and 200% zoom acceptance before
+  production; the [website audit corrections](docs/project/website-correction-plan-2026-10-20.md)
+  are implemented and covered by Chrome, runtime and private migration checks.
+  Add the exact Kiezfonds share only when the project team confirms it.
 - Review the local Futura/Zukunft im Gespräch pages and their shared JSON editors.
   Preserve ZiG's private draft recovery state (19 October, 12:56); complete the
   interactive user-draft save and Firefox checks. See [current handoff](handoff_CURRENT.md)
@@ -21,9 +19,6 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   exhibition differences and unfinished-draft preview recovery. Include interactive
   Query Monitor/editor-cadence review. See [current handoff](handoff_CURRENT.md)
   for the verified staging release; reload existing editors for changed assets.
-- Correct the archive landing quick-navigation grid at phone widths: its four
-  columns overflow (409 px content / 375 px viewport). The shared archive cards
-  already fit; fix the quick-navigation owner without changing their layout.
 - Complete the remaining [maintenance activation](docs/runbooks/staging-maintenance.md)
   in a separately coordinated operational slice. Website code, taxonomy/owner/
   commerce migrations and the full local content/uploads/intake snapshot were
