@@ -1,4 +1,26 @@
-# Current handoff — 20 October 2026
+# Current handoff — 21 October 2026
+
+## Project picker access deployed
+
+`0d1ec04` is deployed through GitHub to staging. Burmeister remains the sole
+`iss_project_uat` account. This role can browse existing private Sets and select
+approved media, and open existing Archive selections in the project editor.
+Set/archive management, membership/link changes and unrelated administration
+remain denied. Existing projects and private drafts were not edited.
+
+The owner capability migration added only `iss_read_sets` to administrator and
+project-UAT roles, on local and staging. Private before-images and verification:
+local `var/project-picker-20261021/`; staging
+`/srv/industriesalon/stage/repo/var/project-picker-20261021/roles-before.json`.
+No SQL/content/uploads transfer. Rollback must review later role changes before
+restoring the before-image and previous code; never restore unrelated user data.
+
+Verified: 103 local UAT assertions with fixture cleanup; PHP lint/PHPCS/PHPStan;
+staging role diff, idempotence, five successful picker reads and denied write
+permissions. Chrome as Burmeister loaded both pickers, selected an approved Set
+image and an Archive object without applying them, and kept unapproved media
+disabled. Existing Futura private draft/conflict was preserved. No further
+permission work is pending; earlier human acceptance gates below still apply.
 
 ## Audit follow-up deployed and verified
 
