@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 define('ISS_CORE_VERSION', '0.1.0');
 define('ISS_CORE_FILE', __FILE__);
 define('ISS_CORE_PATH', plugin_dir_path(__FILE__));
-define('ISS_CORE_CAPS_VERSION', '2026-10-16-project-uat-1');
+define('ISS_CORE_CAPS_VERSION', '2026-10-21-project-picker-read-1');
 define('ISS_CORE_CAPS_OPTION', 'iss_caps_version');
 define('ISS_CORE_OPERATIONS_MENU_SLUG', 'iss-operations');
 
@@ -28,6 +28,7 @@ function iss_core_default_capability_definitions(): array
         'iss_manage_register' => ['label' => 'Manage register places and tools', 'owner' => 'industriesalon-schoeneweide-register'],
         'iss_manage_archive' => ['label' => 'Manage archive curation surfaces', 'owner' => 'iss-archive'],
         'iss_import_archive' => ['label' => 'Run archive import jobs', 'owner' => 'iss-archive'],
+        'iss_read_sets' => ['label' => 'Browse existing Sets in editorial pickers', 'owner' => 'iss-content'],
         'iss_create_sets' => ['label' => 'Create Sets and attach incoming items', 'owner' => 'iss-content'],
         'iss_edit_sets' => ['label' => 'Organize Sets and edit metadata', 'owner' => 'iss-content'],
         'iss_review_sets' => ['label' => 'Review, reject, restore, and annotate Set items', 'owner' => 'iss-content'],
@@ -443,7 +444,7 @@ function iss_core_operations_role_grants(): array
             'iss_access_operations',
             'iss_manage_requests',
         ], $technical_caps),
-        'iss_project_uat' => ['read', 'upload_files', 'create_projekte', 'edit_projekte', 'edit_others_projekte', 'edit_published_projekte'],
+        'iss_project_uat' => ['read', 'upload_files', 'create_projekte', 'edit_projekte', 'edit_others_projekte', 'edit_published_projekte', 'iss_read_sets'],
     ];
 
     // Preserve each existing role's project access when separating it from posts.

@@ -9,6 +9,7 @@ $admin = get_users(['role' => 'administrator', 'number' => 1])[0];
 $original_user = get_current_user_id();
 $original_post = $_POST;
 $fixtures = [];
+$archive_set = 0;
 $checks = 0;
 $assert = static function ($condition, string $message) use (&$checks): void {
     if (!$condition) { throw new RuntimeException($message); }
@@ -16,7 +17,11 @@ $assert = static function ($condition, string $message) use (&$checks): void {
 };
 $request = static function (string $method, string $route, array $params = []): WP_REST_Response {
     $request = new WP_REST_Request($method, $route);
-    $request->set_body_params($params);
+    if (in_array($method, ['GET', 'HEAD'], true)) {
+        $request->set_query_params($params);
+    } else {
+        $request->set_body_params($params);
+    }
     return rest_do_request($request);
 };
 $snapshot = static function (): string {
@@ -38,13 +43,39 @@ try {
     $other = wp_insert_post(['post_type' => 'page', 'post_status' => 'draft', 'post_title' => 'Temporary access-denial fixture'], true);
     $assert(!is_wp_error($other), 'Create other-content fixture');
     $fixtures['page'] = $other;
+    $archive_set = iss_wf_import_get_archivset_service()->create_set(['title' => 'Temporary UAT archive picker fixture']);
+    $assert($archive_set > 0, 'Create unlinked archive selection fixture');
     wp_set_current_user($tester->ID);
-    foreach (['create_projekte', 'edit_projekte', 'edit_others_projekte', 'edit_published_projekte', 'upload_files'] as $cap) {
+    foreach (['create_projekte', 'edit_projekte', 'edit_others_projekte', 'edit_published_projekte', 'upload_files', 'iss_read_sets'] as $cap) {
         $assert(current_user_can($cap), 'Required capability: ' . $cap);
     }
-    foreach (['publish_projekte', 'delete_projekte', 'edit_posts', 'edit_pages', 'manage_options', 'list_users', 'activate_plugins', 'iss_access_operations', 'iss_edit_sets'] as $cap) {
+    foreach (['publish_projekte', 'delete_projekte', 'edit_posts', 'edit_pages', 'manage_options', 'list_users', 'activate_plugins', 'iss_access_operations', 'iss_create_sets', 'iss_edit_sets', 'iss_review_sets', 'iss_promote_media', 'iss_delete_sets', 'iss_cleanup_sets', 'iss_manage_archive', 'iss_import_archive'] as $cap) {
         $assert(!current_user_can($cap), 'Restricted capability: ' . $cap);
     }
+    $assert($request('GET', '/iss-content/v1/editorial-sets', ['perPage' => 1])->get_status() === 200, 'Browse existing private Sets');
+    $assert($request('GET', '/iss-content/v1/editorial-set-items', ['perPage' => 1])->get_status() === 200, 'Browse existing Set media');
+    $assert($request('GET', '/iss-content/v1/editorial-sets', ['contextId' => $other])->get_status() === 403, 'Cannot browse with an uneditable context');
+    $assert($request('POST', '/iss-content/v1/editorial-sets', ['title' => 'Must not be created'])->get_status() === 403, 'Set creation denied');
+    $assert($request('POST', '/iss-content/v1/editorial-sets/0', ['title' => 'Must not change'])->get_status() === 403, 'Set editing denied');
+    $archive_context = ['contextPostId' => $fixtures['draft']];
+    $assert($request('GET', '/iss-archive/v1/sets/' . $archive_set, $archive_context)->get_status() === 200, 'Read an archive selection before attaching it');
+    $assert($request('GET', '/iss-archive/v1/sets/' . $archive_set, ['contextPostId' => $other])->get_status() === 403, 'Archive read requires an editable context');
+    $assert($request('GET', '/iss-archive/v1/sets/' . $archive_set)->get_status() === 403, 'No standalone archive management access');
+    $assert($request('POST', '/iss-archive/v1/sets/' . $archive_set, $archive_context)->get_status() === 403, 'Archive selection metadata editing denied');
+    $assert($request('DELETE', '/iss-archive/v1/sets/' . $archive_set, $archive_context)->get_status() === 403, 'Archive selection deletion denied');
+    $assert($request('POST', '/iss-archive/v1/sets/' . $archive_set . '/members', $archive_context)->get_status() === 403, 'Browsing an unlinked selection does not grant member edits');
+    $assert($request('POST', '/iss-archive/v1/sets', $archive_context + ['title' => 'Must not be created'])->get_status() === 403, 'Archive selection creation denied');
+    $assert($request('POST', '/iss-archive/v1/content/' . $fixtures['draft'] . '/sets', ['setId' => $archive_set])->get_status() === 403, 'Archive selection linking denied');
+    wp_set_current_user($admin->ID);
+    $assert(iss_wf_import_get_archivset_service()->attach_set($archive_set, $fixtures['draft']), 'Attach own archive fixture');
+    wp_set_current_user($tester->ID);
+    $assert($request('GET', '/iss-archive/v1/sets/' . $archive_set, $archive_context)->get_status() === 200, 'Read attached archive selection');
+    $assert($request('POST', '/iss-archive/v1/sets/' . $archive_set . '/members', $archive_context)->get_status() === 403, 'Attached archive membership editing denied');
+    $assert($request('DELETE', '/iss-archive/v1/content/' . $fixtures['draft'] . '/sets/' . $archive_set)->get_status() === 403, 'Archive selection unlinking denied');
+    wp_set_current_user(0);
+    $assert($request('GET', '/iss-content/v1/editorial-sets')->get_status() === 401, 'Anonymous private Set access denied');
+    $assert($request('GET', '/iss-archive/v1/sets/' . $archive_set, $archive_context)->get_status() === 401, 'Anonymous archive selection access denied');
+    wp_set_current_user($tester->ID);
     foreach (get_post_types(['show_ui' => true], 'objects') as $type) {
         if ($type->name !== 'projekt') {
             $assert(!current_user_can($type->cap->edit_posts), 'Cannot manage ' . $type->name);
@@ -89,6 +120,9 @@ try {
     remove_filter('wp_die_handler', $die_handler, PHP_INT_MAX);
     $_POST = [];
     wp_set_current_user($admin->ID);
+    if ($archive_set) {
+        $assert(iss_wf_import_get_archivset_service()->delete_set($archive_set), 'Remove own archive selection fixture');
+    }
     foreach ($fixtures as $id) {
         $sets = iss_content_editorial_sets_service()->get_links_for_context(get_post_type($id), $id);
         wp_delete_post($id, true);

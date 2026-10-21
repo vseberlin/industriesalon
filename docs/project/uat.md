@@ -14,8 +14,14 @@ Projects use the shared `iss-editorial` JSON canvas. The dedicated
 and published projects, and use the WordPress media picker/uploads. Editing an
 already published project updates that published content. The role cannot
 publish new projects, delete projects, edit private projects, manage Sets/shared
-taxonomies, or administer other content/settings/users. Private Set operations
-retain their existing capability requirements; use the ordinary media picker.
+taxonomies, or administer other content/settings/users. The `iss_read_sets`
+capability permits browsing existing private Sets and selecting their approved
+media in the project editor, without Set creation, review or management rights.
+The Archive picker can open existing selections before they are attached to the
+project; reading uses the same editable-project check as listing/searching.
+The UAT role cannot create Archive selections, alter their members or change
+their project links; selecting object references in the project remains allowed.
+Standalone Archive and Set workbenches remain restricted.
 Project-status assignment is allowed. Personal profile/password/logout remain
 available through the account toolbar; the sidebar shows only Projects.
 

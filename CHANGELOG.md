@@ -4,6 +4,18 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-21
+
+- Project UAT can browse existing private Sets through the new read capability
+  and select their approved media. Archive selection reads now use the existing
+  editable-context permission, so an unlinked selection can be opened without
+  granting its editing permission. UAT creation/member/link writes are denied.
+  Set management and unrelated administration
+  remain restricted. Apply the existing `wp iss-core caps migrate --apply`
+  after deploying; back up target roles first. No SQL/content/uploads transfer.
+  Local Project UAT passes 103 assertions with fixtures removed; PHP lint,
+  PHPCS and PHPStan pass for the affected plugins.
+
 ## 2026-10-16
 
 - Proposed `docs/architecture/skin-contract-adr.md` after reviewing the

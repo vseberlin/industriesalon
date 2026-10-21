@@ -16,6 +16,10 @@ function iss_wf_import_archivset_rest_can_edit_sets(): bool
 
 function iss_wf_import_archivset_rest_can_list_or_create_sets(WP_REST_Request $request): bool
 {
+    if (!in_array($request->get_method(), ['GET', 'HEAD'], true)
+        && function_exists('iss_core_is_project_uat') && iss_core_is_project_uat()) {
+        return false;
+    }
     $context_post_id = iss_wf_import_archivset_rest_get_context_post_id($request);
     if ($context_post_id > 0) {
         return current_user_can('edit_post', $context_post_id);
@@ -26,6 +30,9 @@ function iss_wf_import_archivset_rest_can_list_or_create_sets(WP_REST_Request $r
 
 function iss_wf_import_archivset_rest_can_edit_set(WP_REST_Request $request): bool
 {
+    if (function_exists('iss_core_is_project_uat') && iss_core_is_project_uat()) {
+        return false;
+    }
     if (iss_wf_import_archivset_rest_can_edit_sets()) {
         return true;
     }
@@ -41,6 +48,10 @@ function iss_wf_import_archivset_rest_can_edit_set(WP_REST_Request $request): bo
 
 function iss_wf_import_archivset_rest_can_edit_content(WP_REST_Request $request): bool
 {
+    if (!in_array($request->get_method(), ['GET', 'HEAD'], true)
+        && function_exists('iss_core_is_project_uat') && iss_core_is_project_uat()) {
+        return false;
+    }
     $post_id = absint($request->get_param('post_id'));
 
     return $post_id > 0 && current_user_can('edit_post', $post_id);
@@ -544,7 +555,7 @@ function iss_wf_import_archivset_register_rest_routes(): void
         [
             'methods' => WP_REST_Server::READABLE,
             'callback' => 'iss_wf_import_archivset_rest_get_set',
-            'permission_callback' => 'iss_wf_import_archivset_rest_can_edit_set',
+            'permission_callback' => 'iss_wf_import_archivset_rest_can_list_or_create_sets',
         ],
         [
             'methods' => WP_REST_Server::EDITABLE,

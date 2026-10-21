@@ -28,6 +28,7 @@ function iss_content_editorial_sets_current_user_can_any(array $capabilities): b
 function iss_content_editorial_sets_can_access(): bool
 {
     return iss_content_editorial_sets_current_user_can_any([
+        'iss_read_sets',
         'iss_create_sets',
         'iss_edit_sets',
         'iss_review_sets',

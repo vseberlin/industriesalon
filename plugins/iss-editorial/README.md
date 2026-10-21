@@ -105,7 +105,9 @@ private Arbeitsstand gesichert wurde.
 5. Prüfe Bildausschnitt und Lesbarkeit auf Desktop und Telefon.
 
 **Entfernen** am Bild löst dessen Zuordnung; die Mediendatei bleibt erhalten.
-Für den UAT verwende die normale Mediathek. Private Sets haben eigene Zugriffsrechte.
+Für den Projekt-UAT stehen Mediathek, vorhandene Sets mit freigegebenen Medien
+und vorhandene Archivauswahlen zur Auswahl bereit. Sets werden dabei nicht
+angelegt oder verwaltet; die Auswahl erfolgt im Projekteditor.
 
 ## Die sechs Abschnittstypen im Futura-Piloten
 
