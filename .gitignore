@@ -29,6 +29,7 @@
 /tools/composer.phar
 !/ops/
 /ops/*
+!/ops/import-db-stage.sh
 !/ops/sql/
 /ops/sql/*
 !/ops/sql/*.md

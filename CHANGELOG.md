@@ -6,6 +6,33 @@ be recovered from Git history.
 
 ## 2026-10-21
 
+- Retired the leaked local administrator credential, cleared local sessions and
+  verified it no longer matches any local, staging or touchtable account. Staging's
+  previously rotated password remains unchanged; sessions and admin application
+  passwords remain absent. Disabled the unrestricted staging SQL importer and
+  replaced the full-refresh account-copy policy with target-owned identities and
+  reviewed content migrations. Browser authentication now reads a private,
+  target-bound credential file with no hard-coded password or retained trace.
+  Incident evidence remains private and intact; historical credential/session
+  backups must never be replayed as deployment inputs.
+
+- Contained the unrecognized staging administrator login: revoked all WordPress
+  sessions, checked/revoked the affected account's application passwords (none
+  existed), and compared accounts, code, uploads and scheduled tasks against
+  pre-incident backup, trusted Git and official WordPress checksums. No unexplained
+  persistence was identified. With separate user approval, moved staging's existing
+  upload-PHP Nginx deny rule ahead of the generic PHP handler; syntax, reload,
+  blocked-upload and ordinary-route checks passed. Private evidence retained;
+  no content migration, uploads transfer or source-code deployment.
+
+- Patched the staging and touchtable VPS WordPress runtimes to PHP 8.3.36 for
+  CVE-2026-109618/109619, using a pinned build of the official WordPress recipe
+  while published WordPress images still lacked the fixes. Fresh verified
+  backups and recovery/build artifacts are retained privately. Both services,
+  nine routes and all PHP extensions passed checks; installed cores, persistent
+  mounts and other services were preserved. No database migration or uploads
+  transfer. STRATO production was already patched.
+
 - Project UAT can browse existing private Sets through the new read capability
   and select their approved media. Archive selection reads now use the existing
   editable-context permission, so an unlinked selection can be opened without

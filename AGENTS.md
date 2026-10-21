@@ -48,6 +48,9 @@ All changes must be lean, reversible where practical, documented, tested, and ju
 - Prefer Docker Compose and reproducible changes over ad hoc container commands.
 - Do not run blind package updates, expose databases, disable auth/firewalls, store secrets in Git, or use root unnecessarily.
 - No destructive operation without backup verification.
+- Local-to-staging content transfers must preserve target accounts, credentials,
+  roles, sessions and environment security settings. Full SQL imports are disabled;
+  follow `docs/infrastructure/sync.md`, including for full-content refresh requests.
 
 ## Continuity Rules
 

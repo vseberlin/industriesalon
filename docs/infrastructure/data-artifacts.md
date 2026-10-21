@@ -21,9 +21,10 @@ closeout context.
 - Historical `ops/sql/` files are ignored compatibility inputs, not Git assets.
 - Verify backups before applying SQL to staging or production.
 - Apply SQL after code/plugin deploy and required schema creation.
-- For ordinary deployments, keep SQL artifacts narrow: stable content/configuration
-  data, not volatile logs, runtime locks, caches, or diagnostics. An explicitly
-  authorized full refresh follows `sync.md` and transfers a consistent snapshot.
+- Keep transfers narrow: reviewed content/configuration, not accounts, passwords,
+  sessions, application passwords, roles, security logs or environment secrets.
+  Full SQL imports into staging are disabled. Even a full-content refresh follows
+  the target-account preservation boundary in `sync.md`; use owner/API migrations.
 - Do not embed normalized plugin internals such as PHP-serialized relation rows
   when the owning plugin exposes a write API.
 

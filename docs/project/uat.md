@@ -33,11 +33,16 @@ capability checks and a restricted admin-screen allowlist.
 For a role-only staging deployment, deploy matching code and run
 `wp iss-core caps migrate --apply`; create the tester with only
 `iss_project_uat`, without notification flags. Passwords stay outside Git.
-The user's explicit 16 October full-content refresh superseded that account-only
-path: local users/roles and content were copied together, so Burmeister is ID
-328 and uses the same password on both sites. No invitation was sent. Follow
-`docs/infrastructure/sync.md` for future full refreshes; never infer permission
-to replace target users or content from an ordinary role change.
+The 16 October full refresh copied local accounts and content together; Burmeister
+is ID 328 and no invitation was sent. That historical procedure is retired.
+Follow `docs/infrastructure/sync.md`: preserve existing target accounts during
+content transfers and provision any new user separately. Do not copy local
+credentials or infer account replacement from a role/content change.
+
+Authenticated browser checks require `ISS_TEST_CREDENTIALS_FILE`, pointing to a
+private mode-0600 JSON file with `username`, `password` and `login_url`. Its URL
+origin must match `PLAYWRIGHT_BASE_URL`; no default test password is supplied.
+The related-block authentication test disables retained traces/screenshots.
 
 Verify with `wp eval-file tests/e2e/bin/project-uat.php USER_LOGIN`, using a
 read-only mount when running through Docker. It exercises native JSON saves,

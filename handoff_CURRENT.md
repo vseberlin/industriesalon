@@ -1,5 +1,58 @@
 # Current handoff — 21 October 2026
 
+## Staging login containment and persistence review complete
+
+The leaked local testing password is retired. It now matches none of the eight
+accounts across local, staging and touchtable. Local admin was rotated to a
+generated password and its three local sessions cleared; the private credential
+record is `var/local-admin-credentials.json` (0600). Staging's user-rotated
+credential was preserved, with zero sessions and admin application passwords.
+The unrestricted staging importer is disabled; content refreshes must preserve
+target accounts and follow `docs/infrastructure/sync.md`. Browser tests require
+a private target-bound credential file. Incident/rollback evidence is preserved;
+never restore old authentication state. No content/media transfer is required.
+Private remediation checks: `var/login-investigation-20261021/credential-remediation/`.
+
+The 20 October 14:21:10 UTC login audit and Nginx access log confirm an
+unrecognized successful `admin` login following 71 failed attempts. The user
+changed the password. On 21 October, all three stored WordPress sessions across
+two accounts were revoked through core APIs; zero remained. The affected admin
+had no application passwords. No new accounts, changed emails or unexplained
+privilege, plugin, file or scheduled-task changes were found against the verified
+17 October backup, official WordPress checksums and trusted Git `e75ac4a`.
+
+The separately approved staging Nginx fix moves the existing upload-PHP deny
+rule before the general PHP handler. Syntax/reload checks passed; both benign
+upload PHP guards now return 403, while home/login/media/CSS/intake return 200.
+Noindex and other services are preserved. Private evidence, backup paths and
+limits: `var/login-investigation-20261021/impact-review.json`. Requested checks
+are complete; this does not rule out data viewing/copying during the login.
+No SQL migration, content/uploads transfer or source-code deployment was needed.
+
+The historical follow-up found no pre-login PHP-like upload requests in retained
+staging logs (7–20 October) and no added upload scripts in nine preserved archives.
+The 16 October full DB refresh imported the local admin password hash. Offline
+verification confirmed the local testing password was valid on staging before
+and after the login, but not before the refresh. The submitted attacker password
+is not logged. Later PDFs match the authorized release. Snapshot gaps and Git-only
+plugin backups limit attribution. Private timeline:
+`var/login-investigation-20261021/timeline/prelogin-review.json`.
+
+## PHP security patch active
+
+Staging and the separate touchtable VPS stack now run PHP 8.3.36 for
+CVE-2026-109618/109619. Both WordPress containers are healthy; nine route checks,
+all 41 extensions, GD/Imagick/Intl, persistent mounts, config/core-version hashes
+and existing PHP limits passed. Staging remains noindex. Other service
+containers and website code (`e75ac4a`) were preserved; no SQL migration or
+uploads transfer was needed. STRATO production already serves patched 8.3.36.
+
+Verified backups, pinned build and recovery paths are recorded in
+[staging infrastructure](docs/infrastructure/staging.md#php-runtime-security-update).
+Private receipt and rebuild source copy: `var/php-security-20261021/`.
+Next runtime maintenance: replace the emergency build with an official image
+only after verifying patched PHP and repeating the runtime checks.
+
 ## Project picker access deployed
 
 `0d1ec04` is deployed through GitHub to staging. Burmeister remains the sole

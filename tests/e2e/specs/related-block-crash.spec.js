@@ -1,13 +1,35 @@
 const { test, expect } = require("@playwright/test");
+const { readFileSync } = require("node:fs");
 
-async function login(page) {
+// Authentication traces can retain submitted credentials.
+test.use({ trace: "off", screenshot: "off" });
+
+async function login(page, baseURL) {
+  const credentialsFile = process.env.ISS_TEST_CREDENTIALS_FILE;
+  if (!credentialsFile) {
+    throw new Error("Set ISS_TEST_CREDENTIALS_FILE to a private target-specific credential JSON file.");
+  }
+  let credentials;
+  try {
+    credentials = JSON.parse(readFileSync(credentialsFile, "utf8"));
+  } catch {
+    throw new Error("Unable to read the private credential file.");
+  }
+  if (
+    typeof credentials.username !== "string" || !credentials.username ||
+    typeof credentials.password !== "string" || !credentials.password ||
+    typeof credentials.login_url !== "string" ||
+    new URL(credentials.login_url).origin !== new URL(baseURL).origin
+  ) {
+    throw new Error("Credential target does not match the configured test site.");
+  }
   await page.goto("/wp-login.php");
-  await page.getByLabel(/username or email address/i).fill("admin");
-  await page.locator("#user_pass").fill("password");
+  await page.getByLabel(/username or email address/i).fill(credentials.username);
+  await page.locator("#user_pass").fill(credentials.password);
   await page.getByRole("button", { name: /log in/i }).click();
 }
 
-test("related cards block does not crash the editor", async ({ page }) => {
+test("related cards block does not crash the editor", async ({ page, baseURL }) => {
   const consoleMessages = [];
   const pageErrors = [];
   const requestFailures = [];
@@ -22,7 +44,7 @@ test("related cards block does not crash the editor", async ({ page }) => {
     requestFailures.push(`${request.method()} ${request.url()} :: ${request.failure()?.errorText || "failed"}`);
   });
 
-  await login(page);
+  await login(page, baseURL);
   await page.goto("/wp-admin/post-new.php?post_type=page");
   await page.locator(".editor-post-title__input").waitFor();
 

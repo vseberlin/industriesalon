@@ -22,29 +22,45 @@ Shared sync expectations across local, GitHub, staging, and production.
 
 ## Full Local-To-Staging Refresh
 
-When the user explicitly requests identical local/staging content, local is the
-source for all WordPress content, custom tables, users, settings, templates,
-uploads and private intake. A partial project migration is insufficient. This
-replaces target-only content; retain a verified target rollback backup first.
+Local may be authoritative for content, templates, media and approved custom
+data. Accounts and authentication belong to each target environment, including
+when the user requests identical content. Never transfer local passwords or
+sessions as part of a content refresh.
+
+The former unrestricted `ops/import-db-stage.sh` is disabled and exits before
+connecting to the database. Its target copy at
+`/srv/industriesalon/stage/ops/import-db-stage.sh` must remain the same disabled
+entrypoint. Do not bypass it with a raw SQL pipe or replay an old private import
+script. Use reviewed owner/API migrations under `ops/migrations/`. A future bulk
+content transfer needs an explicitly reviewed table/record scope and verification
+that target identity and security state remain unchanged.
 
 1. Verify code refs, mounts, environment settings, disk and service health.
 2. Back up target DB, uploads, private intake, core/configuration and code;
-   read/test archives and verify their hashes before replacement.
-3. Quiesce application writes. Export a consistent local DB snapshot and review
-   checksum-based dry runs for uploads, private intake and installed core.
-4. Transfer snapshots privately over SSH. Mirror only the inspected application
-   roots, preserving target configuration, secrets and security controls.
-5. Import all local tables; remove superseded target-only content/backup tables
-   only after backup verification. Preserve target security audit records.
-6. Use serialized-data-aware WP-CLI URL replacement across all imported tables;
-   retain GUIDs. Keep staging home/siteurl, noindex and infrastructure secrets.
-   Keep environment-specific security/operations helpers separate from content.
-7. Verify normalized table hashes and counts, all canonical media references,
-   checksum dry runs, restricted-user login/editor behavior and public routes.
-   Resume application traffic and inspect logs.
-8. Record snapshot/backup locations and exact environment/runtime exceptions.
-   New sessions, caches, logs and scheduled-job receipts can diverge after use.
+   read/test archives and verify their hashes before writes.
+3. Exclude the target's `users` and `usermeta` tables (using its actual prefix),
+   user IDs/logins/emails, password and reset hashes, sessions, application
+   passwords, roles/capabilities, security audit tables and environment settings.
+   Do not replace the whole options table. Apply role changes only through the
+   separately reviewed owning capability migration.
+4. Resolve content authors/owners against existing target accounts. Abort on an
+   unresolved identity; provision new users separately with a target-specific
+   password and explicit permission/notification scope.
+5. Quiesce writes when required by the migration. Export only reviewed content
+   records and paired media; transfer privately over SSH and apply through owner
+   APIs. Preserve target configuration, secrets, security controls and noindex.
+6. Limit serialized-data-aware URL replacement to transferred content, retaining
+   GUIDs. Never run blanket replacement across account or authentication tables.
+7. Verify account identity, roles and credential metadata against the private
+   target before-image without exposing values. Verify content/media, restricted
+   editor access, public routes and logs before resuming traffic. Abort on an
+   unexplained security-state difference.
+8. Record artifacts and target-only exceptions. Never restore retired credentials
+   or sessions from a rollback backup. Disaster recovery from a historical full
+   dump must stay offline until credentials are rotated and sessions/application
+   passwords revoked; it is not a deployment procedure.
 
-On 16 October 2026 the user explicitly authorized this full refresh and kept
-public noindex previews. Data artifacts previously tracked in Git were removed
-from the current tree, with private copies retained; Git history was not rewritten.
+The 16 October 2026 full refresh copied the local admin credential into staging.
+Offline checks confirmed this on 21 October. The above account boundary replaces
+the old instruction to import all tables/users. Incident backups and Git history
+remain preserved evidence; access is revoked by retiring the credential.
