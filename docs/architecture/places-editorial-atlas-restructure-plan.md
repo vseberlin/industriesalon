@@ -724,6 +724,42 @@ separate before-images are `prefix_iss_backup_20260927_register_reinbeck_*`.
 It preserves canonical `register_id=13`, records both source identities in the
 receipt, updates one current-use field and appends one undated development event.
 
+### Reviewing omissions in enabled Place documents
+
+The 22 October 2026 review compares all supplier records with both target sites,
+including information omitted from earlier selective batches. An unchanged
+upstream revision does not establish that all useful facts were already imported.
+Use the enabled `place` document for present-day narrative; changing legacy
+`current_use` alone does not update its public Place/Atlas read model.
+
+`ops/migrations/2026-10-22-register-review.php` accepts
+`dry-run|apply|verify PRIVATE_MANIFEST` through WP-CLI `eval-file --use-include`
+with an existing target administrator. Each private, site-bound manifest contains
+reviewed before/after documents, exact metadata changes and source revision.
+This is a bounded follow-up batch, not a generic fetch-latest importer. Later
+batches require a new review against current target content and source evidence.
+
+The migration uses the editorial owner and its Place transaction, validates
+public text, retains existing revisions/private drafts, and verifies protected
+posts, metadata, historical projection meanings, milestones, graph relations,
+taxonomy links, accounts and authentication state. Derived epoch/state IDs and
+timestamps may be rebuilt by the owner. Graph verification also recognizes the
+existing owner conversion of legacy native relation projections from
+`related`/confidence `0` to `iss_relations`/`100`, only for changed Places with
+unchanged relation metadata and derived status. Endpoints, roles, weights,
+dates, status and visibility remain guarded. The non-autoloaded
+`iss_backup_20261022_register_review` receipt holds target-local before-images;
+partial receipts block replay. A verified database backup remains mandatory.
+No uploads artifact is needed for this text-only batch. Payloads, snapshots,
+review decisions and receipts stay in private release storage, outside GitHub.
+
+Keep source observations dated and preserve uncertainty about elapsed project
+targets. Check conflicting current-use claims against the operator's own sources.
+Do not turn organizational/contact prose into graph identities or move a map
+marker automatically. Existing local-only Places, unpublished records, component
+mappings and historical narratives remain protected. Narrow corrections to a
+current claim embedded in an introduction must be explicit in the manifest.
+
 ### Internal contacts
 
 Contact names, emails and phones belong in protected `_iss_register_contacts`

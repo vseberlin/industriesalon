@@ -4,6 +4,19 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-22
+
+- Reviewed all 69 supplier records against 84 local/staging Places. Added a
+  bounded owner-API migration for 36 present-day descriptions and four fact
+  fields, with dated source links and qualified project targets. Checked
+  conflicting KAOS, Treptow-Ateliers and Katapult claims against primary sources;
+  corrected the unsupported completed-departure claim for Wilhelminenhofstraße 92.
+  Preserved local histories, 17 local-only Places, the ADMOS draft, Reinbeckhallen
+  component mapping, media, editorial relationships and target accounts.
+  Private site-bound payloads and before-images accompany the migration; no
+  uploads or schema change. Verification recognizes the existing graph owner's
+  regeneration of derived rows while guarding source relationships and attributes.
+
 ## 2026-10-21
 
 - Retired the leaked local administrator credential, cleared local sessions and
