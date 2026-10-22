@@ -6,6 +6,10 @@ be recovered from Git history.
 
 ## 2026-10-22
 
+- Removed repeated tour names beneath dates in the shared Führungen panel;
+  date/time, booking state and actions remain. Removed the unused name styling.
+  Renderer-only change with no database or uploads artifact.
+
 - Unified the shared Führungen hero grid and information panel with the
   Elektropolis proportions. Native Group blocks replace the forced Columns
   layout; booking labels wrap without squeezing dates, and slot descriptions

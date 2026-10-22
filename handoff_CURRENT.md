@@ -14,6 +14,7 @@ overflow. The Kiez booking link still opens the selected-date form. Targeted
 Stylelint, PHP syntax/PHPCS and native template roundtrip passed. The site editor
 loads the native Groups with no hero validation warnings and no unsaved changes;
 an existing footer image validation warning is separate from this change.
+Date rows now omit repeated tour names; booking-dialog titles are preserved.
 The theme owns `single-fuehrung`; no DB/content/uploads transfer is required.
 Private layout receipts are in `var/tour-panels-20261022/` locally.
 
