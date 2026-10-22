@@ -169,15 +169,44 @@ final class ISS_Register_Place_Epoch_Service
     }
 
     /** Modern events share the chronology table, but are not land-use phases. */
-    public function get_milestones_for_place(int $post_id): array
+    public function get_milestones_for_place(int $post_id, bool $public = false): array
     {
         global $wpdb;
 
         $rows = $wpdb->get_col($wpdb->prepare('SELECT milestone_json FROM %i WHERE place_post_id = %d AND milestone_key IS NOT NULL ORDER BY start_year IS NULL, start_year, id', $this->get_table_name(), $post_id));
-        return array_values(array_filter(array_map(static function ($json): array {
+        return array_values(array_filter(array_map(static function ($json) use ($public): array {
             $value = json_decode((string) $json, true);
+            // Supplier audit provenance remains available to editors and private exports.
+            if ($public && is_array($value) && str_starts_with((string) ($value['key'] ?? ''), 'schoeneweide-register:')) {
+                unset($value['source_url'], $value['source_revision'], $value['source_summary'], $value['observed_at']);
+            }
             return is_array($value) ? $value : [];
         }, (array) $rows)));
+    }
+
+    /** Revise reviewed wording with an exact before-image; retain dates and provenance. */
+    public function revise_milestone_summary(int $post_id, array $before, string $summary)
+    {
+        global $wpdb;
+        if (!current_user_can('edit_post', $post_id) || trim($summary) === '') {
+            return new WP_Error('milestone_permission', 'An editor and nonempty summary are required.');
+        }
+        if (!in_array($before, $this->get_milestones_for_place($post_id), true)) {
+            return new WP_Error('milestone_conflict', 'Accepted milestone changed since review.');
+        }
+        $after = $before;
+        $after['summary'] = sanitize_textarea_field($summary);
+        $valid = $this->validate_milestone($after);
+        if (is_wp_error($valid)) { return $valid; }
+        if ($after === $before) { return false; }
+        $encode = static fn(array $event): string => (string) wp_json_encode($event, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+        $updated = $wpdb->query($wpdb->prepare(
+            'UPDATE %i SET milestone_json = %s, summary = %s, updated_at = %s WHERE place_post_id = %d AND milestone_key = %s AND milestone_json = %s',
+            $this->get_table_name(), $encode($after), $after['summary'], current_time('mysql', true), $post_id, $before['key'], $encode($before)
+        ));
+        if ($updated !== 1) { return new WP_Error('milestone_conflict', 'Milestone write failed or concurrent edit detected.'); }
+        iss_register_clear_places_cache();
+        return true;
     }
 
     /** Validate dates without turning a reporting date into an event date. */
@@ -628,7 +657,7 @@ final class ISS_Register_Place_Epoch_Service
         ];
     }
 
-    public function build_export_document(array $places): array
+    public function build_export_document(array $places, bool $public = false): array
     {
         $place_post_ids = array_values(array_filter(array_map(static function (array $place): int {
             return (int) ($place['post_id'] ?? 0);
@@ -649,7 +678,7 @@ final class ISS_Register_Place_Epoch_Service
             'totalEpochs' => count($epochs),
             'places' => array_values($places),
             'epochs' => array_values($epochs),
-            'milestones' => array_map(fn(int $id): array => ['place_post_id' => $id, 'events' => $this->get_milestones_for_place($id)], $place_post_ids),
+            'milestones' => array_map(fn(int $id): array => ['place_post_id' => $id, 'events' => $this->get_milestones_for_place($id, $public)], $place_post_ids),
         ];
     }
 
@@ -943,7 +972,7 @@ final class ISS_Register_Place_Epoch_Service
 /** Group accepted dated updates into authored phases; retain undated/unmatched events. */
 function iss_register_merge_place_milestones(int $post_id, array $epochs): array
 {
-    foreach (iss_register_get_epoch_service()->get_milestones_for_place($post_id) as $event) {
+    foreach (iss_register_get_epoch_service()->get_milestones_for_place($post_id, true) as $event) {
         $date = $event['event_date'] ?? null;
         $year = is_string($date) && $date !== '' ? (int) substr($date, 0, 4) : null;
         $match = null;

@@ -137,13 +137,11 @@ function iss_content_model_build_place_editorial_candidate(WP_Post $post): array
     }
 
     if ($current_use !== '') {
-        $import = get_post_meta((int) $post->ID, '_iss_register_current_import', true);
-        $source_url = is_array($import) ? esc_url_raw((string) ($import['source_url'] ?? '')) : '';
         $sections[] = [
             'type' => 'gegenwart',
             'title' => __('Heute', 'iss-content-model'),
             'body' => wpautop(esc_html($current_use)),
-            'links' => $source_url !== '' ? [['label' => __('Standortregister: Quelle zur Gegenwart', 'iss-content-model'), 'url' => $source_url]] : [],
+            'links' => [],
         ];
     }
 

@@ -760,6 +760,17 @@ marker automatically. Existing local-only Places, unpublished records, component
 mappings and historical narratives remain protected. Narrow corrections to a
 current claim embedded in an introduction must be explicit in the manifest.
 
+### Public attribution and internal provenance
+
+Supplier repository references are internal provenance. Public Place narrative
+and current-fact text omit those citations; automatic Place seeding does not
+copy the import URL into a public link. Public chronology, Atlas detail and REST
+exports omit supplier milestone audit fields, while editor/private export reads
+retain them. Milestone summary wording can be revised through the epoch owner's
+`revise_milestone_summary()` only with an exact before-image; dates, identity and
+source provenance stay intact. The 22 October contribution follow-up migration
+retains private before-images and uses the shared Place preservation checks.
+
 ### Internal contacts
 
 Contact names, emails and phones belong in protected `_iss_register_contacts`

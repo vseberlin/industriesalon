@@ -972,6 +972,12 @@ after its narrative, while pending or absent memories leave no heading. The
 theme's shared feedback primitive retains event labels in the event composition.
 No existing Place is opened or migrated by deploying this code.
 
+The explicitly requested 22 October follow-up opens the existing contribution
+gesture on the 62 published Places with authored open questions (61 were closed).
+`2026-10-22-place-contributions.php` applies a private, site-bound reviewed
+manifest through the existing intake and editorial owners. This is a content
+decision for those Places, not a new default for future questions or documents.
+
 Epoch invitations are added on demand using the existing **Automatische Inhalte**
 gesture with the Place-owned source **Wissen zur Epoche beitragen**
 (`dynamic_slot`, `slot_key: place-epoch-contribution`). Insert it after the intended

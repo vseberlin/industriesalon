@@ -6,6 +6,14 @@ be recovered from Git history.
 
 ## 2026-10-22
 
+- Removed public supplier repository citations from 41 Place documents and
+  related fact/timeline wording, retaining the internal import provenance.
+  Public milestone reads omit supplier audit fields; reviewed summary revisions
+  use exact before-images through the epoch owner. Activated the existing upload
+  gesture on all 62 published Places with open questions (61 newly opened).
+  Files and text use the existing private intake/moderation workflow. Site-bound
+  content manifests and receipts remain private; no media or schema artifact.
+
 - Reviewed all 69 supplier records against 84 local/staging Places. Added a
   bounded owner-API migration for 36 present-day descriptions and four fact
   fields, with dated source links and qualified project targets. Checked

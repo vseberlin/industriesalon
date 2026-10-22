@@ -87,7 +87,7 @@ function iss_register_rest_export_places(WP_REST_Request $request): WP_REST_Resp
         iss_register_get_place_query_args_from_request($request)
     );
     $response = rest_ensure_response(
-        iss_register_get_epoch_service()->build_export_document($places)
+        iss_register_get_epoch_service()->build_export_document($places, true)
     );
 
     $response->header('Content-Disposition', 'attachment; filename="schoeneweide-register-export.json"');

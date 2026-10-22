@@ -32,7 +32,7 @@ $original_epochs = $service->get_epochs_for_place($post_id);
 $original_milestone_count = count($service->get_milestones_for_place($post_id));
 $counts = $service->get_counts_by_era_and_function();
 $event = [
-    'key' => 'test:ownership-2025-03-05',
+    'key' => 'schoeneweide-register:test:ownership-2025-03-05',
     'event_date' => '2025-03-05',
     'date_precision' => 'day',
     'event_type' => 'ownership',
@@ -61,13 +61,19 @@ try {
     $changed = $event;
     $changed['summary'] = 'Different claim';
     register_sync_expect(is_wp_error($service->append_milestone($post_id, $changed)), 'Cannot silently overwrite an accepted event.');
+    register_sync_expect($service->revise_milestone_summary($post_id, $event, $changed['summary']) === true, 'Reviewed summary revision succeeds.');
+    register_sync_expect(is_wp_error($service->revise_milestone_summary($post_id, $event, 'Stale revision')), 'A stale before-image cannot overwrite newer wording.');
+    register_sync_expect($service->revise_milestone_summary($post_id, $changed, $event['summary']) === true, 'Restore fixture wording through the owner.');
+    register_sync_expect(in_array($event, $service->get_milestones_for_place($post_id), true), 'Dates and internal provenance are unchanged.');
+    $public_event = array_values(array_filter($service->get_milestones_for_place($post_id, true), static fn(array $row): bool => $row['key'] === $event['key']))[0];
+    register_sync_expect($public_event['summary'] === $event['summary'] && $public_event['event_date'] === $event['event_date'] && !isset($public_event['source_url'], $public_event['source_revision'], $public_event['source_summary']), 'Public milestone keeps facts without supplier audit fields.');
     foreach (['2025-02-30', '2025-3-5', 'unknown'] as $bad_date) {
         $bad = $event;
         $bad['event_date'] = $bad_date;
         register_sync_expect(is_wp_error($service->validate_milestone($bad)), 'Reject invalid or invented dates.');
     }
     $unknown = $event;
-    $unknown['key'] = 'test:unknown-event';
+    $unknown['key'] = 'schoeneweide-register:test:unknown-event';
     $unknown['event_date'] = null;
     $unknown['date_precision'] = 'unknown';
     $unknown['reported_as_of'] = '2026-05';
@@ -76,12 +82,17 @@ try {
     register_sync_expect($service->get_epochs_for_place($post_id) === $original_epochs, 'Events do not enter phase reads.');
     register_sync_expect($service->get_counts_by_era_and_function() === $counts, 'Events do not change Atlas historical filter counts.');
     $timeline = iss_register_merge_place_milestones($post_id, $original_epochs);
-    register_sync_expect(count($timeline) === count($original_epochs) + $original_milestone_count + 2, 'One combined chronology includes the events.');
+    $timeline_events = [];
+    foreach ($timeline as $phase) {
+        if (isset($phase['milestone'])) { $timeline_events[] = $phase['milestone']; }
+        foreach ($phase['milestones'] ?? [] as $milestone) { $timeline_events[] = $milestone; }
+    }
+    register_sync_expect(count($timeline_events) === $original_milestone_count + 2, 'Grouped chronology includes every event once.');
     register_sync_expect(end($timeline)['milestone']['key'] === $unknown['key'], 'Undated events are not assigned an invented chronology.');
     $html = industriesalon_render_editorial_place_document($post_id, ['sections' => []]);
     register_sync_expect(str_contains($html, '05.03.2025'), 'Exact date is rendered.');
     register_sync_expect(!str_contains($html, '<script>'), 'Source text is escaped in public output.');
-    register_sync_expect(str_contains($html, 'Standortregister'), 'Public event source is linked.');
+    register_sync_expect(!str_contains($html, 'github.com'), 'Public chronology omits supplier repository links.');
     $saved = $service->save_epochs_for_place($post_id, $original_epochs);
     register_sync_expect(!is_wp_error($saved) && count($service->get_milestones_for_place($post_id)) === $original_milestone_count + 2, 'Ordinary epoch saves preserve milestones.');
     // Roll back the phase-save exercise before testing current-only projection preservation.
@@ -93,7 +104,7 @@ try {
     $historical = $wpdb->get_results("SELECT * FROM {$state_table} WHERE state_kind = 'historical' ORDER BY id", ARRAY_A);
     register_sync_expect($historical === array_values(array_filter($original_states, static fn(array $row): bool => $row['state_kind'] === 'historical')), 'Historical states remain byte-identical.');
     $current = $wpdb->get_var($wpdb->prepare("SELECT summary FROM {$state_table} WHERE place_post_id=%d AND state_kind='current'", $post_id));
-    register_sync_expect($current === 'Temporary current-use test', 'Current projection reflects the new fact.');
+    register_sync_expect($current === iss_register_get_place_entity_by_post_id($post_id)['current'], 'Current projection follows the enabled canonical narrative.');
     $entity = iss_graph_sync_register_place_entity($post_id);
     $public_roles = $graph->get_relations_for_entity((int) $entity['id'], 'organization', ['public_only' => true]);
     register_sync_expect(!in_array('owner', array_column($public_roles, 'relation_type'), true), 'Graph sync cannot revive an obsolete imported owner claim.');

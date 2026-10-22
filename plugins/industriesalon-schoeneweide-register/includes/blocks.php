@@ -408,12 +408,7 @@ function iss_register_render_place_context(array $attributes = []): string
         if (iss_editorial_document_is_enabled((int) $post_id, 'place')) { return ''; }
         $note = trim((string) get_post_meta((int) $post_id, 'current_use', true));
         if ($note === '') { return ''; }
-        $html = '<div class="iss-register-place__current-note"><p>' . esc_html($note) . '</p>';
-        $source = get_post_meta((int) $post_id, '_iss_register_current_import', true);
-        if (is_array($source) && !empty($source['source_url'])) {
-            $html .= '<p><a href="' . esc_url($source['source_url']) . '">Quelle der aktuellen Angaben: Standortregister</a></p>';
-        }
-        return $html . '</div>';
+        return '<div class="iss-register-place__current-note"><p>' . esc_html($note) . '</p></div>';
     }
 
     if ($variant === 'hero_meta') {
