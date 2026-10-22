@@ -6,6 +6,7 @@ global $wpdb;
 $db = $wpdb; $checks = 0; $sent = 0; $events = []; $messages = [];
 $expect = static function (bool $ok, string $label) use (&$checks): void { ++$checks; if (!$ok) { throw new RuntimeException($label); } };
 $expect(defined('DISABLE_WP_CRON') && DISABLE_WP_CRON && !wp_using_ext_object_cache(), 'Cron disabled and caches process-local');
+if (!current_user_can(iss_payments_lite_admin_capability())) { WP_CLI::error('Run with --user= an authorized staff user for the admin-render assertion.'); }
 $real_prefix = $db->prefix; $real_options = $db->options; $real_requests = iss_payments_lite_requests_table_name();
 $protected = [$real_requests,$db->posts,$db->postmeta,iss_graph_get_service()->get_dirty_queue_table_name()];
 $real_state = static fn(): array => ['tables' => array_map(static fn(string $table): array => $db->get_results("CHECKSUM TABLE `$table`", ARRAY_A), $protected), 'options' => $db->get_results("SELECT * FROM `$real_options` ORDER BY option_id", ARRAY_A)];

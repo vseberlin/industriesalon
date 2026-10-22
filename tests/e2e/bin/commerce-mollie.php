@@ -60,8 +60,14 @@ try {
         $remote_payments[$id]['status'] = $status;
         $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 200 && $read()[0]['payment_status'] === 'paid' && $read()[0]['booking_state'] === 'confirmed', 'Out-of-order provider status cannot undo settled booking');
     }
-    $remote_payments[$id]['status'] = 'paid'; $remote_payments[$id]['amountRefunded'] = ['value' => '10.00'];
+    $remote_payments[$id]['status'] = 'paid';
+    ISS_Commerce_Ledger::staff_action((int) $row['id'], 'cancelled', 'Staff canceled the settled fixture');
+    $cancelled = $read();
+    $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 200 && $read() === $cancelled && $read()[0]['booking_state'] === 'cancelled', 'Repeated paid callback preserves explicit staff cancellation');
+    $remote_payments[$id]['amountRefunded'] = ['value' => '10.00'];
     $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 200 && $read()[0]['payment_status'] === 'partially_refunded', 'Partial refund remains visible');
+    unset($remote_payments[$id]['amountRefunded']);
+    $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 200 && $read()[0]['payment_status'] === 'partially_refunded', 'Stale paid snapshot cannot erase a partial refund');
     $remote_payments[$id]['amountRefunded']['value'] = '20.00';
     $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 200 && $read()[0]['payment_status'] === 'refunded', 'Full refund is not presented as current paid status');
     $remote_payments[$id]['amountChargedBack'] = ['value' => '20.00'];

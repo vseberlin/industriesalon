@@ -318,7 +318,7 @@ const { state, actions } = store('iss/booking', {
         slot_id: slot?.id || '', start: state.isInquiry ? `${values.preferred_date}${values.preferred_time ? `T${values.preferred_time}:00` : ''}` : slot?.start || '',
         voucher_code: state.intent === 'booking' ? (values.voucher_code || '') : '', website: values.website || '', loaded_at: state.loadedAt, request_key: state.requestKey,
       };
-      state.submitting = true; state.status = 'Anfrage wird gesendet …';
+      state.submitting = true; state.status = state.intent === 'booking' ? 'Buchung wird gesendet …' : 'Anfrage wird gesendet …';
       try {
         const response = yield fetch(config.requestUrl, {
           method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': config.nonce }, body: JSON.stringify(payload),

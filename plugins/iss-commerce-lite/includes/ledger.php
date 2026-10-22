@@ -270,10 +270,12 @@ final class ISS_Commerce_Ledger {
             // Delayed provider snapshots must not undo a settled payment.
             $settled = ['paid', 'partially_refunded', 'refunded', 'charged_back'];
             if (in_array($row['payment_status'], $settled, true) && !in_array($status, $settled, true)) { return $row; }
-            if (in_array($row['payment_status'], ['refunded','charged_back'], true) && $status === 'paid') { return $row; }
+            if (in_array($row['payment_status'], ['partially_refunded','refunded','charged_back'], true) && $status === 'paid') { return $row; }
             if (in_array($row['payment_status'], ['failed','canceled','expired'], true) && in_array($status, ['open','pending','authorized'], true)) { return $row; }
             $next = $before;
-            if ($status === 'paid' && !in_array($before, ['confirmed', 'payment_exception'], true)) {
+            // Staff cancellation after settlement is final for allocation. A first late payment still needs review.
+            $cancelled_after_payment = $before === 'cancelled' && in_array($row['payment_status'], $settled, true);
+            if ($status === 'paid' && !$cancelled_after_payment && !in_array($before, ['confirmed', 'payment_exception'], true)) {
                 $can_allocate = $before !== 'cancelled' && (int) $departure['booking_open'] && !(int) $departure['needs_review']
                     && $departure['starts_at'] > gmdate('Y-m-d H:i:s')
                     && (int) $row['quantity'] + self::allocated((int) $departure['id'], true, (int) $row['id']) <= (int) $departure['capacity'];

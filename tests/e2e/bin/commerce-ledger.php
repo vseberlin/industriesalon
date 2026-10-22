@@ -89,6 +89,8 @@ ISS_Commerce_Ledger::staff_action((int) $new['id'], 'cancelled', 'Fixture cancel
 $expect(ISS_Commerce_Ledger::allocated(1) === 2, 'Staff cancellation frees seats');
 ISS_Commerce_Ledger::staff_action($id, 'confirmed', 'Resolved late payment with available seat');
 $expect(ISS_Commerce_Ledger::allocated(1) === 3, 'Explicit staff resolution uses admission lock');
+$late_cancelled = ISS_Commerce_Ledger::apply_payment(ISS_Commerce_Ledger::booking((int) $new['id']), ['provider_payment_id' => 'tr_cancelled111', 'payment_status' => 'paid', 'payment_checkout_url' => '']);
+$expect($late_cancelled['booking_state'] === 'payment_exception' && ISS_Commerce_Ledger::allocated(1) === 3, 'First payment after an unpaid cancellation stays unallocated and requires review');
 ISS_Commerce_Ledger::configure(1, 30, true, true, 'Capacity test', true);
 $onsite = $entry(12, 2); $onsite['payment'] = 'onsite'; $onsite['start'] = $config['start'] . ' UTC';
 $accepted = ISS_Commerce_Ledger::admit($onsite, $identity('onsite'));

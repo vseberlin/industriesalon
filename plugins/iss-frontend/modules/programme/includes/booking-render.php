@@ -88,7 +88,7 @@ function iss_programm_render_calendar_modal_host(): void {
             </header>
             <section class="is-tour-calendar__request-details" data-wp-bind--hidden="!state.paymentReturn" hidden>
                 <p data-wp-text="state.paymentSummary"></p>
-                <p><?php esc_html_e('Testbetrieb: Es wird kein echtes Geld eingezogen. Das Team prüft Ihre Buchung und bestätigt die Plätze persönlich.', 'iss-programm'); ?></p>
+                <p><?php esc_html_e('Testbetrieb: Es wird kein echtes Geld eingezogen. Diese Buchung reserviert keine Plätze für einen echten Besuch.', 'iss-programm'); ?></p>
                 <button type="button" class="is-tour-calendar__form-submit" data-wp-bind--disabled="state.loading" data-wp-on--click="actions.refreshPayment"><?php esc_html_e('Zahlungsstatus prüfen', 'iss-programm'); ?></button>
                 <p><a data-wp-bind--hidden="!state.checkoutUrl" data-wp-bind--href="state.checkoutUrl" hidden><?php esc_html_e('Testzahlung fortsetzen', 'iss-programm'); ?></a></p>
                 <p><a data-wp-bind--hidden="!state.paymentSourceUrl" data-wp-bind--href="state.paymentSourceUrl" hidden><?php esc_html_e('Zurück zum Angebot', 'iss-programm'); ?></a></p>
