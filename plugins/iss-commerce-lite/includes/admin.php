@@ -177,7 +177,7 @@ function iss_payments_lite_admin_handle_actions(): void
 
     if ($action === 'update_status') {
         check_admin_referer('iss_payments_lite_status');
-        iss_payments_lite_admin_update_status();
+        try { iss_payments_lite_admin_update_status(); } catch (Throwable $error) { wp_die(esc_html($error->getMessage()), '', ['response' => 409, 'back_link' => true]); }
         wp_safe_redirect(add_query_arg(['page' => 'iss-payments-lite-requests', 'updated' => 'status'], admin_url(defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php')));
         exit;
     }
@@ -205,16 +205,14 @@ function iss_payments_lite_admin_update_status(): void
         return;
     }
 
-    $placeholders = implode(', ', array_fill(0, count($ids), '%d'));
-    $table = iss_payments_lite_requests_table_name();
-    $values = array_merge([$status, current_time('mysql')], $ids);
-    $wpdb->query(
-        // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber, WordPress.DB.PreparedSQL.NotPrepared -- ID placeholders and values are built together above.
-        $wpdb->prepare(
-            "UPDATE {$table} SET status = %s, updated_at = %s WHERE id IN ({$placeholders})",
-            $values
-        )
-    );
+    foreach ($ids as $id) {
+        $row = ISS_Commerce_Ledger::booking($id);
+        if (!empty($row['departure_id']) && in_array($status, ['confirmed', 'cancelled', 'spam'], true)) {
+            ISS_Commerce_Ledger::staff_action($id, $status === 'spam' ? 'cancelled' : $status, 'Staff request status: ' . $status);
+        } else {
+            ISS_Commerce_Ledger::update(iss_payments_lite_requests_table_name(), ['status' => $status, 'updated_at' => current_time('mysql')], $id);
+        }
+    }
 
     if (function_exists('iss_core_audit_log')) {
         iss_core_audit_log('requests_status_update', [
@@ -240,7 +238,7 @@ function iss_payments_lite_admin_export_csv(): void
         exit;
     }
 
-    fputcsv($out, ['id', 'request_kind', 'status', 'created_at', 'customer_name', 'customer_email', 'item_label', 'quantity', 'amount_cents', 'payment_method', 'slot_id', 'tag', 'source_post_id', 'source_post_type', 'ip_address', 'notified_at', 'notification_error', 'regular_tickets', 'reduced_tickets', 'price_cents', 'reduced_price_cents', 'provider_payment_id', 'payment_status']);
+    fputcsv($out, ['id', 'request_kind', 'status', 'created_at', 'customer_name', 'customer_email', 'item_label', 'quantity', 'amount_cents', 'payment_method', 'slot_id', 'tag', 'source_post_id', 'source_post_type', 'ip_address', 'notified_at', 'notification_error', 'regular_tickets', 'reduced_tickets', 'price_cents', 'reduced_price_cents', 'provider_payment_id', 'payment_status', 'booking_reference', 'departure_id', 'booking_state', 'hold_expires_at_utc', 'voucher_cents', 'provider_amount_cents', 'currency', 'test_mode']);
     foreach ($result['rows'] as $row) {
         $payload = json_decode((string) ($row['payload'] ?? ''), true);
         fputcsv($out, [
@@ -267,6 +265,7 @@ function iss_payments_lite_admin_export_csv(): void
             $payload['reduced_price_cents'] ?? '',
             (string) ($row['provider_payment_id'] ?? ''),
             (string) ($row['payment_status'] ?? ''),
+            $row['booking_reference'] ?? '', $row['departure_id'] ?? '', $row['booking_state'] ?? '', $row['hold_expires_at'] ?? '', $row['voucher_cents'] ?? 0, $row['provider_amount_cents'] ?? 0, $row['currency'] ?? 'EUR', $row['test_mode'] ?? 0,
         ]);
     }
 
@@ -282,7 +281,7 @@ function iss_payments_lite_render_requests_page(): void
         wp_die(esc_html__('Keine Berechtigung.', 'iss-payments-lite'), 403);
     }
 
-    iss_payments_lite_maybe_install_schema();
+    if (!ISS_Commerce_Ledger::ready()) { echo '<div class="notice notice-warning"><p>' . esc_html__('Buchungsdatenbank: gesicherte Migration erforderlich.', 'iss-payments-lite') . '</p></div>'; return; }
 
     $filters = iss_payments_lite_admin_current_filters();
     $paged = max(1, (int) iss_payments_lite_admin_get_param('paged'));
@@ -312,6 +311,7 @@ function iss_payments_lite_render_requests_page(): void
             <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Gespeichert.', 'iss-payments-lite'); ?></p></div>
         <?php endif; ?>
 
+        <?php iss_commerce_render_ledger(); ?>
         <h2><?php esc_html_e('Einstellungen', 'iss-payments-lite'); ?></h2>
         <form method="post" action="<?php echo esc_url(admin_url((defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php') . '?page=iss-payments-lite-requests')); ?>">
             <?php wp_nonce_field('iss_payments_lite_settings'); ?>

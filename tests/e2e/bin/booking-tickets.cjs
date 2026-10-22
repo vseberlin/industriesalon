@@ -168,3 +168,19 @@ test('payment receipt separates verified paid, pending and failure states withou
   assert.doesNotMatch(f.state.status, /erfolgreich/);
   assert.equal(f.state.checkoutUrl, '');
 });
+
+test('full voucher coverage confirms without redirecting to a missing checkout', async () => {
+  const f = fixture({ mollieEnabled: true }); f.input('payment', 'mollie'); f.form();
+  f.answer({ ok: true, booking_state: 'confirmed', booking_reference: 'ISS-FIXTURE', voucher_cents: 1400 });
+  await run(f.actions.submit({ preventDefault() {} }));
+  assert.equal(f.state.submitted, true); assert.equal(f.location.assigned, undefined);
+  assert.match(f.state.status, /ISS-FIXTURE.*bestätigt.*Gutschein/);
+});
+
+test('paid late-payment exception never presents a seat confirmation', async () => {
+  const f = fixture(); f.state.paymentId = '1'; f.state.paymentToken = 'fixture';
+  f.answer({ ok: true, payment_status: 'paid', booking_state: 'payment_exception', booking_id: 1, title: 'Fixture', amount_cents: 1400 });
+  await run(f.actions.refreshPayment());
+  assert.match(f.state.status, /keine Plätze bestätigt/); assert.match(f.state.status, /Erstattung/);
+  assert.doesNotMatch(f.state.status, /Ihre Buchung ist bestätigt/);
+});

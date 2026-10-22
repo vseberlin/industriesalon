@@ -43,7 +43,7 @@ try {
     $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 200 && $read()[0]['payment_status'] === 'paid', 'Authenticated provider paid state is saved');
     $after = $read();
     $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 200 && $read() === $after && $sent === 1 && count($events) === 1, 'Duplicate webhook is a no-op with no repeat dispatch');
-    $expect($read()[0]['status'] === 'new', 'Payment never implies a SuperSaaS reservation or staff confirmation');
+    $expect($read()[0]['status'] === 'new', 'Staff workflow status remains separate from authoritative booking allocation');
     $receipt_request = new WP_REST_Request('POST', '/iss-payments/v1/payment-status');
     $receipt_request->set_param('booking_id', $row['id']); $receipt_request->set_param('token', 'wrong');
     $before_calls = count($http_calls);
@@ -52,13 +52,13 @@ try {
     $receipt_response = iss_commerce_payment_status($receipt_request);
     $expect($receipt_response->get_status() === 200 && $receipt_response->get_data()['payment_status'] === 'paid' && $receipt_response->get_headers()['Cache-Control'] === 'no-store', 'Receipt is verified and uncached');
     $expect(!str_contains(wp_json_encode($receipt_response->get_data()), $data['email']) && !str_contains(wp_json_encode($receipt_response->get_data()), $data['name']), 'Public receipt excludes customer details');
-    $transport_failure = 'read';
+    $before_calls = count($http_calls); $transport_failure = 'read';
     $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 503 && $read() === $after, 'Provider outage requests redelivery and preserves known state');
-    $expect(iss_commerce_payment_status($receipt_request)->get_status() === 503, 'Return page never substitutes stale success when verification fails');
+    $expect(iss_commerce_payment_status($receipt_request)->get_status() === 200 && count($http_calls) === $before_calls + 1, 'Receipt reads committed state without a provider call during outage');
     $transport_failure = '';
     foreach (['failed', 'canceled', 'expired', 'pending', 'authorized'] as $status) {
         $remote_payments[$id]['status'] = $status;
-        $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 200 && $read()[0]['payment_status'] === $status, 'Provider terminal/pending states are represented without success');
+        $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 200 && $read()[0]['payment_status'] === 'paid' && $read()[0]['booking_state'] === 'confirmed', 'Out-of-order provider status cannot undo settled booking');
     }
     $remote_payments[$id]['status'] = 'paid'; $remote_payments[$id]['amountRefunded'] = ['value' => '10.00'];
     $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 200 && $read()[0]['payment_status'] === 'partially_refunded', 'Partial refund remains visible');

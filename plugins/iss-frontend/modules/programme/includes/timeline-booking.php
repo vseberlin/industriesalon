@@ -58,7 +58,7 @@ function iss_timeline_get_booking_url_for_row($row): string {
 }
 
 function iss_timeline_get_ticket_action_for_occurrence($row, $opts = []) {
-    if (!is_array($row) || in_array($row['availability_state'] ?? $row['availability'] ?? '', ['cancelled', 'sold_out'], true)) {
+    if (!is_array($row) || in_array($row['availability_state'] ?? $row['availability'] ?? '', ['cancelled', 'sold_out', 'unavailable'], true)) {
         return [];
     }
 
@@ -207,6 +207,7 @@ function iss_timeline_occurrence_is_sold_out(array $occurrence): bool {
 }
 
 function iss_timeline_get_occurrence_capacity_label(array $occurrence): string {
+    if (($occurrence['availability_state'] ?? $occurrence['availability'] ?? '') === 'unavailable') { return __('Buchung noch nicht geöffnet', 'iss-timeline'); }
     if (iss_timeline_occurrence_is_sold_out($occurrence)) {
         return __('Ausgebucht', 'iss-timeline');
     }

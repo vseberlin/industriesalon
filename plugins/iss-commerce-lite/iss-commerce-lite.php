@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ISS Commerce Lite
  * Description: Lightweight booking request and publication order intake for Industriesalon.
- * Version: 0.4.0
+ * Version: 0.5.0
  */
 
 if (!defined('ABSPATH')) {
@@ -11,11 +11,11 @@ if (!defined('ABSPATH')) {
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- This plugin owns the lightweight booking/order request table.
 
-define('ISS_PAYMENTS_LITE_SCHEMA_VERSION', '2026-10-22-requests-v4-mollie');
+define('ISS_PAYMENTS_LITE_SCHEMA_VERSION', '2026-10-22-requests-v5-ledger');
 define('ISS_PAYMENTS_LITE_SCHEMA_OPTION', 'iss_payments_lite_schema_version');
 define('ISS_PAYMENTS_LITE_SETTINGS_OPTION', 'iss_payments_lite_settings');
 define('ISS_PAYMENTS_LITE_PATH', plugin_dir_path(__FILE__));
-define('ISS_COMMERCE_LITE_VERSION', '0.4.0');
+define('ISS_COMMERCE_LITE_VERSION', '0.5.0');
 define('ISS_COMMERCE_LITE_PATH', ISS_PAYMENTS_LITE_PATH);
 
 function iss_payments_lite_requests_table_name(): string {
@@ -87,8 +87,8 @@ function iss_payments_lite_install_schema(bool $allow_existing_upgrade = false):
     if ($wpdb->last_error !== '') {
         throw new RuntimeException('Commerce schema could not be inspected before upgrade.');
     }
-    if ($columns && array_diff(['request_key', 'request_fingerprint', 'provider_payment_id', 'payment_status', 'payment_checkout_url', 'payment_payload', 'payment_started_at'], $columns) && !$allow_existing_upgrade) {
-        throw new RuntimeException('Commerce upgrade requires the scoped backup in ops/migrations/2026-10-22-commerce-mollie.php.');
+    if ($columns && array_diff(['request_key', 'request_fingerprint', 'provider_payment_id', 'payment_status', 'payment_checkout_url', 'payment_payload', 'payment_started_at', 'departure_id', 'booking_state', 'payment_checked_at'], $columns) && !$allow_existing_upgrade) {
+        throw new RuntimeException('Commerce upgrade requires the scoped backup in ops/migrations/2026-10-22-commerce-ledger.php.');
     }
     $statements = iss_payments_lite_schema_statements();
     foreach ($statements as $statement) {
@@ -123,6 +123,17 @@ function iss_payments_lite_schema_statements(): array {
         payment_checkout_url varchar(512) NOT NULL DEFAULT '',
         payment_payload longtext DEFAULT NULL,
         payment_started_at datetime DEFAULT NULL,
+        booking_reference varchar(32) DEFAULT NULL,
+        departure_id bigint(20) unsigned NOT NULL DEFAULT 0,
+        booking_state varchar(32) NOT NULL DEFAULT 'legacy',
+        hold_expires_at datetime DEFAULT NULL,
+        confirmed_at datetime DEFAULT NULL,
+        cancelled_at datetime DEFAULT NULL,
+        voucher_cents int(11) unsigned NOT NULL DEFAULT 0,
+        provider_amount_cents int(11) unsigned NOT NULL DEFAULT 0,
+        currency char(3) NOT NULL DEFAULT 'EUR',
+        test_mode tinyint(1) NOT NULL DEFAULT 0,
+        payment_checked_at datetime DEFAULT NULL,
         slot_id varchar(191) NOT NULL DEFAULT '',
         tag varchar(100) NOT NULL DEFAULT '',
         payload longtext NOT NULL,
@@ -141,10 +152,13 @@ function iss_payments_lite_schema_statements(): array {
         KEY email_lookup (customer_email),
         KEY duplicate_lookup (duplicate_hash),
         UNIQUE KEY request_key (request_key),
-        UNIQUE KEY provider_payment_id (provider_payment_id)
-    ) {$charset_collate};";
+        UNIQUE KEY provider_payment_id (provider_payment_id),
+        UNIQUE KEY booking_reference (booking_reference),
+        KEY departure_allocation (departure_id, booking_state, hold_expires_at),
+        KEY reconcile_payments (payment_checked_at, payment_status)
+    ) ENGINE=InnoDB {$charset_collate};";
 
-    return [$sql];
+    return array_merge([$sql], ISS_Commerce_Ledger::schema());
 }
 
 function iss_payments_lite_insert_request(string $request_kind, array $entry): int {
@@ -487,6 +501,7 @@ function iss_payments_lite_request_identity(string $kind, array $payload): array
         'start' => $kind === 'inquiry' ? sanitize_text_field($payload['start'] ?? '') : '',
     ];
     if ($kind === 'booking') {
+        if (!empty($payload['voucher_code'])) { $intent['voucher'] = ISS_Commerce_Vouchers::fingerprint((string) $payload['voucher_code']); }
         $counts = iss_payments_lite_booking_ticket_counts($payload);
         // Preserve fingerprints of already committed regular-only requests.
         if ($counts['reduced_tickets'] > 0) {
@@ -539,6 +554,8 @@ function iss_payments_lite_process_request_payload(array $payload, WP_REST_Reque
             return iss_payments_lite_process_inquiry_request($payload, $request);
         }
         return iss_payments_lite_process_slot_booking_request($payload, $request);
+    } catch (DomainException $error) {
+        return new WP_REST_Response(['ok' => false, 'error' => $error->getMessage()], 409);
     } catch (InvalidArgumentException $error) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Ungültige Anfragekennung.'], 400);
     } catch (RuntimeException $error) {
@@ -553,6 +570,16 @@ function iss_payments_lite_process_request_payload(array $payload, WP_REST_Reque
 function iss_payments_lite_store_request(string $kind, array $entry, array $payload, WP_REST_Request $request): WP_REST_Response {
     global $wpdb;
     $identity = iss_payments_lite_request_identity($kind, $payload);
+    if ($kind === 'booking') {
+        $result = ISS_Commerce_Ledger::admit($entry, $identity, (string) ($payload['voucher_code'] ?? ''));
+        if ($result['created']) {
+            $entry['request_id'] = $result['id'];
+            iss_payments_lite_send_request_notification($result['id'], $kind, $entry);
+            do_action('iss_payments_lite_booking_created', $entry, $request);
+            do_action('iss_payments_lite_request_created', $kind, $entry, $request);
+        }
+        return iss_commerce_request_response($result['id'], (string) $entry['payment']);
+    }
     $state = $wpdb->get_row('SELECT @@SESSION.in_transaction AS in_transaction, @@SESSION.autocommit AS autocommit, DATABASE() AS database_name', ARRAY_A);
     if ($wpdb->last_error !== '' || !$state || !isset($state['in_transaction'], $state['autocommit'], $state['database_name']) || (int) $state['in_transaction'] !== 0 || (int) $state['autocommit'] !== 1) {
         throw new RuntimeException('Commerce intake requires an independent committed write.');
@@ -724,6 +751,7 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
         'regular_tickets' => $regular_tickets,
         'reduced_tickets' => $reduced_tickets,
         'slot_id' => $slot_id,
+        'departure_id' => (int) ($found['departure_id'] ?? 0),
         'payment' => $payment,
         'tag' => $tag,
         'start' => $start,
@@ -865,8 +893,13 @@ function iss_payments_lite_process_order_request(array $payload, WP_REST_Request
     return iss_payments_lite_store_request('order', $entry, $payload, $request);
 }
 
+require_once ISS_PAYMENTS_LITE_PATH . 'includes/ledger.php';
+require_once ISS_PAYMENTS_LITE_PATH . 'includes/vouchers.php';
+require_once ISS_PAYMENTS_LITE_PATH . 'includes/worker.php';
+add_filter('iss_occurrences_public_item', [ISS_Commerce_Ledger::class, 'availability'], 10, 2);
 require_once ISS_PAYMENTS_LITE_PATH . 'includes/mollie.php';
 require_once ISS_PAYMENTS_LITE_PATH . 'includes/admin.php';
+require_once ISS_PAYMENTS_LITE_PATH . 'includes/ledger-admin.php';
 require_once ISS_PAYMENTS_LITE_PATH . 'includes/cli.php';
 
 register_activation_hook(__FILE__, function () {

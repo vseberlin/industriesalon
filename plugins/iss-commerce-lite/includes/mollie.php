@@ -85,7 +85,7 @@ function iss_commerce_mollie_checkout_url(string $url): string {
 /** Only authenticated provider reads establish payment truth. Caller holds the booking lock. */
 function iss_commerce_mollie_accept(array $row, array $payment): array {
     $id = (string) ($payment['id'] ?? '');
-    $expected = number_format((int) $row['amount_cents'] / 100, 2, '.', '');
+    $expected = number_format((int) (!empty($row['departure_id']) ? $row['provider_amount_cents'] : $row['amount_cents']) / 100, 2, '.', '');
     if (!preg_match('/^tr_[A-Za-z0-9]{5,60}$/D', $id)
         || (!empty($row['provider_payment_id']) && $row['provider_payment_id'] !== $id)
         || ($payment['mode'] ?? '') !== 'test' || ($payment['amount']['currency'] ?? '') !== 'EUR'
@@ -111,8 +111,7 @@ function iss_commerce_mollie_accept(array $row, array $payment): array {
     }
     $fields = ['provider_payment_id' => $id, 'payment_status' => $status, 'payment_checkout_url' => $checkout];
     // Exact duplicates do not rewrite timestamps or dispatch actions/notifications.
-    if (array_intersect_key($row, $fields) !== $fields) { iss_commerce_payment_write((int) $row['id'], $fields); }
-    return array_merge($row, $fields);
+    return ISS_Commerce_Ledger::apply_payment($row, $fields);
 }
 
 function iss_commerce_mollie_payment(int $id, bool $create): array {
@@ -121,11 +120,12 @@ function iss_commerce_mollie_payment(int $id, bool $create): array {
             return iss_commerce_mollie_accept($row, iss_commerce_mollie_api('GET', 'payments/' . rawurlencode($row['provider_payment_id'])));
         }
         if (!$create) { return $row; }
+        if (!empty($row['departure_id']) && empty($row['payment_started_at']) && ($row['booking_state'] !== 'pending' || $row['hold_expires_at'] <= gmdate('Y-m-d H:i:s'))) { return $row; }
         if (!iss_commerce_mollie_enabled()) { throw new RuntimeException('New Mollie payments are disabled.'); }
         if (empty($row['payment_started_at'])) {
             $token = iss_commerce_payment_token($row);
             $body = [
-                'amount' => ['currency' => 'EUR', 'value' => number_format((int) $row['amount_cents'] / 100, 2, '.', '')],
+                'amount' => ['currency' => 'EUR', 'value' => number_format((int) (!empty($row['departure_id']) ? $row['provider_amount_cents'] : $row['amount_cents']) / 100, 2, '.', '')],
                 'description' => 'Industriesalon Testbuchung #' . $row['id'],
                 'redirectUrl' => home_url('/?iss_payment_return=1') . '#iss-payment=' . $row['id'] . '.' . $token,
                 'webhookUrl' => rest_url('iss-payments/v1/mollie/webhook'),
@@ -155,6 +155,7 @@ function iss_commerce_mollie_payment(int $id, bool $create): array {
 
 function iss_commerce_payment_receipt(array $row): array {
     return [
+        'booking_state' => $row['booking_state'] ?? 'legacy', 'booking_reference' => $row['booking_reference'] ?? '', 'hold_expires_at' => $row['hold_expires_at'] ?? null, 'voucher_cents' => (int) ($row['voucher_cents'] ?? 0),
         'ok' => true, 'booking_id' => (int) $row['id'], 'payment_status' => $row['payment_status'], 'test_mode' => true,
         'amount_cents' => (int) $row['amount_cents'], 'title' => $row['item_label'],
         'checkout_url' => $row['payment_checkout_url'], 'source_url' => get_permalink((int) $row['source_post_id']) ?: home_url('/'),
@@ -163,7 +164,10 @@ function iss_commerce_payment_receipt(array $row): array {
 }
 
 function iss_commerce_request_response(int $id, string $method): WP_REST_Response {
-    if ($method !== 'mollie') { return new WP_REST_Response(['ok' => true], 200); }
+    $booking = ISS_Commerce_Ledger::booking($id);
+    if ($method !== 'mollie' || (!empty($booking['departure_id']) && (int) $booking['provider_amount_cents'] === 0)) {
+        return new WP_REST_Response(['ok' => true, 'test_mode' => (bool) $booking['test_mode'], 'booking_state' => $booking['booking_state'], 'booking_reference' => $booking['booking_reference'], 'voucher_cents' => (int) $booking['voucher_cents']], 200, ['Cache-Control' => 'no-store']);
+    }
     try { $response = new WP_REST_Response(iss_commerce_payment_receipt(iss_commerce_mollie_payment($id, true)), 200); }
     catch (RuntimeException $error) {
         $response = new WP_REST_Response(['ok' => false, 'error' => 'Die Zahlungsanfrage konnte noch nicht bestätigt werden. Bitte mit unveränderten Angaben erneut versuchen. Bei längerem Ausfall kontaktieren Sie uns; bitte keine zweite Buchung anlegen.'], 503);
@@ -198,7 +202,7 @@ function iss_commerce_payment_status(WP_REST_Request $request): WP_REST_Response
         $row = iss_commerce_payment_row((int) $id);
         if (!hash_equals(iss_commerce_payment_token($row), $token)) { throw new RuntimeException('Invalid receipt.'); }
     } catch (RuntimeException $error) { return new WP_REST_Response(['ok' => false, 'error' => 'Ungültiger Zahlungsbeleg.'], 404, ['Cache-Control' => 'no-store']); }
-    try { $data = iss_commerce_payment_receipt(iss_commerce_mollie_payment((int) $id, false)); }
+    try { $data = iss_commerce_payment_receipt($row); }
     catch (RuntimeException $error) { return new WP_REST_Response(['ok' => false, 'error' => 'Zahlungsstatus derzeit nicht prüfbar. Bitte später erneut prüfen.'], 503, ['Cache-Control' => 'no-store']); }
     return new WP_REST_Response($data, 200, ['Cache-Control' => 'no-store']);
 }

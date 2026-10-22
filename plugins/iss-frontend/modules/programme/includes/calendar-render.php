@@ -126,6 +126,7 @@ function iss_programm_render_tour_calendar_shell($title, $booking_url, $post_id 
             $start = new DateTimeImmutable($slot['start'], wp_timezone());
             $label = iss_programm_format_datetime_de($start->getTimestamp());
             if (($slot['availability_state'] ?? '') === 'cancelled') { $label .= ' · ' . __('Abgesagt', 'iss-programm'); }
+            elseif (($slot['availability_state'] ?? '') === 'unavailable') { $label .= ' · ' . __('Buchung noch nicht geöffnet', 'iss-programm'); }
             elseif (($slot['availability_state'] ?? '') === 'sold_out' || ($slot['available'] !== null && $slot['available'] <= 0)) { $label .= ' · ' . __('Ausgebucht', 'iss-programm'); }
             $out .= '<li>' . esc_html($label) . '</li>';
         }
@@ -233,7 +234,9 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
             $out .= '<span class="iss-tour-dates__label">' . $label_html . '</span>';
         }
 
-        if ($booking_url !== '' && $is_sold_out) {
+        if (in_array($data['availability'] ?? '', ['unavailable', 'cancelled'], true)) {
+            $out .= ' <span class="iss-tour-dates__link iss-tour-dates__link--disabled" aria-disabled="true">' . esc_html(($data['availability'] ?? '') === 'cancelled' ? __('Abgesagt', 'iss-programm') : __('Buchung noch nicht geöffnet', 'iss-programm')) . '</span>';
+        } elseif ($booking_url !== '' && $is_sold_out) {
             $out .= ' <span class="iss-tour-dates__link iss-tour-dates__link--disabled" aria-disabled="true">';
             $out .= esc_html__('Ausgebucht', 'iss-programm');
             $out .= '</span>';

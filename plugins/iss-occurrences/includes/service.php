@@ -2139,7 +2139,7 @@ final class ISS_Occurrences_Service
             }
         }
 
-        return [
+        return apply_filters('iss_occurrences_public_item', [
             'id' => isset($row['id']) ? (int) $row['id'] : 0,
             'title' => $title,
             'start_raw' => $starts_at,
@@ -2174,7 +2174,7 @@ final class ISS_Occurrences_Service
             'tag' => isset($row['tag']) ? strtoupper(sanitize_text_field((string) $row['tag'])) : '',
             'content_url' => $content_url,
             'year' => $is_running_open_ended ? (int) wp_date('Y', null, wp_timezone()) : ($start_ts ? (int) wp_date('Y', $start_ts, wp_timezone()) : null),
-        ];
+        ], $row);
     }
 
     private function get_future_horizon_months(): int

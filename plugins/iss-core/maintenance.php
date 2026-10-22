@@ -86,6 +86,11 @@ function iss_core_maintenance_status(?int $now = null): array
             'last_run' => $queue['last_run'] ?? [],
         ];
     }
+    if (class_exists('ISS_Commerce_Ledger') && ISS_Commerce_Ledger::ready()) {
+        $receipt = get_option('iss_commerce_worker_receipt', []);
+        $age = $now - (int) ($receipt['finished_at'] ?? 0);
+        $rows[] = ['owner' => 'commerce', 'status' => !empty($receipt['ok']) && $age <= 180 ? 'ok' : 'error', 'age_seconds' => $age, 'mail_enabled' => ISS_Commerce_Worker::mail_enabled()];
+    }
     $missing_hooks = []; $oldest = 0;
     foreach ((array) _get_cron_array() as $time => $hooks) {
         foreach ($hooks as $hook => $events) {

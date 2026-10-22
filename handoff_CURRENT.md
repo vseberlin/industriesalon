@@ -1,47 +1,59 @@
 # Current handoff — 22 October 2026
 
 Website source is `/home/vladimir/wp-website`; staging checkout is
-`/srv/industriesalon/stage/repo`. Mollie implementation `ad632d0` is on GitHub
-and deployed to staging; this documentation checkpoint follows it. Production
-is untouched and staging remains noindex.
+`/srv/industriesalon/stage/repo`. The last deployed baseline is `e1dc25d`.
+The booking upgrade is implemented and verified locally, pending the staging
+release below. Production is untouched; staging remains noindex.
 
-## Booking and Mollie test checkout
+## Commerce upgrade and activation boundary
 
-The existing WordPress request flow now supports hosted Mollie test payments,
-verified webhooks, a private uncached receipt, and payment status in
-Tools → ISS Anfragen and its CSV. Staff workflow status remains independent.
-The user chose WordPress booking/payment first: staff reserve and confirm seats
-in SuperSaaS. No SuperSaaS writes or automatic seat confirmation were added.
-The shared dialog retains onsite payment and offers card/PayPal test checkout.
-Live keys are rejected; notification emails remain disabled. The test key exists
-only in private staging configuration. Local runtime has no provider key.
+The five-slice WordPress booking upgrade is implemented locally in
+`iss-commerce-lite` 0.5.0. The [commerce contract](plugins/iss-commerce-lite/README.md)
+is the implementation/operations record; the [plan](docs/project/wordpress-booking-ledger-plan.md)
+records the agreed scope. WordPress owns capacity; SuperSaaS supplies schedules.
+The v5 additive migration is applied locally with a verified private before-image.
+All three original local requests remain unchanged.
 
-Owner schema migration `ops/migrations/2026-10-22-commerce-mollie.php` is applied
-on both targets. All three pre-existing requests on each target are unchanged.
-Private before-images and acceptance evidence are in `var/mollie-20261022/`
-on the respective checkouts; no uploads/content transfer was needed. Target
-accounts, authentication and roles were not migration inputs.
+Capacity is **30 people per departure**, explicitly confirmed by the user.
+Local rehearsal has 23 test departures. Nine legacy reservations (18 seats)
+map to three departures and are retained in `legacy_review`; those departures
+remain closed. Other local departures are open only as labelled test inventory.
+The local browser acceptance booking is explicitly canceled and retains its
+history. Real inventory activation requires current reservation reconciliation.
 
-Verified: 207 isolated PHP assertions, 16 migration checks, nine JavaScript
-store tests, PHP lint/PHPCS/PHPStan and JS lint. A real staging €24 card test
-completed; Mollie's webhook returned 200 before the browser checked the receipt.
-Repeated callbacks with a forged status leave the paid row entirely unchanged.
-Invalid receipt tokens return uncached 404. Desktop and 390px mobile receipts
-work without horizontal overflow; the browser console reports no errors.
+The private SQL backup contains 2,283 historic bookings, including nine future
+reservations (one paid/eight unpaid). The newer private YITH snapshot preserves
+the 17 September expiry corrections. All 108 voucher records passed dry-run
+validation and remain review-only; no real balances were imported or consumed.
+Reconcile subsequent usage and establish one redemption authority before real
+activation. Never put customer records/codes in Git or alter the source backups.
+Private manifests, receipts and configuration before-image are under
+`var/booking-upgrade-20261022/`. The local voucher lookup key is private to its
+WordPress configuration and must be preserved across releases.
 
-Unsuccessful PayPal method attempts leave the provider payment open. The UI
-correctly shows unpaid and preserves the verified resume link, including when
-Mollie omits that optional link. Terminal canceled/failed/expired, refunds and
-chargebacks are covered by isolated tests, not claimed as live terminal outcomes.
-Two visibly labelled synthetic bookings remain as test evidence (paid/open);
-do not reserve real seats for them. No real money or notification email was sent.
+Local verification: 216 isolated request/payment/schedule assertions, 16 migration
+checks, real ten-process seat admission (exactly three of ten for three seats),
+concurrent voucher conservation, ledger/worker rollback and lease tests, 11 JS
+store tests, PHP syntax, targeted PHPCS/PHPStan and ESLint. Chrome proved mixed
+regular/reduced onsite confirmation and the 390px form without overflow. Staff
+screen rendering is covered by CLI; the browser requires the normal staff login.
+Mailpit SMTP/API readback verified the UTF-8 zero-booking digest. Actual delivery
+to the staff mailbox remains unverified until authenticated sender setup.
 
-Provider outage recovery, the 45-minute creation retry bound, CLI reconciliation
-and rollback are in [the commerce contract](plugins/iss-commerce-lite/README.md).
-Disable new checkout before rollback; retain payment columns, requests, the key
-and callback support until pending payments are reconciled. Never restore the
-old request table over later bookings. The requested staging scope is complete;
-production/live activation and customer-email delivery are separate work.
+Next operational step: deploy code through GitHub, apply target-local v5 migration,
+rehearse private reservation mappings, install the independent commerce minute
+runner and verify staging callbacks/receipts, routes and worker health. Mail stays
+disabled pending authenticated sender information; live payment keys are refused.
+Existing non-commerce cron ownership and broader maintenance remain separate.
+No uploads/content transfer is required. Preserve target accounts/authentication.
+Do not restore old tables over later requests, redemptions or event history.
+Close admissions with `ISS_COMMERCE_BOOKINGS_ENABLED=false` during recovery;
+retain callbacks and the provider key until pending payments are reconciled.
+
+The preceding Mollie baseline retained two labelled staging synthetic payments;
+they have no departure allocation and do not consume real inventory or enter
+staff digests. Receipt reads now use authoritative processed state; the worker
+and callbacks perform provider verification. Local runtime has no provider key.
 
 ## Preserved content and operational constraints
 
@@ -64,10 +76,10 @@ Project UAT retains its existing picker permissions.
 Staging/touchtable PHP 8.3.36 emergency images remain active. Their separately
 scoped maintenance is replacement with a verified patched official image under
 [the runtime procedure](docs/infrastructure/staging.md#php-runtime-security-update).
-Current staging containers and commerce checks are healthy. Git deployment must
+Last verified staging containers and commerce checks were healthy. Git deployment must
 use the ordinary source-file umask (`022`); scope private backup permissions to
 the private files, so newly checked-out PHP remains readable by FPM.
 
 Earlier human gates remain: Kiezfonds exact share, children's-photo rights,
 actual 200% zoom, physical touch and screenreader acceptance. No additional
-infrastructure or editorial work is queued by this booking implementation.
+editorial work is queued by this booking plan; production activation is separate.

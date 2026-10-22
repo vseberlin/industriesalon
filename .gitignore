@@ -74,3 +74,7 @@
 *~lock*
 __pycache__/
 *.pyc
+
+# Reviewed commerce owner tooling (payloads stay private).
+!/ops/commerce-stage.sh
+!/tools/commerce-legacy-export.py

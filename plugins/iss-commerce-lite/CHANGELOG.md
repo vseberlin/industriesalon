@@ -1,3 +1,10 @@
+# 0.5.0 — 22 October 2026
+
+WordPress departure inventory, atomic booking holds, legacy voucher redemption,
+transactional payment transitions and late-payment exceptions, staff ledger and
+24-hour digest/outbox with a bounded host worker. Additive v5 migration preserves
+requests; private import reconciliation and live activation remain explicit gates.
+
 # Changelog
 
 All notable changes for `iss-commerce-lite` are documented here.

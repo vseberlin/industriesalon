@@ -11,7 +11,7 @@ const dayOf = (slot) => String(slot.start || '').slice(0, 10);
 const bookable = (slot) => !!slot && !['cancelled', 'unavailable', 'sold_out'].includes(slot.availability_state) && (slot.available == null || Number(slot.available) > 0);
 const dateLabel = (slot) => slot.date_label || new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${dayOf(slot)}T12:00:00Z`));
 const timeLabel = (slot) => slot.time_label || `${String(slot.start || '').slice(11, 16)}${slot.end ? ` – ${String(slot.end).slice(11, 16)}` : ''} Uhr`;
-const unavailableLabel = (slot) => slot.availability_state === 'cancelled' ? 'abgesagt' : slot.available != null && Number(slot.available) <= 0 || slot.availability_state === 'sold_out' ? 'ausgebucht' : 'nicht verfügbar';
+const unavailableLabel = (slot) => slot.availability_state === 'cancelled' ? 'abgesagt' : slot.availability_state === 'unavailable' ? 'Buchung noch nicht geöffnet' : slot.available != null && Number(slot.available) <= 0 || slot.availability_state === 'sold_out' ? 'ausgebucht' : 'nicht verfügbar';
 const price = cents => new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(cents / 100);
 
 // Day-only arithmetic deliberately stays in UTC; the occurrence owner supplies
@@ -55,7 +55,7 @@ const { state, actions } = store('iss/booking', {
     catalog: {}, source: null, slots: [], day: '', slotId: '', intent: 'booking',
     open: false, loading: false, failed: false, submitting: false, submitted: false,
     inquiryAllowed: false, status: '', requestKey: '', loadedAt: 0,
-    paymentMethod: 'onsite', paymentReturn: false, paymentId: '', paymentToken: '', paymentSummary: '', checkoutUrl: '', paymentSourceUrl: '',
+    voucherCode: '', paymentMethod: 'onsite', paymentReturn: false, paymentId: '', paymentToken: '', paymentSummary: '', checkoutUrl: '', paymentSourceUrl: '',
     customerName: '', email: '', preferredDate: '', preferredTime: '', quantity: 1, reducedQuantity: 0,
     get title() { return state.selectedSlot?.title || state.source?.title || 'Anfrage'; },
     get selectedSlot() { return state.slots.find((slot) => String(slot.id) === state.slotId && dayOf(slot) === state.day); },
@@ -63,13 +63,14 @@ const { state, actions } = store('iss/booking', {
     get needsQuantity() { return !state.isInquiry; },
     get hidePreferred() { return !state.isInquiry; },
     get hideSlots() { return state.intent !== 'booking'; },
+    get isBooking() { return state.intent === 'booking'; },
     get choosingDate() { return !state.paymentReturn && state.intent === 'booking' && !bookable(state.selectedSlot); },
     get step() { return state.choosingDate ? 'dates' : 'request'; },
-    get headingLabel() { return state.paymentReturn ? 'Zahlungsstatus' : state.choosingDate ? 'Termin wählen' : state.intent === 'order' ? 'Publikation anfragen' : 'Buchung anfragen'; },
+    get headingLabel() { return state.paymentReturn ? 'Zahlungsstatus' : state.choosingDate ? 'Termin wählen' : state.intent === 'order' ? 'Publikation anfragen' : state.isInquiry ? 'Termin anfragen' : 'Plätze buchen'; },
     get canPayOnline() { return !!getConfig('iss/booking').mollieEnabled && state.intent === 'booking' && Number(state.selectedSlot?.amount) > 0; },
     get onlinePayment() { return state.canPayOnline && state.paymentMethod === 'mollie'; },
-    get submitLabel() { return state.onlinePayment ? 'Weiter zur Testzahlung' : 'Anfrage senden'; },
-    get submitNotice() { return state.onlinePayment ? 'Testzahlung ohne echtes Geld. Ihre Buchung wird gespeichert; das Team bestätigt die Plätze anschließend persönlich.' : 'Mit dem Absenden stellen Sie eine Anfrage. Eine Buchung oder Zahlung ist damit noch nicht bestätigt.'; },
+    get submitLabel() { return state.onlinePayment ? 'Weiter zur Testzahlung' : state.isBooking ? 'Verbindlich buchen' : 'Anfrage senden'; },
+    get submitNotice() { return state.isBooking && state.selectedSlot?.test_mode && !state.onlinePayment ? 'Testbuchung: keine echte Reservierung und keine Zahlung. Dieser Termin dient der Funktionsprüfung.' : state.onlinePayment ? 'Testzahlung ohne echtes Geld. Ihre Plätze werden für 15 Minuten reserviert. Die Bestätigung erfolgt nach erfolgreicher Zahlung.' : state.isBooking ? 'Mit dem Absenden buchen Sie die ausgewählten Plätze. Den Restbetrag bezahlen Sie vor Ort.' : 'Mit dem Absenden stellen Sie eine Anfrage. Eine Buchung oder Zahlung ist damit noch nicht bestätigt.'; },
     get selectedTimeLabel() { return state.selectedSlot ? timeLabel(state.selectedSlot) : ''; },
     get noSlots() { return state.slots.length === 0; },
     get noDay() { return state.day === ''; },
@@ -183,7 +184,7 @@ const { state, actions } = store('iss/booking', {
         source: { ...source }, slots: [], day: '', slotId: '', intent: source.intent, picker: { month: '', focusDay: '' },
         open: true, loading: false, failed: false, submitting: false, submitted: false,
         inquiryAllowed: false, status: '',
-        paymentMethod: 'onsite', paymentReturn: false, checkoutUrl: '', paymentSummary: '', paymentSourceUrl: '',
+        voucherCode: '', paymentMethod: 'onsite', paymentReturn: false, checkoutUrl: '', paymentSummary: '', paymentSourceUrl: '',
         requestKey: Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join(''),
         loadedAt: Math.floor(Date.now() / 1000), customerName: '', email: '', preferredDate: '', preferredTime: '', quantity: 1, reducedQuantity: 0,
       });
@@ -274,7 +275,7 @@ const { state, actions } = store('iss/booking', {
     },
     input() {
       const { ref } = getElement();
-      const property = { name: 'customerName', email: 'email', preferred_date: 'preferredDate', preferred_time: 'preferredTime', quantity: 'quantity', reduced_quantity: 'reducedQuantity', payment: 'paymentMethod' }[ref.name];
+      const property = { name: 'customerName', email: 'email', preferred_date: 'preferredDate', preferred_time: 'preferredTime', quantity: 'quantity', reduced_quantity: 'reducedQuantity', payment: 'paymentMethod', voucher_code: 'voucherCode' }[ref.name];
       if (property) state[property] = ref.value;
     },
     *refreshPayment() {
@@ -286,8 +287,13 @@ const { state, actions } = store('iss/booking', {
         const result = yield response.json();
         if (!response.ok || !result.ok) throw new Error(result.error || 'Zahlungsstatus derzeit nicht prüfbar.');
         if (version !== generation) return;
-        const messages = { paid: 'Testzahlung erfolgreich. Ihre Buchung ist zur persönlichen Bestätigung beim Team gespeichert.', open: 'Die Testzahlung ist noch offen.', pending: 'Die Testzahlung wird noch verarbeitet.', authorized: 'Die Testzahlung wurde autorisiert, aber noch nicht abgeschlossen.', failed: 'Die Testzahlung ist fehlgeschlagen. Es wurde keine Zahlung bestätigt.', canceled: 'Die Testzahlung wurde abgebrochen.', expired: 'Die Testzahlung ist abgelaufen.', creating: 'Die Zahlungsanfrage wird noch geprüft. Bitte kontaktieren Sie uns, falls dieser Status bestehen bleibt.', refunded: 'Die Testzahlung wurde erstattet.', partially_refunded: 'Die Testzahlung wurde teilweise erstattet.', charged_back: 'Für diese Testzahlung liegt eine Rückbuchung vor.' };
+        const messages = { paid: 'Testzahlung erfolgreich.', open: 'Die Testzahlung ist noch offen.', pending: 'Die Testzahlung wird noch verarbeitet.', authorized: 'Die Testzahlung wurde autorisiert, aber noch nicht abgeschlossen.', failed: 'Die Testzahlung ist fehlgeschlagen. Es wurde keine Zahlung bestätigt.', canceled: 'Die Testzahlung wurde abgebrochen.', expired: 'Die Testzahlung ist abgelaufen.', creating: 'Die Zahlungsanfrage wird noch geprüft. Bitte kontaktieren Sie uns, falls dieser Status bestehen bleibt.', refunded: 'Die Testzahlung wurde erstattet.', partially_refunded: 'Die Testzahlung wurde teilweise erstattet.', charged_back: 'Für diese Testzahlung liegt eine Rückbuchung vor.' };
         state.status = messages[result.payment_status] || 'Die Zahlung ist noch nicht bestätigt.';
+        if (result.booking_state === 'confirmed') state.status += ' Ihre Buchung ist bestätigt.';
+        if (result.booking_state === 'payment_exception') state.status += ' Es konnten keine Plätze bestätigt werden. Bitte kontaktieren Sie uns zur Klärung oder Erstattung.';
+        if (result.booking_state === 'expired') state.status += ' Die Platzreservierung ist abgelaufen.';
+        if (result.booking_state === 'cancelled') state.status += ' Die Buchung wurde storniert.';
+        if (result.booking_state === 'pending' && result.hold_expires_at) state.status += ` Plätze reserviert bis ${new Date(result.hold_expires_at.replace(' ', 'T') + 'Z').toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Berlin' })} Uhr.`;
         state.paymentSummary = `Buchung #${result.booking_id} · ${result.title} · ${price(result.amount_cents)}`;
         state.checkoutUrl = result.checkout_url || ''; state.paymentSourceUrl = result.source_url || '';
       } catch (error) { if (version === generation) state.status = error.message || 'Zahlungsstatus derzeit nicht prüfbar.'; }
@@ -310,7 +316,7 @@ const { state, actions } = store('iss/booking', {
         tickets: state.totalQuantity, quantity: state.totalQuantity,
         reduced_tickets: state.hasReducedTickets ? Number(state.reducedQuantity) : 0, payment: state.onlinePayment ? 'mollie' : 'onsite',
         slot_id: slot?.id || '', start: state.isInquiry ? `${values.preferred_date}${values.preferred_time ? `T${values.preferred_time}:00` : ''}` : slot?.start || '',
-        website: values.website || '', loaded_at: state.loadedAt, request_key: state.requestKey,
+        voucher_code: state.intent === 'booking' ? (values.voucher_code || '') : '', website: values.website || '', loaded_at: state.loadedAt, request_key: state.requestKey,
       };
       state.submitting = true; state.status = 'Anfrage wird gesendet …';
       try {
@@ -321,10 +327,10 @@ const { state, actions } = store('iss/booking', {
         if (!response.ok || !result.ok) throw new Error(response.status === 403 ? 'Die Sitzung ist abgelaufen. Bitte die Seite neu laden und erneut versuchen.' : result.error || 'Die Anfrage wurde abgelehnt. Bitte prüfen Sie Ihre Angaben.');
         if (version === generation) {
           state.submitted = true;
-          if (payload.payment === 'mollie') {
+          if (payload.payment === 'mollie' && result.booking_state !== 'confirmed') {
             state.status = 'Sie werden zur Testzahlung weitergeleitet …';
             location.assign(result.checkout_url || result.return_url);
-          } else { state.status = 'Vielen Dank. Ihre Anfrage wurde gespeichert. Wir melden uns zur Bestätigung bei Ihnen.'; }
+          } else { state.status = result.booking_state === 'confirmed' ? `Ihre Buchung ${result.booking_reference || ''} ist bestätigt.${result.voucher_cents ? ' Gutschein angerechnet.' : ''}` : 'Vielen Dank. Ihre Anfrage wurde gespeichert. Wir melden uns zur Bestätigung bei Ihnen.'; }
         }
       } catch (error) {
         if (version === generation) state.status = error instanceof TypeError ? 'Netzwerkfehler. Bitte erneut versuchen; Ihre Angaben bleiben erhalten.' : error.message;

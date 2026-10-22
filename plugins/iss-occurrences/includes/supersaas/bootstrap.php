@@ -578,6 +578,8 @@ function iss_occurrences_get_booking_slots(array $args = []): array {
         }
         $slot = [
             'id' => $external_id,
+            'departure_id' => (int) ($item['departure_id'] ?? 0),
+            'test_mode' => !empty($item['test_mode']),
             'title' => trim((string) ($item['title'] ?? '')),
             'start' => $start,
             'end' => !empty($item['end_raw']) ? (string) $item['end_raw'] : null,

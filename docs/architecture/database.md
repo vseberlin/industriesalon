@@ -7,7 +7,7 @@ WordPress posts, post meta, terms, and `WP_Query` are the default model for norm
 - `iss-content`: private editorial Sets, their items/context links and retained audit history.
 - `iss-graph`: entity index, entity names, entity identifiers, entity evidence references, entity relations, editorial relation signals, search index, person facts, and organization facts.
 - `iss-occurrences`: public programme occurrence projection and recurrence series for indexed calendar/timeline queries.
-- `iss-commerce-lite`: lightweight public booking/order request intake, review/export/status handling, and notification state for low-volume operational handling. The request table keeps the existing `wp_iss_payments_lite_requests` name for compatibility.
+- `iss-commerce-lite`: public booking/order intake, atomic departure capacity and booking ledger, legacy voucher redemption, review/export, payment processing and staff-mail outbox. The request table keeps the existing `wp_iss_payments_lite_requests` name for compatibility.
 - `iss-archive`: archive objects, archive collections, collection members, assertions, evidence, and source snapshots.
 - `industriesalon-schoeneweide-register` (transitional): Place epoch/state and
   industry-actor projections used by the interactive Atlas while the accepted
@@ -448,15 +448,21 @@ dates use strict site-timezone validation, including nonexistent DST times.
 Booking availability is the complete source set within the existing default
 12-month horizon (owner maximum 24 months), with no silent 1000-row truncation.
 The public endpoint reads the occurrence projection and returns `no-store`;
-legacy tag-only transients cannot override current source visibility. This is
-request capture, not a capacity reservation or automatic external booking.
-Payment remains separate from staff confirmation and capacity reservations.
+legacy tag-only transients cannot override current source visibility. The commerce v5 ledger now owns seat allocation; the schedule projection delegates
+public availability to the same service used by admission. Payment state remains
+separate from booking allocation and staff workflow status.
 Schema v4 adds `provider_payment_id` (nullable unique), `payment_status`,
 `payment_checkout_url`, `payment_payload` and `payment_started_at` to the same
 request table through `ops/migrations/2026-10-22-commerce-mollie.php` with a verified
 private before-image. The optional Mollie test adapter verifies provider state;
-onsite requests keep their prior behavior. See the commerce plugin README for
-retry, receipt, callback and manual reconciliation contracts.
+schema v5 extends it with departure identity, booking state, deadlines, voucher
+credit, provider remainder and test markers. Five commerce-owned InnoDB tables
+provide departure locks, voucher balances/redemptions, append-only events and the
+mail outbox. This extends the existing owner rather than adding a second booking
+record or generic queue. The v5 migration is
+`ops/migrations/2026-10-22-commerce-ledger.php`; target-local before-images are
+mandatory. See the commerce plugin README for admission, receipt, callback,
+legacy-import and recovery contracts.
 
 Tour ticket rates use `iss-content` metadata: `booking_price_cents` and optional
 `booking_reduced_price_cents` (0 disables the reduced rate; a positive rate must

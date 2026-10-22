@@ -4,6 +4,11 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Complete real booking/voucher/mail activation after the commerce test release:
+  reconcile the nine legacy reservations and subsequent changes; verify current
+  voucher balances and one redemption authority; configure the authenticated
+  staff sender and prove mailbox delivery. Production/live payments remain a
+  separate release. See the commerce README and current handoff.
 - Complete human Firefox, screenreader, touch and 200% zoom acceptance before
   production; the [website audit corrections](docs/project/website-correction-plan-2026-10-20.md)
   are implemented and covered by Chrome, runtime and private migration checks.

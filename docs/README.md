@@ -33,6 +33,8 @@ This directory is the repo-owned source for durable project, agent, architecture
 - WordPress refactoring and native programme interactions:
   `docs/project/wordpress-refactoring-plan.md`
 - Plugin/data contract: `docs/architecture/plugin-map.md`, `docs/architecture/database.md`
+- WordPress booking capacity, ledger, legacy Gutscheine and staff mail:
+  [Booking implementation plan](project/wordpress-booking-ledger-plan.md)
 - Places JSON editor and interactive Atlas ownership migration:
   `docs/architecture/places-editorial-atlas-restructure-plan.md`
 - Archive preservation/provenance: `docs/architecture/archive-preservation-architecture-adr.md`

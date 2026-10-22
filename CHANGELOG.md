@@ -6,6 +6,20 @@ be recovered from Git history.
 
 ## 2026-10-22
 
+- Implemented the WordPress booking ledger in the existing commerce owner:
+  stable departure inventory, atomic 15-minute holds, accepted onsite allocations,
+  voucher reservations/redemptions, immutable event history, transactional payment
+  transitions and late-payment exceptions. Schedule/public availability now reads
+  commerce capacity. Native staff controls and CSV expose the same state. Added
+  the private legacy-evidence exporter/importers and staff digest outbox with a
+  bounded host minute job. These owner tables provide the missing departure lock,
+  balance history and durable mail state; no booking CPT or generic queue.
+  Capacity is 30 per departure. Private backup review identified nine future
+  legacy reservations (18 seats) and 108 vouchers; real cutover requires current
+  reconciliation and one redemption authority. Additive v5 migration preserves
+  request/payment identities; no content/uploads transfer. Local concurrency,
+  provider, migration, worker and browser checks are recorded in the handoff.
+
 - Added Mollie test checkout to the existing booking request and shared native
   dialog, with verified webhooks and an uncached receipt. Server-owned prices,
   durable payment binding, frozen idempotent creation and per-booking locks

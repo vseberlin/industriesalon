@@ -113,7 +113,7 @@ function iss_programm_render_calendar_modal_host(): void {
                 <fieldset class="is-tour-calendar__form-fields" data-wp-bind--hidden="state.choosingDate" data-wp-bind--disabled="state.fieldsDisabled">
                     <div class="is-tour-calendar__request-details">
                     <div class="is-tour-calendar__request-summary" data-wp-bind--hidden="state.hideSlots">
-                        <p><?php esc_html_e('Bitte bestätigen Sie Ihre Anfrage für folgenden Termin:', 'iss-programm'); ?></p>
+                        <p><?php esc_html_e('Ihre Buchung für folgenden Termin:', 'iss-programm'); ?></p>
                         <p><strong data-wp-text="state.selectedDateLabel"></strong><br><span data-wp-text="state.selectedTimeLabel"></span></p>
                         <button type="button" class="is-tour-calendar__form-switch" data-wp-on--click="actions.chooseBooking"><?php esc_html_e('Termin ändern', 'iss-programm'); ?></button>
                     </div>
@@ -130,6 +130,9 @@ function iss_programm_render_calendar_modal_host(): void {
                         <label class="is-tour-calendar__field" data-wp-bind--hidden="state.isInquiry"><span data-wp-text="state.quantityLabel"><?php esc_html_e('Anzahl', 'iss-programm'); ?></span><input name="quantity" type="number" min="1" value="1" data-wp-bind--min="state.minQuantity" data-wp-bind--max="state.maxQuantity" data-wp-bind--value="state.quantity" data-wp-bind--required="state.needsQuantity" data-wp-bind--disabled="state.isInquiry" data-wp-on--input="actions.input" aria-describedby="iss-booking-quantity-error"></label>
                         <label class="is-tour-calendar__field" data-wp-bind--hidden="state.hideReducedTickets" hidden><span data-wp-text="state.reducedQuantityLabel"><?php esc_html_e('Ermäßigt', 'iss-programm'); ?></span><input name="reduced_quantity" type="number" min="0" value="0" data-wp-bind--max="state.maxQuantity" data-wp-bind--value="state.reducedQuantity" data-wp-bind--required="state.hasReducedTickets" data-wp-bind--disabled="state.reducedDisabled" data-wp-on--input="actions.input" aria-describedby="iss-booking-quantity-error"></label>
                     </div>
+                    <?php if (defined('ISS_COMMERCE_VOUCHER_KEY')) : ?>
+                    <label class="is-tour-calendar__field" data-wp-bind--hidden="!state.isBooking"><span><?php esc_html_e('Vorhandener Gutschein (optional)', 'iss-programm'); ?></span><input name="voucher_code" type="text" maxlength="191" autocomplete="off" data-wp-bind--value="state.voucherCode" data-wp-on--input="actions.input"><small><?php esc_html_e('Gültiges Guthaben wird angerechnet. Ein Restbetrag wird mit der gewählten Zahlungsart bezahlt.', 'iss-programm'); ?></small></label>
+                    <?php endif; ?>
                     <p id="iss-booking-quantity-error" aria-live="polite" data-wp-text="state.quantityError"></p>
                     <p data-wp-bind--hidden="state.isInquiry" data-wp-text="state.priceLabel"></p>
                     <label class="is-tour-calendar__field" data-wp-bind--hidden="!state.canPayOnline" hidden><span><?php esc_html_e('Zahlungsart', 'iss-programm'); ?></span><select name="payment" data-wp-bind--value="state.paymentMethod" data-wp-on--change="actions.input"><option value="onsite"><?php esc_html_e('Zahlung vor Ort', 'iss-programm'); ?></option><option value="mollie"><?php esc_html_e('Online bezahlen – Testzahlung', 'iss-programm'); ?></option></select></label>

@@ -20,7 +20,7 @@ add_filter('pre_wp_mail', $mail, 10, 2); add_action('iss_payments_lite_request_c
 $with_filter = static function (callable $filter, callable $call) { add_filter('query', $filter); try { return $call(); } finally { remove_filter('query', $filter); } };
 $created = []; $temporary = []; $error = null; $stage = 'setup'; $old_suppression = $db->suppress_errors(true);
 $read = static fn(): array => $db->get_results("SELECT * FROM `$table` ORDER BY id", ARRAY_A);
-$reset = static function () use ($db,$table,&$sent,&$events,&$messages): void { if ($db->query("DELETE FROM `$table`") === false) { throw new RuntimeException('Cannot reset requests'); } $sent = 0; $events = []; $messages = []; delete_transient(iss_payments_lite_rate_limit_key('commerce-request')); };
+$reset = static function () use ($db,$table,&$sent,&$events,&$messages): void { foreach (['events','redemptions'] as $role) { ISS_Commerce_Ledger::execute('DELETE FROM %i', [ISS_Commerce_Ledger::table($role)]); } if ($db->query("DELETE FROM `$table`") === false) { throw new RuntimeException('Cannot reset requests'); } $sent = 0; $events = []; $messages = []; delete_transient(iss_payments_lite_rate_limit_key('commerce-request')); };
 $payload = static fn(string $kind = 'inquiry', string $key = 'fixture-request-0001'): array => ['intent' => $kind, 'source_post_id' => $kind === 'order' ? $base + 1 : $base, 'source_post_type' => $kind === 'order' ? 'publication' : 'veranstaltung', 'name' => 'Fixture visitor', 'email' => 'visitor@example.invalid', 'tickets' => 2, 'quantity' => 2, 'payment' => 'onsite', 'slot_id' => 'fixture-slot', 'start' => '2030-11-01T12:00:00', 'request_key' => $key, 'loaded_at' => time() - 10];
 $request = new WP_REST_Request('POST', '/iss-payments/v1/request');
 $call = static fn(array $data): WP_REST_Response => iss_payments_lite_process_request_payload($data, $request);
@@ -36,8 +36,9 @@ try {
     foreach ([$base => ['iss_booking_enabled' => '1','iss_booking_price_cents' => '1000'], $base + 1 => ['_iss_publication_sale_enabled' => '1','_iss_publication_price_cents' => '600'], $base + 2 => ['booking_price_cents' => '1400', 'booking_reduced_price_cents' => '1000', 'booking_mode' => 'calendar']] as $id => $meta) {
         foreach ($meta as $key => $value) { $expect($db->insert($db->postmeta, ['post_id' => $id, 'meta_key' => $key, 'meta_value' => $value]) === 1, 'Seed owner metadata'); }
     }
-    $expect($db->query("CREATE TABLE `$options` LIKE `$real_options`") !== false, 'Isolated options/transients'); $created[] = $options; $created[] = $table;
+    $expect($db->query("CREATE TABLE `$options` LIKE `$real_options`") !== false, 'Isolated options/transients'); $created[] = $options;
     $db->prefix = $prefix; $db->options = $options; wp_cache_flush();
+    foreach (iss_payments_lite_schema_statements() as $schema) { preg_match('/CREATE TABLE (\w+)/', $schema, $match); $created[] = $match[1]; }
     iss_payments_lite_install_schema(); update_option('timezone_string', 'Europe/Berlin');
     iss_payments_lite_update_settings(['notifications_enabled' => true, 'notification_email' => 'fixture@example.invalid', 'require_nonce' => true, 'min_submit_seconds' => 3]);
     $occurrences = iss_occurrences_get_service();
@@ -45,6 +46,14 @@ try {
     $occurrences->install_schema(); $occurrence_table = $occurrences->get_occurrences_table_name();
     $expect($db->insert($occurrence_table, ['source_post_id' => $base, 'source_post_type' => 'veranstaltung', 'kind' => 'event', 'title' => 'Fixture', 'starts_at' => gmdate('Y-m-d H:i:s', time() + DAY_IN_SECONDS), 'external_id' => 'fixture-slot', 'capacity_available' => 10, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00']) === 1, 'Seed future booking availability');
     $expect($db->insert($occurrence_table, ['source_post_id' => $base + 2, 'source_post_type' => 'fuehrung', 'kind' => 'tour', 'title' => 'Fixture tour – Spezial', 'origin' => 'supersaas', 'starts_at' => gmdate('Y-m-d H:i:s', time() + DAY_IN_SECONDS), 'external_id' => 'tour-fixture-slot', 'capacity_available' => 10, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00']) === 1, 'Seed tour availability');
+    ISS_Commerce_Ledger::sync_schedule();
+    $set_capacity = static function (int $source, int $capacity): void {
+        foreach (ISS_Commerce_Ledger::rows('SELECT id FROM %i WHERE source_post_id = %d', [ISS_Commerce_Ledger::table('departures'), $source]) as $departure) {
+            ISS_Commerce_Ledger::configure((int) $departure['id'], $capacity, true, true, 'Isolated fixture', true);
+        }
+    };
+    $set_capacity($base, 10); $set_capacity($base + 2, 10);
+    include __DIR__ . '/commerce-schedule.php';
     include __DIR__ . '/commerce-mollie.php';
     $stage = 'reduced_tickets';
     $tour = array_replace($payload('booking'), ['source_post_id' => $base + 2, 'source_post_type' => 'fuehrung', 'slot_id' => 'tour-fixture-slot', 'tickets' => 3, 'reduced_tickets' => 2]);
@@ -93,9 +102,9 @@ try {
         $expect(!isset($slots[0]['reduced_amount']) && $call($tour)->get_status() === 400 && !$read() && !$sent, 'Disabled or invalid reduced rates are neither offered nor accepted');
     }
     $db->update($db->postmeta, ['meta_value' => '1000'], ['post_id' => $base + 2, 'meta_key' => 'booking_reduced_price_cents']); wp_cache_delete($base + 2, 'post_meta');
-    $db->update($occurrence_table, ['capacity_available' => 2], ['source_post_id' => $base + 2]);
+    $set_capacity($base + 2, 2);
     $expect($call($tour)->get_status() === 400 && !$read() && !$sent, 'Capacity applies to the combined regular and reduced count');
-    $db->update($occurrence_table, ['capacity_available' => 10], ['source_post_id' => $base + 2]);
+    $set_capacity($base + 2, 10);
     foreach (['booking','inquiry','order'] as $kind) {
         $stage = $kind . '_retry'; $reset(); $data = $payload($kind);
         $expect($call($data)->get_status() === 200 && count($read()) === 1 && $sent === 1 && count($events) === 1, 'Initial request persists and dispatches once');
@@ -112,9 +121,10 @@ try {
     $expect($call($data)->get_status() === 200 && count($read()) === 1 && $sent === 1, 'Committed replay survives later sold-out state');
     $db->update($occurrence_table, ['capacity_available' => 10], ['source_post_id' => $base]);
     $stage = 'current_validation'; $reset(); $data = $payload('booking');
-    $db->update($occurrence_table, ['capacity_available' => 1], ['source_post_id' => $base]);
+    $set_capacity($base, 1);
     $expect($call($data)->get_status() === 400 && !$read() && !$sent, 'Current capacity rejects excess requested quantity');
-    $db->update($occurrence_table, ['capacity_available' => 10, 'availability_state' => 'cancelled'], ['source_post_id' => $base]);
+    $set_capacity($base, 10);
+    $db->update($occurrence_table, ['capacity_available' => 0, 'availability_state' => 'cancelled'], ['source_post_id' => $base]);
     $expect($call($data)->get_status() === 400 && !$read() && !$sent, 'Cancelled slot cannot accept a new request');
     $db->update($occurrence_table, ['availability_state' => ''], ['source_post_id' => $base]);
     $data['start'] = '1900-01-01'; $data['title'] = 'Forged title';
