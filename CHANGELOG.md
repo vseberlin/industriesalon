@@ -19,6 +19,10 @@ be recovered from Git history.
   reconciliation and one redemption authority. Additive v5 migration preserves
   request/payment identities; no content/uploads transfer. Local concurrency,
   provider, migration, worker and browser checks are recorded in the handoff.
+  Staging migration, sandbox checkout/callback/receipt, duplicate callbacks,
+  Mailpit capture and minute-cron health passed. Settled booking cancellations
+  survive reconciliation; stale paid snapshots cannot erase a partial refund.
+  Target accounts and existing requests were preserved; real activation stays gated.
 
 - Added Mollie test checkout to the existing booking request and shared native
   dialog, with verified webhooks and an uncached receipt. Server-owned prices,

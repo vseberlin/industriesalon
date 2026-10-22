@@ -160,7 +160,7 @@ is not a safe rollback for open inventory.
 Isolated suites: `commerce-idempotency.php` (including Mollie and schedule tests),
 `commerce-migration.php`, `commerce-ledger.php`, `commerce-worker.php` and
 `commerce-mailpit.php` under `tests/e2e/bin/`; JS store tests are in
-`booking-tickets.cjs`. Run with cron disabled and process-local caches. Ledger
+`booking-tickets.cjs`. Run with cron disabled and process-local caches. The
 admin rendering in `commerce-idempotency.php` also needs WP-CLI `--user=ID` for
 an existing authorized staff user; it does not change that account. Ledger
 setup returns a private fixture receipt; launch ten independent `worker` commands

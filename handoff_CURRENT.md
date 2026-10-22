@@ -1,25 +1,25 @@
 # Current handoff — 22 October 2026
 
 Website source is `/home/vladimir/wp-website`; staging checkout is
-`/srv/industriesalon/stage/repo`. The last deployed baseline is `e1dc25d`.
-The booking upgrade is implemented and verified locally, pending the staging
-release below. Production is untouched; staging remains noindex.
+`/srv/industriesalon/stage/repo`. Commerce 0.5.0 is deployed through GitHub
+(`4666d81`, final code correction `9531b65`). Local and staging acceptance passed.
+Production is untouched; staging remains noindex and uses test inventory/payments.
 
 ## Commerce upgrade and activation boundary
 
-The five-slice WordPress booking upgrade is implemented locally in
+The five-slice WordPress booking upgrade is implemented and deployed in
 `iss-commerce-lite` 0.5.0. The [commerce contract](plugins/iss-commerce-lite/README.md)
 is the implementation/operations record; the [plan](docs/project/wordpress-booking-ledger-plan.md)
 records the agreed scope. WordPress owns capacity; SuperSaaS supplies schedules.
-The v5 additive migration is applied locally with a verified private before-image.
-All three original local requests remain unchanged.
+The v5 additive migration is applied locally and on staging with verified private
+before-images. It preserved all three local and all six staging requests. Target
+users/usermeta are unchanged; existing payment callbacks continue normally.
 
 Capacity is **30 people per departure**, explicitly confirmed by the user.
-Local rehearsal has 23 test departures. Nine legacy reservations (18 seats)
+Local and staging each have 23 test departures. Nine legacy reservations (18 seats)
 map to three departures and are retained in `legacy_review`; those departures
-remain closed. Other local departures are open only as labelled test inventory.
-The local browser acceptance booking is explicitly canceled and retains its
-history. Real inventory activation requires current reservation reconciliation.
+remain closed. The other 20 departures are open only as labelled test inventory.
+Browser acceptance allocations are explicitly canceled and retain their history. Real inventory activation requires current reservation reconciliation.
 
 The private SQL backup contains 2,283 historic bookings, including nine future
 reservations (one paid/eight unpaid). The newer private YITH snapshot preserves
@@ -28,22 +28,28 @@ validation and remain review-only; no real balances were imported or consumed.
 Reconcile subsequent usage and establish one redemption authority before real
 activation. Never put customer records/codes in Git or alter the source backups.
 Private manifests, receipts and configuration before-image are under
-`var/booking-upgrade-20261022/`. The local voucher lookup key is private to its
-WordPress configuration and must be preserved across releases.
+`var/booking-upgrade-20261022/` locally and staging
+`/srv/industriesalon/stage/var/commerce-upgrade-20261022/`. Each target has its own
+private voucher lookup key in WordPress configuration; preserve it across releases.
 
-Local verification: 216 isolated request/payment/schedule assertions, 16 migration
-checks, real ten-process seat admission (exactly three of ten for three seats),
-concurrent voucher conservation, ledger/worker rollback and lease tests, 11 JS
-store tests, PHP syntax, targeted PHPCS/PHPStan and ESLint. Chrome proved mixed
+Local verification: 218 request/payment/schedule assertions, 16 migration checks,
+25 ledger assertions including real ten-process admission (three of ten for three
+seats), concurrent voucher conservation, 16 worker assertions, 11 JS store tests,
+PHP syntax, targeted PHPCS/PHPStan and ESLint. Chrome proved mixed
 regular/reduced onsite confirmation and the 390px form without overflow. Staff
 screen rendering is covered by CLI; the browser requires the normal staff login.
-Mailpit SMTP/API readback verified the UTF-8 zero-booking digest. Actual delivery
-to the staff mailbox remains unverified until authenticated sender setup.
+Staging Chrome proved the hosted Mollie sandbox payment, automatic callback
+confirmation, persisted receipt and a 390px receipt without overflow. Repeated
+HTTP callbacks caused no duplicate effects. Staff cancellation remains canceled
+after provider reconciliation; synthetic booking #18 consumes zero seats.
+Mailpit SMTP/API readback passed locally and on staging, including UTF-8 and the
+zero-booking digest. Staff browser interaction still needs the normal staff login.
 
-Next operational step: deploy code through GitHub, apply target-local v5 migration,
-rehearse private reservation mappings, install the independent commerce minute
-runner and verify staging callbacks/receipts, routes and worker health. Mail stays
-disabled pending authenticated sender information; live payment keys are refused.
+The independent commerce minute job is installed and actual cron runs are fresh
+and successful. Host receipts/logs are under `/srv/industriesalon/stage/var/commerce/`.
+Mail stays disabled pending authenticated sender setup and mailbox-delivery proof;
+live payment keys are refused. The next operational step is current reservation
+and voucher reconciliation plus one redemption authority before real cutover.
 Existing non-commerce cron ownership and broader maintenance remain separate.
 No uploads/content transfer is required. Preserve target accounts/authentication.
 Do not restore old tables over later requests, redemptions or event history.
@@ -60,7 +66,7 @@ and callbacks perform provider verification. Local runtime has no provider key.
 The preceding Place review/contribution update remains intact. Its private
 evidence is in `var/place-contributions-20261022/` and
 `var/register-review-20261022/`; implementation history is in Git/CHANGELOG.
-All 84 canonical documents, local-only Places, ADMOS draft, upstream component
+Canonical documents (191 valid on staging), local-only Places, ADMOS draft, upstream component
 mapping, editorial history/media/relations and qualified source conflicts remain
 protected. Existing signed upload generations and private intake moderation
 must not be overwritten by historical backups.
@@ -76,7 +82,7 @@ Project UAT retains its existing picker permissions.
 Staging/touchtable PHP 8.3.36 emergency images remain active. Their separately
 scoped maintenance is replacement with a verified patched official image under
 [the runtime procedure](docs/infrastructure/staging.md#php-runtime-security-update).
-Last verified staging containers and commerce checks were healthy. Git deployment must
+Final staging routes, containers, worker and PHP log checks passed. Git deployment must
 use the ordinary source-file umask (`022`); scope private backup permissions to
 the private files, so newly checked-out PHP remains readable by FPM.
 

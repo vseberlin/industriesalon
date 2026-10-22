@@ -1,6 +1,6 @@
 # WordPress booking ledger and legacy voucher redemption plan
 
-Date: 22 October 2026. Status: implemented locally; staging acceptance and operational activation are in progress.
+Date: 22 October 2026. Status: implemented and accepted on staging; real inventory, voucher cutover and staff-mail delivery retain the activation gates below.
 
 WordPress will own departure capacity, seat reservations, bookings, voucher
 redemption and the operational ledger. SuperSaaS supplies scheduling information
@@ -278,10 +278,11 @@ an old whole table over newer bookings, redemptions or event history on rollback
 ## Next action and prerequisites
 
 Implementation and repeatable operations now live in the commerce plugin README.
-Complete target migration, staging acceptance and scheduler installation. Capacity values and existing real reservations
-must be confirmed before opening departures. Current voucher balances/terms and
-the authenticated mail sender are prerequisites for their later activation,
-not blockers to building the first isolated slice.
+Target migration, staging sandbox acceptance and the independent minute scheduler
+are complete. The user confirmed capacity 30 per departure. Reconcile the private
+legacy reservations and subsequent changes before opening real departures. Verify
+current voucher balances/terms and one redemption authority; configure the
+authenticated staff sender and prove mailbox delivery before enabling it.
 
 The implementation uses the additive v5 owner migration and private target-local
 before-images. Current verification, deployment and remaining activation gates
