@@ -5,6 +5,18 @@ Website source is `/home/vladimir/wp-website`; staging checkout is
 (`4666d81`, final code correction `9531b65`). Local and staging acceptance passed.
 Production is untouched; staging remains noindex and uses test inventory/payments.
 
+## Tour panel consistency
+
+Shared Führungen panel fix `b54eae9` is deployed locally and on staging. All 16
+published tours passed browser layout checks at 1920, 1024 and 390px on both
+targets: uniform panel widths, readable dates/status labels and no horizontal
+overflow. The Kiez booking link still opens the selected-date form. Targeted
+Stylelint, PHP syntax/PHPCS and native template roundtrip passed. The site editor
+loads the native Groups with no hero validation warnings and no unsaved changes;
+an existing footer image validation warning is separate from this change.
+The theme owns `single-fuehrung`; no DB/content/uploads transfer is required.
+Private layout receipts are in `var/tour-panels-20261022/` locally.
+
 ## Commerce upgrade and activation boundary
 
 The five-slice WordPress booking upgrade is implemented and deployed in
