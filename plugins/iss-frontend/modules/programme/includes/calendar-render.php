@@ -223,7 +223,7 @@ function iss_programm_render_tour_dates($attributes = [], $content = '') {
         $slot_start = isset($data['start_raw']) ? trim((string) $data['start_raw']) : '';
         $slot_title = isset($data['title']) ? trim((string) $data['title']) : '';
         if ($slot_title !== '' && $slot_title !== get_the_title($post_id)) {
-            $label_html .= '<span>' . esc_html($slot_title) . '</span>';
+            $label_html .= '<span class="iss-tour-dates__name">' . esc_html($slot_title) . '</span>';
         }
 
         $out .= '<li class="iss-tour-dates__item">';

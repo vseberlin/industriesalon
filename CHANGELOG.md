@@ -6,6 +6,13 @@ be recovered from Git history.
 
 ## 2026-10-22
 
+- Unified the shared Führungen hero grid and information panel with the
+  Elektropolis proportions. Native Group blocks replace the forced Columns
+  layout; booking labels wrap without squeezing dates, and slot descriptions
+  use the shared compact typography. All 16 published tours passed desktop,
+  tablet and mobile layout checks. Theme-owned template; no database or uploads
+  artifact is required.
+
 - Implemented the WordPress booking ledger in the existing commerce owner:
   stable departure inventory, atomic 15-minute holds, accepted onsite allocations,
   voucher reservations/redemptions, immutable event history, transactional payment
