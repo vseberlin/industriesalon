@@ -6,6 +6,19 @@ be recovered from Git history.
 
 ## 2026-10-22
 
+- Added Mollie test checkout to the existing booking request and shared native
+  dialog, with verified webhooks and an uncached receipt. Server-owned prices,
+  durable payment binding, frozen idempotent creation and per-booking locks
+  prevent duplicate charges and forged payment confirmation. Staff workflow and
+  SuperSaaS seat handling remain separate. Provider status is visible in the
+  existing request admin/CSV; no new table, queue, SDK or frontend skin.
+  The additive owner migration preserves existing requests in a private verified
+  before-image; no uploads/content artifact. Live keys are refused and new
+  checkout requires private target configuration. Validation: 206 isolated PHP
+  assertions, 16 migration checks, nine JavaScript store tests, lint and static
+  analysis; staging browser/provider acceptance follows deployment.
+
+
 - Removed public supplier repository citations from 41 Place documents and
   related fact/timeline wording, retaining the internal import provenance.
   Public milestone reads omit supplier audit fields; reviewed summary revisions

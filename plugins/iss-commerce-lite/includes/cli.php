@@ -9,6 +9,27 @@ if (!defined('ABSPATH')) {
 if (defined('WP_CLI') && WP_CLI) {
     final class ISS_Payments_Lite_CLI_Command
     {
+        /**
+         * Refresh a known payment, or recover a lost create response using its dashboard ID.
+         *
+         * ## OPTIONS
+         * <booking-id>
+         * [--payment-id=<id>]
+         */
+        public function payment_refresh(array $args, array $assoc_args): void
+        {
+            $id = (int) ($args[0] ?? 0);
+            $payment_id = (string) ($assoc_args['payment-id'] ?? '');
+            if ($id <= 0 || ($payment_id !== '' && !preg_match('/^tr_[A-Za-z0-9]{5,60}$/D', $payment_id))) {
+                \WP_CLI::error('Supply a booking ID and, for recovery, its Mollie payment ID.');
+            }
+            try {
+                $row = $payment_id === '' ? iss_commerce_mollie_payment($id, false)
+                    : iss_commerce_payment_lock($id, static fn(array $row): array => iss_commerce_mollie_accept($row, iss_commerce_mollie_api('GET', 'payments/' . rawurlencode($payment_id))));
+                \WP_CLI::success(sprintf('Booking #%d: %s (%s).', $id, $row['payment_status'], $row['provider_payment_id'] ?: 'no provider binding'));
+            } catch (RuntimeException $error) { \WP_CLI::error($error->getMessage()); }
+        }
+
         public function verify(array $args, array $assoc_args): void
         {
             global $wpdb;

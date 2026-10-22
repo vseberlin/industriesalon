@@ -1551,7 +1551,7 @@ function iss_content_model_render_veranstaltung_booking_box($post): void
     echo '<input class="widefat" type="text" id="iss_booking_cta_label" name="iss_content_model[iss_booking_cta_label]" value="' . esc_attr($booking_cta_label) . '" placeholder="' . esc_attr__('Tickets buchen', 'iss-content-model') . '"></p>';
     echo '<p class="iss-veranstaltung-admin__field"><label for="iss_booking_gateway_description"><strong>' . esc_html__('Buchungshinweis', 'iss-content-model') . '</strong></label>';
     echo '<textarea class="widefat" rows="3" id="iss_booking_gateway_description" name="iss_content_model[iss_booking_gateway_description]">' . esc_textarea($booking_gateway_description) . '</textarea>';
-    echo '<span class="description">' . esc_html__('Mollie ist vorbereitet, aber bis zur Provider-Anbindung deaktiviert; Anfragen werden lokal gespeichert.', 'iss-content-model') . '</span></p>';
+    echo '<span class="description">' . esc_html__('Anfragen werden in ISS Anfragen gespeichert. Online-Testzahlungen sind nur bei konfigurierter Mollie-Anbindung verfügbar; Plätze bestätigt das Team persönlich.', 'iss-content-model') . '</span></p>';
     echo '</div>';
 }
 

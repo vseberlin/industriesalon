@@ -11,13 +11,13 @@ $expect(defined('DISABLE_WP_CRON') && DISABLE_WP_CRON && !wp_using_ext_object_ca
 $real_prefix = $db->prefix; $real_options = $db->options; $real_table = iss_payments_lite_requests_table_name();
 $real_state = static fn(): array => [$db->get_results("CHECKSUM TABLE `$real_table`", ARRAY_A), $db->get_results("SELECT * FROM `$real_options` ORDER BY option_id", ARRAY_A)];
 $before_real = $real_state(); $prefix = $real_prefix . 'cm_' . bin2hex(random_bytes(4)) . '_'; $table = $prefix . 'iss_payments_lite_requests'; $options = $prefix . 'options';
-$run = static function (array $args): void { include ABSPATH . 'ops/migrations/2026-10-11-commerce-idempotency.php'; };
+$run = static function (array $args): void { include ABSPATH . 'ops/migrations/2026-10-22-commerce-mollie.php'; };
 $old_suppression = $db->suppress_errors(true);
 try {
     $expect($db->query("CREATE TABLE `$options` LIKE `$real_options`") !== false, 'Isolated options'); $created[] = $options; $created[] = $table;
     $db->prefix = $prefix; $db->options = $options; wp_cache_flush();
     $sql = iss_payments_lite_schema_statements()[0];
-    $sql = preg_replace('/^\s*(?:request_key char|request_fingerprint char|UNIQUE KEY request_key).*\n/m', '', $sql);
+    $sql = preg_replace('/^\s*(?:request_key char|request_fingerprint char|provider_payment_id varchar|payment_status varchar|payment_checkout_url varchar|payment_payload longtext|payment_started_at datetime|UNIQUE KEY request_key|UNIQUE KEY provider_payment_id).*\n/m', '', $sql);
     $sql = preg_replace('/,\s*\)/', "\n    )", $sql);
     $expect($db->query($sql) !== false, 'Install historical v2 fixture');
     update_option(ISS_PAYMENTS_LITE_SCHEMA_OPTION, '2026-06-13-requests-v2', false);

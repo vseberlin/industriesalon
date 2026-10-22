@@ -45,6 +45,7 @@ try {
     $occurrences->install_schema(); $occurrence_table = $occurrences->get_occurrences_table_name();
     $expect($db->insert($occurrence_table, ['source_post_id' => $base, 'source_post_type' => 'veranstaltung', 'kind' => 'event', 'title' => 'Fixture', 'starts_at' => gmdate('Y-m-d H:i:s', time() + DAY_IN_SECONDS), 'external_id' => 'fixture-slot', 'capacity_available' => 10, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00']) === 1, 'Seed future booking availability');
     $expect($db->insert($occurrence_table, ['source_post_id' => $base + 2, 'source_post_type' => 'fuehrung', 'kind' => 'tour', 'title' => 'Fixture tour – Spezial', 'origin' => 'supersaas', 'starts_at' => gmdate('Y-m-d H:i:s', time() + DAY_IN_SECONDS), 'external_id' => 'tour-fixture-slot', 'capacity_available' => 10, 'created_at' => '2026-01-01 00:00:00', 'updated_at' => '2026-01-01 00:00:00']) === 1, 'Seed tour availability');
+    include __DIR__ . '/commerce-mollie.php';
     $stage = 'reduced_tickets';
     $tour = array_replace($payload('booking'), ['source_post_id' => $base + 2, 'source_post_type' => 'fuehrung', 'slot_id' => 'tour-fixture-slot', 'tickets' => 3, 'reduced_tickets' => 2]);
     $slots = iss_occurrences_get_booking_slots(['source_post_id' => $base + 2, 'source_post_type' => 'fuehrung']);
@@ -154,7 +155,7 @@ try {
     foreach (['lookup','state','lock','inside_lookup','duplicate','insert','ignored_insert'] as $stage) {
         $reset(); $data = $payload(); $hits = 0; $lookups = 0;
         $filter = static function (string $sql) use ($stage,$table,&$hits,&$lookups): string {
-            $lookup = str_starts_with($sql, "SELECT request_kind, request_fingerprint FROM $table"); if ($lookup) { ++$lookups; }
+            $lookup = str_starts_with($sql, "SELECT request_kind, request_fingerprint, id, payment_method FROM $table"); if ($lookup) { ++$lookups; }
             $match = match ($stage) { 'lookup' => $lookup, 'inside_lookup' => $lookup && $lookups === 2, 'state' => str_contains($sql, '@@SESSION.in_transaction'), 'lock' => str_starts_with($sql, 'SELECT GET_LOCK('), 'duplicate' => str_starts_with($sql, "SELECT COUNT(*) FROM $table WHERE request_kind"), 'insert','ignored_insert' => str_starts_with($sql, "INSERT INTO `$table`") };
             if (!$match || $hits) { return $sql; } ++$hits;
             return $stage === 'ignored_insert' ? "UPDATE `$table` SET status = status WHERE id = 0" : 'SELECT iss_commerce_injected_failure';
@@ -186,7 +187,7 @@ try {
     }
     $stage = 'two_connection_same_key'; $reset(); $data = $payload(); $hits = 0;
     $filter = static function (string $sql) use ($table,$data,$entry,$request,$as_peer,&$hits): string {
-        if (!$hits && str_starts_with($sql, "SELECT request_kind, request_fingerprint FROM $table")) {
+        if (!$hits && str_starts_with($sql, "SELECT request_kind, request_fingerprint, id, payment_method FROM $table")) {
             ++$hits; $result = $as_peer(static fn() => iss_payments_lite_store_request('inquiry', $entry($data), $data, $request));
             if ($result->get_status() !== 200) { throw new RuntimeException('Peer request failed'); }
         }

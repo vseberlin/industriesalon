@@ -6,24 +6,25 @@ const { resolve } = require('node:path');
 const { runInNewContext } = require('node:vm');
 const { webcrypto } = require('node:crypto');
 
-function fixture() {
+function fixture(configOverrides = {}) {
   let definition, context = {}, element = {};
   const requests = [];
-  let fail = false;
+  let fail = false, answer = { ok: true };
+  const location = { hash: '', assign(url) { this.assigned = url; } };
   const dialog = { open: false, showModal() { this.open = true; }, querySelector() { return null; } };
   const source = readFileSync(resolve(__dirname, '../../../plugins/iss-frontend/modules/programme/assets/booking.js'), 'utf8').replace(/^import[^\n]+\n/, '');
   runInNewContext(source, {
     store(namespace, value) { assert.equal(namespace, 'iss/booking'); definition = value; return value; },
     getContext: () => context, getElement: () => ({ ref: element }),
-    getConfig: () => ({ today: '2026-10-20', requestUrl: '/fixture/request', nonce: 'fixture' }),
+    getConfig: () => ({ today: '2026-10-20', requestUrl: '/fixture/request', nonce: 'fixture', paymentStatusUrl: '/fixture/payment-status', ...configOverrides }),
     withSyncEvent: fn => fn,
     document: { getElementById: () => dialog, activeElement: null, body: {} },
-    requestAnimationFrame: fn => fn(), crypto: webcrypto, TypeError, URL,
+    requestAnimationFrame: fn => fn(), crypto: webcrypto, TypeError, URL, location,
     FormData: class { *[Symbol.iterator]() { yield* Object.entries(element.values || {}); } },
     async fetch(url, options) {
       requests.push(JSON.parse(options.body));
       if (fail) throw new TypeError('offline');
-      return { ok: true, json: async () => ({ ok: true }) };
+      return { ok: true, json: async () => answer };
     },
   });
   const { state, actions } = definition;
@@ -33,7 +34,8 @@ function fixture() {
     slotId: 'slot', day: '2026-12-03', open: true, requestKey: 'fixture-request-0001',
   });
   return {
-    state, actions, requests,
+    state, actions, requests, location,
+    answer(value) { answer = value; },
     input(name, value) { element = { name, value }; actions.input(); },
     context(value) { context = value; },
     form() { element = { reportValidity: () => true, values: { name: 'Fixture', email: 'fixture@example.invalid' } }; },
@@ -133,4 +135,36 @@ test('changing slot, calendar day and source resets reduced quantities', async (
   f.state.reducedQuantity = 3;
   await run(f.actions.openSource({ id: 13, type: 'publication', intent: 'order' }, null));
   assert.equal(f.state.reducedQuantity, 0); assert.equal(f.state.quantity, 1);
+});
+
+
+test('online booking redirects to provider checkout and retains identity on network retry', async () => {
+  const f = fixture({ mollieEnabled: true });
+  f.input('payment', 'mollie'); f.form(); f.offline(true);
+  assert.equal(f.state.onlinePayment, true);
+  assert.equal(f.state.submitLabel, 'Weiter zur Testzahlung');
+  await run(f.actions.submit({ preventDefault() {} }));
+  assert.equal(f.state.submitted, false);
+  f.offline(false); f.answer({ ok: true, checkout_url: 'https://www.mollie.com/checkout/fixture' });
+  await run(f.actions.submit({ preventDefault() {} }));
+  assert.equal(f.requests[0].payment, 'mollie');
+  assert.equal(f.requests[0].request_key, f.requests[1].request_key);
+  assert.equal(f.location.assigned, 'https://www.mollie.com/checkout/fixture');
+  assert.equal(f.state.submitted, true);
+  f.state.intent = 'order'; assert.equal(f.state.onlinePayment, false);
+  f.state.intent = 'inquiry'; assert.equal(f.state.onlinePayment, false);
+});
+
+test('payment receipt separates verified paid, pending and failure states without implying seats', async () => {
+  const f = fixture(); f.state.paymentId = '1'; f.state.paymentToken = 'fixture';
+  for (const [status, expected] of [['paid', /Testzahlung erfolgreich/], ['pending', /noch verarbeitet/], ['failed', /fehlgeschlagen/], ['canceled', /abgebrochen/], ['expired', /abgelaufen/], ['refunded', /erstattet/]]) {
+    f.answer({ ok: true, payment_status: status, booking_id: 1, title: 'Fixture', amount_cents: 2000 });
+    await run(f.actions.refreshPayment());
+    assert.match(f.state.status, expected);
+    assert.equal(f.requests.at(-1).token, 'fixture');
+    assert.match(f.state.paymentSummary, /20,00/);
+  }
+  f.offline(true); await run(f.actions.refreshPayment());
+  assert.doesNotMatch(f.state.status, /erfolgreich/);
+  assert.equal(f.state.checkoutUrl, '');
 });

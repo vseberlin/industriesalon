@@ -79,14 +79,21 @@ function iss_programm_render_calendar_modal_host(): void {
     // The dialog is deliberately outside router regions. All triggers share this
     // shell; public dates and contact/navigation fallbacks stay in server HTML.
     ?>
-    <dialog id="iss-booking-dialog" class="is-tour-calendar-modal" data-wp-bind--data-step="state.step" data-wp-interactive="iss/booking" aria-labelledby="iss-booking-title" data-wp-on--close="actions.closed" data-wp-on-window--popstate="actions.close">
+    <dialog id="iss-booking-dialog" class="is-tour-calendar-modal" data-wp-bind--data-step="state.step" data-wp-interactive="iss/booking" data-wp-init="callbacks.paymentReturn" aria-labelledby="iss-booking-title" data-wp-on--close="actions.closed" data-wp-on-window--popstate="actions.close">
         <div class="is-tour-calendar-modal__panel">
             <button type="button" class="is-tour-calendar-modal__close" data-wp-on--click="actions.close" aria-label="<?php esc_attr_e('Schließen', 'iss-programm'); ?>">×</button>
             <header class="is-tour-calendar-modal__header"><p class="is-tour-calendar-modal__eyebrow" data-wp-text="state.headingLabel"></p><h2 id="iss-booking-title" data-wp-text="state.title"><?php esc_html_e('Anfrage', 'iss-programm'); ?></h2>
             <p class="is-tour-calendar__status" role="status" aria-live="polite" data-wp-text="state.status"></p>
             <button type="button" class="is-tour-calendar__form-switch" data-wp-bind--hidden="state.hideRetry" data-wp-on--click="actions.retrySlots" hidden><?php esc_html_e('Termine erneut laden', 'iss-programm'); ?></button>
             </header>
-            <form class="is-tour-calendar__form" data-wp-on--submit="actions.submit">
+            <section data-wp-bind--hidden="!state.paymentReturn" hidden>
+                <p data-wp-text="state.paymentSummary"></p>
+                <p><?php esc_html_e('Testbetrieb: Es wird kein echtes Geld eingezogen. Das Team prüft Ihre Buchung und bestätigt die Plätze persönlich.', 'iss-programm'); ?></p>
+                <button type="button" class="is-tour-calendar__form-submit" data-wp-bind--disabled="state.loading" data-wp-on--click="actions.refreshPayment"><?php esc_html_e('Zahlungsstatus prüfen', 'iss-programm'); ?></button>
+                <p><a data-wp-bind--hidden="!state.checkoutUrl" data-wp-bind--href="state.checkoutUrl" hidden><?php esc_html_e('Testzahlung fortsetzen', 'iss-programm'); ?></a></p>
+                <p><a data-wp-bind--hidden="!state.paymentSourceUrl" data-wp-bind--href="state.paymentSourceUrl" hidden><?php esc_html_e('Zurück zum Angebot', 'iss-programm'); ?></a></p>
+            </section>
+            <form class="is-tour-calendar__form" data-wp-bind--hidden="state.paymentReturn" data-wp-on--submit="actions.submit">
                 <fieldset class="is-tour-calendar__chooser" data-wp-bind--hidden="!state.choosingDate" data-wp-bind--disabled="state.fieldsDisabled">
                     <div class="is-tour-calendar__date-panel">
                         <?php echo iss_programm_render_availability_calendar(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Shared renderer escapes its complete markup. ?>
@@ -125,9 +132,10 @@ function iss_programm_render_calendar_modal_host(): void {
                     </div>
                     <p id="iss-booking-quantity-error" aria-live="polite" data-wp-text="state.quantityError"></p>
                     <p data-wp-bind--hidden="state.isInquiry" data-wp-text="state.priceLabel"></p>
-                    <p><?php esc_html_e('Mit dem Absenden stellen Sie eine Anfrage. Eine Buchung oder Zahlung ist damit noch nicht bestätigt.', 'iss-programm'); ?></p>
+                    <label class="is-tour-calendar__field" data-wp-bind--hidden="!state.canPayOnline" hidden><span><?php esc_html_e('Zahlungsart', 'iss-programm'); ?></span><select name="payment" data-wp-bind--value="state.paymentMethod" data-wp-on--change="actions.input"><option value="onsite"><?php esc_html_e('Zahlung vor Ort', 'iss-programm'); ?></option><option value="mollie"><?php esc_html_e('Online bezahlen – Testzahlung', 'iss-programm'); ?></option></select></label>
+                    <p data-wp-text="state.submitNotice"><?php esc_html_e('Mit dem Absenden stellen Sie eine Anfrage. Eine Buchung oder Zahlung ist damit noch nicht bestätigt.', 'iss-programm'); ?></p>
                     <input type="text" name="website" tabindex="-1" autocomplete="off" hidden>
-                    <button type="submit" class="is-tour-calendar__form-submit" data-wp-bind--disabled="state.submitDisabled"><?php esc_html_e('Anfrage senden', 'iss-programm'); ?></button>
+                    <button type="submit" class="is-tour-calendar__form-submit" data-wp-bind--disabled="state.submitDisabled" data-wp-text="state.submitLabel"><?php esc_html_e('Anfrage senden', 'iss-programm'); ?></button>
                     </div>
                 </fieldset>
             </form>

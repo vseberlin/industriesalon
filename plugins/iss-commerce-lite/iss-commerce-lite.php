@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ISS Commerce Lite
  * Description: Lightweight booking request and publication order intake for Industriesalon.
- * Version: 0.3.0
+ * Version: 0.4.0
  */
 
 if (!defined('ABSPATH')) {
@@ -11,11 +11,11 @@ if (!defined('ABSPATH')) {
 
 // phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- This plugin owns the lightweight booking/order request table.
 
-define('ISS_PAYMENTS_LITE_SCHEMA_VERSION', '2026-10-11-requests-v3-idempotency');
+define('ISS_PAYMENTS_LITE_SCHEMA_VERSION', '2026-10-22-requests-v4-mollie');
 define('ISS_PAYMENTS_LITE_SCHEMA_OPTION', 'iss_payments_lite_schema_version');
 define('ISS_PAYMENTS_LITE_SETTINGS_OPTION', 'iss_payments_lite_settings');
 define('ISS_PAYMENTS_LITE_PATH', plugin_dir_path(__FILE__));
-define('ISS_COMMERCE_LITE_VERSION', '0.3.0');
+define('ISS_COMMERCE_LITE_VERSION', '0.4.0');
 define('ISS_COMMERCE_LITE_PATH', ISS_PAYMENTS_LITE_PATH);
 
 function iss_payments_lite_requests_table_name(): string {
@@ -87,8 +87,8 @@ function iss_payments_lite_install_schema(bool $allow_existing_upgrade = false):
     if ($wpdb->last_error !== '') {
         throw new RuntimeException('Commerce schema could not be inspected before upgrade.');
     }
-    if ($columns && array_diff(['request_key', 'request_fingerprint'], $columns) && !$allow_existing_upgrade) {
-        throw new RuntimeException('Commerce upgrade requires the scoped backup in ops/migrations/2026-10-11-commerce-idempotency.php.');
+    if ($columns && array_diff(['request_key', 'request_fingerprint', 'provider_payment_id', 'payment_status', 'payment_checkout_url', 'payment_payload', 'payment_started_at'], $columns) && !$allow_existing_upgrade) {
+        throw new RuntimeException('Commerce upgrade requires the scoped backup in ops/migrations/2026-10-22-commerce-mollie.php.');
     }
     $statements = iss_payments_lite_schema_statements();
     foreach ($statements as $statement) {
@@ -118,6 +118,11 @@ function iss_payments_lite_schema_statements(): array {
         quantity int(11) NOT NULL DEFAULT 0,
         amount_cents int(11) NOT NULL DEFAULT 0,
         payment_method varchar(50) NOT NULL DEFAULT '',
+        provider_payment_id varchar(64) DEFAULT NULL,
+        payment_status varchar(32) NOT NULL DEFAULT '',
+        payment_checkout_url varchar(512) NOT NULL DEFAULT '',
+        payment_payload longtext DEFAULT NULL,
+        payment_started_at datetime DEFAULT NULL,
         slot_id varchar(191) NOT NULL DEFAULT '',
         tag varchar(100) NOT NULL DEFAULT '',
         payload longtext NOT NULL,
@@ -135,7 +140,8 @@ function iss_payments_lite_schema_statements(): array {
         KEY source_lookup (source_post_type, source_post_id),
         KEY email_lookup (customer_email),
         KEY duplicate_lookup (duplicate_hash),
-        UNIQUE KEY request_key (request_key)
+        UNIQUE KEY request_key (request_key),
+        UNIQUE KEY provider_payment_id (provider_payment_id)
     ) {$charset_collate};";
 
     return [$sql];
@@ -331,7 +337,7 @@ function iss_payments_lite_recent_duplicate_exists(string $request_kind, string 
     $table = iss_payments_lite_requests_table_name();
     $count = (int) $wpdb->get_var(
         $wpdb->prepare(
-            "SELECT COUNT(*) FROM {$table} WHERE request_kind = %s AND duplicate_hash = %s AND created_at >= %s",
+            "SELECT COUNT(*) FROM {$table} WHERE request_kind = %s AND duplicate_hash = %s AND created_at >= %s AND payment_status NOT IN ('failed', 'canceled', 'expired')",
             $request_kind,
             $duplicate_hash,
             $since
@@ -497,7 +503,7 @@ function iss_payments_lite_replay_request(array $identity): ?WP_REST_Response {
     }
     global $wpdb;
     $table = iss_payments_lite_requests_table_name();
-    $row = $wpdb->get_row($wpdb->prepare("SELECT request_kind, request_fingerprint FROM {$table} WHERE request_key = %s", $identity['key']), ARRAY_A);
+    $row = $wpdb->get_row($wpdb->prepare("SELECT request_kind, request_fingerprint, id, payment_method FROM {$table} WHERE request_key = %s", $identity['key']), ARRAY_A);
     if ($wpdb->last_error !== '') {
         throw new RuntimeException('Commerce retry lookup failed.');
     }
@@ -505,7 +511,7 @@ function iss_payments_lite_replay_request(array $identity): ?WP_REST_Response {
         return null;
     }
     return $row['request_kind'] === $identity['kind'] && hash_equals($row['request_fingerprint'], $identity['fingerprint'])
-        ? new WP_REST_Response(['ok' => true], 200)
+        ? iss_commerce_request_response((int) $row['id'], $row['payment_method'])
         : new WP_REST_Response(['ok' => false, 'error' => 'Diese Anfrage wurde bereits mit anderen Angaben gesendet. Bitte das Formular erneut öffnen.'], 409);
 }
 
@@ -516,6 +522,9 @@ function iss_payments_lite_process_request_payload(array $payload, WP_REST_Reque
     }
     if ((string) get_option(ISS_PAYMENTS_LITE_SCHEMA_OPTION, '') !== ISS_PAYMENTS_LITE_SCHEMA_VERSION) {
         return new WP_REST_Response(['ok' => false, 'error' => 'Anfragen sind vorübergehend nicht verfügbar. Bitte später erneut versuchen.'], 503);
+    }
+    if (($payload['payment'] ?? '') === 'mollie' && ($intent !== 'booking' || empty($payload['request_key']))) {
+        return new WP_REST_Response(['ok' => false, 'error' => 'Online-Zahlung benötigt eine Buchung mit Anfragekennung.'], 400);
     }
     try {
         $identity = iss_payments_lite_request_identity($intent, $payload);
@@ -586,7 +595,7 @@ function iss_payments_lite_store_request(string $kind, array $entry, array $payl
         do_action('iss_payments_lite_' . $kind . '_created', $entry, $request);
     }
     do_action('iss_payments_lite_request_created', $kind, $entry, $request);
-    return new WP_REST_Response(['ok' => true], 200);
+    return iss_commerce_request_response($request_id, (string) ($entry['payment'] ?? ''));
 }
 
 function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_Request $request): WP_REST_Response {
@@ -656,6 +665,12 @@ function iss_payments_lite_process_slot_booking_request(array $payload, WP_REST_
     }
     if (!iss_payments_lite_payment_method_is_supported($payment)) {
         $errors[] = 'Ungültige Zahlungsart.';
+    }
+    if ($payment === 'mollie' && (!iss_commerce_mollie_enabled() || $price_cents * $regular_tickets + $reduced_price_cents * $reduced_tickets < 1)) {
+        $errors[] = 'Online-Zahlung ist für dieses Angebot nicht verfügbar.';
+    }
+    if ($price_cents * $regular_tickets + $reduced_price_cents * $reduced_tickets > 2147483647) {
+        $errors[] = 'Der Gesamtbetrag ist zu hoch.';
     }
 
     if ($source_post_id > 0) {
@@ -850,6 +865,7 @@ function iss_payments_lite_process_order_request(array $payload, WP_REST_Request
     return iss_payments_lite_store_request('order', $entry, $payload, $request);
 }
 
+require_once ISS_PAYMENTS_LITE_PATH . 'includes/mollie.php';
 require_once ISS_PAYMENTS_LITE_PATH . 'includes/admin.php';
 require_once ISS_PAYMENTS_LITE_PATH . 'includes/cli.php';
 

@@ -240,7 +240,7 @@ function iss_payments_lite_admin_export_csv(): void
         exit;
     }
 
-    fputcsv($out, ['id', 'request_kind', 'status', 'created_at', 'customer_name', 'customer_email', 'item_label', 'quantity', 'amount_cents', 'payment_method', 'slot_id', 'tag', 'source_post_id', 'source_post_type', 'ip_address', 'notified_at', 'notification_error', 'regular_tickets', 'reduced_tickets', 'price_cents', 'reduced_price_cents']);
+    fputcsv($out, ['id', 'request_kind', 'status', 'created_at', 'customer_name', 'customer_email', 'item_label', 'quantity', 'amount_cents', 'payment_method', 'slot_id', 'tag', 'source_post_id', 'source_post_type', 'ip_address', 'notified_at', 'notification_error', 'regular_tickets', 'reduced_tickets', 'price_cents', 'reduced_price_cents', 'provider_payment_id', 'payment_status']);
     foreach ($result['rows'] as $row) {
         $payload = json_decode((string) ($row['payload'] ?? ''), true);
         fputcsv($out, [
@@ -265,6 +265,8 @@ function iss_payments_lite_admin_export_csv(): void
             $payload['reduced_tickets'] ?? '',
             $payload['price_cents'] ?? '',
             $payload['reduced_price_cents'] ?? '',
+            (string) ($row['provider_payment_id'] ?? ''),
+            (string) ($row['payment_status'] ?? ''),
         ]);
     }
 
@@ -397,12 +399,13 @@ function iss_payments_lite_render_requests_page(): void
                         <th><?php esc_html_e('E-Mail', 'iss-payments-lite'); ?></th>
                         <th><?php esc_html_e('Titel', 'iss-payments-lite'); ?></th>
                         <th><?php esc_html_e('Anzahl', 'iss-payments-lite'); ?></th>
+                        <th><?php esc_html_e('Zahlung', 'iss-payments-lite'); ?></th>
                         <th><?php esc_html_e('Benachrichtigung', 'iss-payments-lite'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($rows)) : ?>
-                        <tr><td colspan="10"><?php esc_html_e('Keine Anfragen gefunden.', 'iss-payments-lite'); ?></td></tr>
+                        <tr><td colspan="11"><?php esc_html_e('Keine Anfragen gefunden.', 'iss-payments-lite'); ?></td></tr>
                     <?php endif; ?>
                     <?php foreach ($rows as $row) : ?>
                         <tr>
@@ -434,6 +437,10 @@ function iss_payments_lite_render_requests_page(): void
                                 }
                                 ?>
                             </td>
+                            <td><?php
+                                echo esc_html($row['payment_method'] === 'mollie' ? 'Mollie TEST · ' . ($row['payment_status'] ?: 'noch nicht angelegt') : 'Vor Ort');
+                                if (!empty($row['provider_payment_id'])) { echo '<br><code>' . esc_html($row['provider_payment_id']) . '</code>'; }
+                            ?></td>
                             <td>
                                 <?php
                                 $notified_at = (string) ($row['notified_at'] ?? '');

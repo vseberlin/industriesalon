@@ -22,6 +22,8 @@ function iss_programm_register_frontend_assets() {
     wp_interactivity_config('iss/booking', [
         'slotsUrl' => rest_url('iss/v1/booking-slots'),
         'requestUrl' => rest_url('iss-payments/v1/request'),
+        'paymentStatusUrl' => rest_url('iss-payments/v1/payment-status'),
+        'mollieEnabled' => function_exists('iss_commerce_mollie_enabled') && iss_commerce_mollie_enabled(),
         'nonce' => wp_create_nonce('wp_rest'),
         'today' => wp_date('Y-m-d', null, wp_timezone()),
     ]);
@@ -65,6 +67,12 @@ function iss_programm_register_frontend_assets() {
     );
 }
 add_action('wp_enqueue_scripts', 'iss_programm_register_frontend_assets');
+
+add_action('wp_enqueue_scripts', static function (): void {
+    // The return flag carries no receipt token; that stays in the URL fragment.
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only asset selection, no state mutation.
+    if (isset($_GET['iss_payment_return'])) { iss_programm_enqueue_calendar_assets(); }
+}, 20);
 
 /** Shared picker presentation also serves the server-rendered programme grid. */
 function iss_programm_enqueue_calendar_styles() {

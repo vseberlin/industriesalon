@@ -450,9 +450,13 @@ Booking availability is the complete source set within the existing default
 The public endpoint reads the occurrence projection and returns `no-store`;
 legacy tag-only transients cannot override current source visibility. This is
 request capture, not a capacity reservation or automatic external booking.
-Online settlement is not implied by a stored request row; supported payment
-methods default to onsite/request capture until a provider integration is
-explicitly added.
+Payment remains separate from staff confirmation and capacity reservations.
+Schema v4 adds `provider_payment_id` (nullable unique), `payment_status`,
+`payment_checkout_url`, `payment_payload` and `payment_started_at` to the same
+request table through `ops/migrations/2026-10-22-commerce-mollie.php` with a verified
+private before-image. The optional Mollie test adapter verifies provider state;
+onsite requests keep their prior behavior. See the commerce plugin README for
+retry, receipt, callback and manual reconciliation contracts.
 
 Tour ticket rates use `iss-content` metadata: `booking_price_cents` and optional
 `booking_reduced_price_cents` (0 disables the reduced rate; a positive rate must
