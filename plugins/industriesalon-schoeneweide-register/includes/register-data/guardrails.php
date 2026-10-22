@@ -244,8 +244,8 @@ function iss_register_contract_collect_atlas_context_errors(array $context): arr
             continue;
         }
         $item_path = sprintf('atlas-context.eras[%d]', $index);
-        $errors = array_merge($errors, iss_register_contract_collect_exact_key_errors($era, ['slug', 'name', 'caption', 'legacy_id', 'legacy_label', 'legacy_short_label', 'legacy_caption', 'place_count', 'story_count'], $item_path));
-        foreach (['slug', 'name', 'caption', 'legacy_id', 'legacy_label', 'legacy_short_label', 'legacy_caption'] as $key) {
+        $errors = array_merge($errors, iss_register_contract_collect_exact_key_errors($era, ['slug', 'name', 'caption', 'period_label', 'legacy_id', 'legacy_label', 'legacy_short_label', 'legacy_caption', 'place_count', 'story_count'], $item_path));
+        foreach (['slug', 'name', 'caption', 'period_label', 'legacy_id', 'legacy_label', 'legacy_short_label', 'legacy_caption'] as $key) {
             $errors = array_merge($errors, iss_register_contract_collect_string_error($era, $key, $item_path, in_array($key, ['caption', 'legacy_caption'], true)));
         }
         $errors = array_merge($errors, iss_register_contract_collect_int_error($era, 'place_count', $item_path, 0));

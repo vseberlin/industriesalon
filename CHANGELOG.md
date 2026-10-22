@@ -16,6 +16,9 @@ be recovered from Git history.
   Private site-bound payloads and before-images accompany the migration; no
   uploads or schema change. Verification recognizes the existing graph owner's
   regeneration of derived rows while guarding source relationships and attributes.
+  Corrected the existing Atlas contract checker to validate the already-published
+  `period_label` string; its omission caused the same false failure before this
+  content update on staging.
 
 ## 2026-10-21
 
