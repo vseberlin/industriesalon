@@ -103,8 +103,11 @@ function iss_commerce_mollie_accept(array $row, array $payment): array {
         $status = (string) $payment['amountRefunded']['value'] === $expected ? 'refunded' : 'partially_refunded';
     }
     $checkout = '';
-    if (in_array($status, ['open', 'pending'], true) && !empty($payment['_links']['checkout']['href'])) {
-        $checkout = iss_commerce_mollie_checkout_url((string) $payment['_links']['checkout']['href']);
+    if (in_array($status, ['open', 'pending'], true)) {
+        // Mollie can omit checkout after a failed method attempt while the
+        // payment remains open. Retain only the previously verified provider URL.
+        $url = (string) ($payment['_links']['checkout']['href'] ?? $row['payment_checkout_url']);
+        if ($url !== '') { $checkout = iss_commerce_mollie_checkout_url($url); }
     }
     $fields = ['provider_payment_id' => $id, 'payment_status' => $status, 'payment_checkout_url' => $checkout];
     // Exact duplicates do not rewrite timestamps or dispatch actions/notifications.

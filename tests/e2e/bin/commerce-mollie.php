@@ -30,6 +30,8 @@ try {
     $expect(str_contains($remote_payments[$id]['webhookUrl'], '/iss-payments/v1/mollie/webhook') && str_contains($remote_payments[$id]['redirectUrl'], '#iss-payment='), 'Webhook and fragment-only receipt configured');
     $expect(!str_contains(wp_json_encode($remote_payments), $data['email']) && !str_contains(wp_json_encode($remote_payments), $data['name']), 'Provider receives no booking customer name or email');
     $expect($call($data)->get_status() === 200 && count($remote_payments) === 1 && $sent === 1 && count($events) === 1, 'Retry creates no duplicate payment or notification');
+    unset($remote_payments[$id]['_links']['checkout']);
+    $expect($call($data)->get_data()['checkout_url'] === $row['payment_checkout_url'], 'Open payment retains its verified checkout if the provider omits the optional link after a failed method attempt');
     $expect($call(array_replace($data, ['tickets' => 3]))->get_status() === 409, 'Changed intent cannot reuse a payment identity');
     $webhook = new WP_REST_Request('POST', '/iss-payments/v1/mollie/webhook'); $webhook->set_param('id', $id); $webhook->set_param('status', 'paid');
     $expect(iss_commerce_mollie_webhook($webhook)->get_status() === 200 && $read()[0]['payment_status'] === 'open', 'Forged paid webhook field is ignored');
