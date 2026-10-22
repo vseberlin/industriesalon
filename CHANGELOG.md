@@ -19,6 +19,9 @@ be recovered from Git history.
   Corrected the existing Atlas contract checker to validate the already-published
   `period_label` string; its omission caused the same false failure before this
   content update on staging.
+  Applied and verified on local/staging: 191 valid canonical documents, all 36
+  changed Place projections, all 83 public Place pages per host, protected source
+  data and idempotent receipts. All 84 Place documents match between targets.
 
 ## 2026-10-21
 
