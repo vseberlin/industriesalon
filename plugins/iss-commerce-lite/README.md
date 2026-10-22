@@ -99,6 +99,11 @@ expired, refunds and chargebacks. Failed/canceled/expired requests permit a new
 booking; a retry of the original identity continues to describe its original
 payment. Staff confirmation and refund execution remain manual.
 
+An unsuccessful hosted method attempt can leave the overall Mollie payment
+`open`. Show that verified state and retain its previously verified checkout URL
+when Mollie omits the optional link, so the visitor can resume the same payment.
+Never interpret a method-selection outcome as a completed payment.
+
 Verification: `tests/e2e/bin/commerce-idempotency.php` includes the isolated
 `commerce-mollie.php` scenarios; run with cron disabled, process-local cache and
 an admin CLI user. `commerce-migration.php` checks backed-up upgrades and failure

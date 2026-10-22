@@ -14,10 +14,13 @@ be recovered from Git history.
   existing request admin/CSV; no new table, queue, SDK or frontend skin.
   The additive owner migration preserves existing requests in a private verified
   before-image; no uploads/content artifact. Live keys are refused and new
-  checkout requires private target configuration. Validation: 206 isolated PHP
+  checkout requires private target configuration. Validation: 207 isolated PHP
   assertions, 16 migration checks, nine JavaScript store tests, lint and static
-  analysis; staging browser/provider acceptance follows deployment.
-
+  analysis. Staging acceptance proved card checkout, a real provider webhook,
+  desktop/mobile receipts and idempotent callback replay. Unsuccessful PayPal
+  attempts correctly remain open; preserve the verified checkout link when
+  Mollie omits it so the same payment can be resumed. Historical requests remain
+  unchanged; notification mail and live payments remain disabled.
 
 - Removed public supplier repository citations from 41 Place documents and
   related fact/timeline wording, retaining the internal import provenance.

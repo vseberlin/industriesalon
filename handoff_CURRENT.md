@@ -1,88 +1,73 @@
 # Current handoff — 22 October 2026
 
 Website source is `/home/vladimir/wp-website`; staging checkout is
-`/srv/industriesalon/stage/repo`. Implementation `58bfaec` is on GitHub and
-deployed to staging. This checkpoint accompanies the completed Place content
-migration on both targets. Production is untouched; staging remains noindex.
+`/srv/industriesalon/stage/repo`. Mollie implementation `ad632d0` is on GitHub
+and deployed to staging; this documentation checkpoint follows it. Production
+is untouched and staging remains noindex.
 
-## Public source cleanup and contribution gestures
+## Booking and Mollie test checkout
 
-The requested follow-up removes 41 repository links from canonical Place
-documents, revises source wording in 20 fact fields and seven milestone
-summaries, and preserves internal import provenance. Public chronology, Atlas
-detail and REST exports omit supplier milestone audit fields. Primary-source
-links remain. Milestone dates, identities and internal citations are unchanged.
+The existing WordPress request flow now supports hosted Mollie test payments,
+verified webhooks, a private uncached receipt, and payment status in
+Tools → ISS Anfragen and its CSV. Staff workflow status remains independent.
+The user chose WordPress booking/payment first: staff reserve and confirm seats
+in SuperSaaS. No SuperSaaS writes or automatic seat confirmation were added.
+The shared dialog retains onsite payment and offers card/PayPal test checkout.
+Live keys are rejected; notification emails remain disabled. The test key exists
+only in private staging configuration. Local runtime has no provider key.
 
-All 62 published Places with authored open questions now have the existing
-upload gesture working: 61 intakes opened, KAOS 93's existing open choice retained.
-Other Places and future default behavior are unchanged. The signed receiver
-offers text and files; existing moderation/private Sets remain the owners.
+Owner schema migration `ops/migrations/2026-10-22-commerce-mollie.php` is applied
+on both targets. All three pre-existing requests on each target are unchanged.
+Private before-images and acceptance evidence are in `var/mollie-20261022/`
+on the respective checkouts; no uploads/content transfer was needed. Target
+accounts, authentication and roles were not migration inputs.
 
-Migration: `ops/migrations/2026-10-22-place-contributions.php`; private receipt:
-`iss_backup_20261022_place_contributions`. Inputs, snapshots and verification
-are in `var/place-contributions-20261022/` on both checkouts; start with
-`completion.json` and `site-parity.json`. Fresh checked DB backups:
-local `local-before.sql.gz` (118 tables), staging `staging-before.sql.gz`
-(119 tables) in the respective review directory. The full staging backup below
-also remains retained. No uploads or schema artifact is required.
-Rollback uses exact receipt fields through owners after checking newer edits;
-close only intake opened here and never restore old signed-link generations.
+Verified: 207 isolated PHP assertions, 16 migration checks, nine JavaScript
+store tests, PHP lint/PHPCS/PHPStan and JS lint. A real staging €24 card test
+completed; Mollie's webhook returned 200 before the browser checked the receipt.
+Repeated callbacks with a forged status leave the paid row entirely unchanged.
+Invalid receipt tokens return uncached 404. Desktop and 390px mobile receipts
+work without horizontal overflow; the browser console reports no errors.
 
-## Earlier supplier review retained
+Unsuccessful PayPal method attempts leave the provider payment open. The UI
+correctly shows unpaid and preserves the verified resume link, including when
+Mollie omits that optional link. Terminal canceled/failed/expired, refunds and
+chargebacks are covered by isolated tests, not claimed as live terminal outcomes.
+Two visibly labelled synthetic bookings remain as test evidence (paid/open);
+do not reserve real seats for them. No real money or notification email was sent.
 
-The preceding batch reviewed all 69 supplier records against 84 Places and
-filled 36 present-day descriptions/four fact fields. Its private evidence stays
-in `var/register-review-20261022/`; the later public-source cleanup above
-supersedes its displayed citations. Upstream revision remains
-`8574160c4ae79a6101dad59d21c9817ab29d0814` (11 September).
-The [canonical review procedure](docs/architecture/places-editorial-atlas-restructure-plan.md#reviewing-omissions-in-enabled-place-documents)
-requires fresh source/target review for later batches.
+Provider outage recovery, the 45-minute creation retry bound, CLI reconciliation
+and rollback are in [the commerce contract](plugins/iss-commerce-lite/README.md).
+Disable new checkout before rollback; retain payment columns, requests, the key
+and callback support until pending payments are reconciled. Never restore the
+old request table over later bookings. The requested staging scope is complete;
+production/live activation and customer-email delivery are separate work.
 
-All 84 documents, reviewed facts, milestones and intake states match across
-targets after URL normalization. Histories, media, relations, 17 local-only
-Places, the ADMOS draft and upstream #70 → #13 component mapping are preserved.
-The follow-up retained 3,619 local / 3,613 staging revisions, target users,
-authentication and capabilities. KAOS address/ownership-role conflicts,
-Energie-Museum access/destination and unconfirmed project dates remain qualified.
+## Preserved content and operational constraints
+
+The preceding Place review/contribution update remains intact. Its private
+evidence is in `var/place-contributions-20261022/` and
+`var/register-review-20261022/`; implementation history is in Git/CHANGELOG.
+All 84 canonical documents, local-only Places, ADMOS draft, upstream component
+mapping, editorial history/media/relations and qualified source conflicts remain
+protected. Existing signed upload generations and private intake moderation
+must not be overwritten by historical backups.
 
 The verified full staging backup remains at
 `/srv/industriesalon/stage/backups/iss-backup-20261022T094828Z/`
-(119 tables, all seven artifacts verified). Never restore historical credentials
-or unrelated target state from that backup.
-
-## Verification
-
-Both targets pass canonical validation (191 documents, zero invalid), all 62
-changed Place epoch-parity checks, register contract/state checks and Atlas
-payload budgets (58,654 bytes; 9,562 gzip). Idempotent replay and final receipt
-verification pass after background projection work. Preservation recognizes
-existing derived relation rows normalized by their owner; source relation
-metadata, endpoints, roles, dates, weights and visibility remain protected.
-
-All 83 published Place pages return 200 on both hosts, without public supplier
-repository references. All 62 questions sections have the signed upload action.
-Public export/Atlas collections and three representative signed receiver pages
-per host pass. No files or comments were submitted. Chrome follows the No. 92
-button into its text/file form on both hosts without desktop overflow. Prior
-desktop/mobile checks remain unchanged; no CSS or template edit was needed.
-PHP lint, PHPCS and PHPStan pass. The local transactional suite passes 35
-assertions, including stale-edit rejection and preservation of milestone
-provenance; all fixture changes rolled back. Its outdated flat-chronology and
-legacy-current-text expectations now follow the existing canonical contracts.
-
-## Preserved operational constraints and remaining gates
-
-Target accounts remain target-owned; the unrestricted staging SQL importer is
-disabled. Follow [content sync](docs/infrastructure/sync.md). The retired testing
-credential and old authentication backups must never be replayed. Prior private
-incident evidence remains retained; no further incident work is queued.
-Project UAT retains its existing picker permissions; no permission changes here.
+(119 tables, all seven artifacts verified). Target accounts remain target-owned;
+the unrestricted SQL importer stays disabled. Follow
+[content sync](docs/infrastructure/sync.md). Never replay retired credentials,
+sessions or authentication backups. Private incident evidence remains retained.
+Project UAT retains its existing picker permissions.
 
 Staging/touchtable PHP 8.3.36 emergency images remain active. Their separately
-scoped next maintenance is replacement with a verified patched official image,
-following [the runtime procedure](docs/infrastructure/staging.md#php-runtime-security-update).
-No runtime replacement was performed during this content review.
+scoped maintenance is replacement with a verified patched official image under
+[the runtime procedure](docs/infrastructure/staging.md#php-runtime-security-update).
+Current staging containers and commerce checks are healthy. Git deployment must
+use the ordinary source-file umask (`022`); scope private backup permissions to
+the private files, so newly checked-out PHP remains readable by FPM.
 
-The requested local/staging update is complete. Existing human gates remain:
-Kiezfonds exact share, children's-photo rights, actual 200% zoom, physical touch
-and screenreader acceptance. Production/maintenance activation is separate.
+Earlier human gates remain: Kiezfonds exact share, children's-photo rights,
+actual 200% zoom, physical touch and screenreader acceptance. No additional
+infrastructure or editorial work is queued by this booking implementation.
