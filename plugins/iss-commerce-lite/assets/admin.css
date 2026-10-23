@@ -1,0 +1,36 @@
+/* Staff controls retain native WordPress styling and accessible table scrolling. */
+.iss-commerce-admin {
+    max-width: 1200px;
+    overflow-wrap: anywhere;
+}
+
+.iss-commerce-admin .nav-tab-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.iss-commerce-admin select,
+.iss-commerce-admin input:not([type="checkbox"]),
+.iss-commerce-admin .button {
+    max-width: 100%;
+    white-space: normal;
+}
+
+.iss-commerce-admin details {
+    margin-block: 12px;
+}
+
+.iss-commerce-admin summary {
+    cursor: pointer;
+    padding-block: 6px;
+}
+
+.iss-commerce-table {
+    max-width: 100%;
+    overflow-x: auto;
+    margin-block: 16px;
+}
+
+.iss-commerce-table table {
+    min-width: 800px;
+}

@@ -5,6 +5,28 @@ Website source is `/home/vladimir/wp-website`; staging checkout is
 (`4666d81`, final code correction `9531b65`). Local and staging acceptance passed.
 Production is untouched; staging remains noindex and uses test inventory/payments.
 
+## SuperSaaS admin refactor — release checkpoint
+
+Occurrences 0.2.0 and commerce 0.5.1 are ready for the authorized GitHub/staging
+release above `35e07ca`. Staging acceptance is pending; production is untouched.
+`Operations → Termine & Synchronisierung` now separates overview, review,
+tour/event series and connection settings. `Buchungen & Anfragen` separates
+requests, capacity, bookings, delivery and settings with contextual actions.
+The [occurrence admin contract](plugins/iss-occurrences/README.md) documents
+mapping precedence, validation, navigation and the isolated regression command.
+
+Local checks passed: 96 isolated admin assertions, 218 commerce assertions,
+31 public occurrence assertions, targeted PHPCS/PHPStan/PHP syntax/ESLint/Stylelint
+and authenticated Chrome navigation, filter recovery and desktop/tablet/mobile
+layouts (including expanded mapping forms). Real mappings, settings, bookings
+and inventory were preserved by the isolated tests. No real sync was manually
+triggered, no mail sent, no accounts/permissions changed. There is no schema,
+content or uploads migration. Existing target data must remain target-owned.
+Staging preflight passed: clean checkout at `35e07ca`, healthy services and all
+seven hashes verified for `backups/iss-backup-20261023T111347Z/` (124 tables).
+Next: deploy the paired plugin changes, verify target-owned data and admin/public
+routes, then record the final shared reference. Rollback uses code only.
+
 ## Consent and privacy — staging release
 
 Code `067dc7b` and paced browser checks `5d199ba` are on GitHub and staging.

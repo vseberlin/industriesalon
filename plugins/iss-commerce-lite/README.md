@@ -28,8 +28,13 @@ The approved capacity is 30 people per departure; staff must reconcile existing
 reservations before opening real inventory. Test departures and their bookings
 are explicitly marked and excluded from staff digests.
 
-`Tools → ISS Anfragen` includes departure controls, staff onsite booking,
-booking/payment states, ticket mix, holds, voucher credit, event history and CSV.
+`Operations → Buchungen & Anfragen` (Tools when ISS Core is inactive) separates
+Anfragen, Termine & Plätze, Buchungen, Versand and Einstellungen. Staff booking
+and mail-retry actions belong to their displayed record; booking IDs are not
+entered manually. Departure and booking lists paginate; wide tables have labelled
+scroll regions. The screen retains booking/payment states, ticket mix, holds,
+voucher credit, event history and CSV. Links to `Termine & Synchronisierung`
+lead to the date source; updating the booking inventory reads WordPress dates.
 Capabilities and nonces protect staff writes; public and staff admission use the
 same service. Cancellation, refund status and voucher reversal are separate.
 

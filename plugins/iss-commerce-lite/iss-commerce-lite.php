@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ISS Commerce Lite
  * Description: Lightweight booking request and publication order intake for Industriesalon.
- * Version: 0.5.0
+ * Version: 0.5.1
  */
 
 if (!defined('ABSPATH')) {
@@ -15,7 +15,7 @@ define('ISS_PAYMENTS_LITE_SCHEMA_VERSION', '2026-10-22-requests-v5-ledger');
 define('ISS_PAYMENTS_LITE_SCHEMA_OPTION', 'iss_payments_lite_schema_version');
 define('ISS_PAYMENTS_LITE_SETTINGS_OPTION', 'iss_payments_lite_settings');
 define('ISS_PAYMENTS_LITE_PATH', plugin_dir_path(__FILE__));
-define('ISS_COMMERCE_LITE_VERSION', '0.5.0');
+define('ISS_COMMERCE_LITE_VERSION', '0.5.1');
 define('ISS_COMMERCE_LITE_PATH', ISS_PAYMENTS_LITE_PATH);
 
 function iss_payments_lite_requests_table_name(): string {

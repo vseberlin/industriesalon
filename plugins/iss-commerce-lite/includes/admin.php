@@ -36,14 +36,34 @@ function iss_payments_lite_admin_add_menu(): void
 {
     add_submenu_page(
         defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'tools.php',
-        __('ISS Anfragen', 'iss-payments-lite'),
-        __('ISS Anfragen', 'iss-payments-lite'),
+        __('Buchungen & Anfragen', 'iss-payments-lite'),
+        __('Buchungen & Anfragen', 'iss-payments-lite'),
         iss_payments_lite_admin_capability(),
         'iss-payments-lite-requests',
         'iss_payments_lite_render_requests_page'
     );
 }
 add_action('admin_menu', 'iss_payments_lite_admin_add_menu');
+
+function iss_commerce_admin_url(array $args = []): string {
+    return add_query_arg(array_merge(['page' => 'iss-payments-lite-requests'], $args), admin_url(defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php'));
+}
+
+function iss_commerce_admin_return_url(string $fallback): string {
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing -- Called after action nonce verification; only local view/filter arguments survive.
+    $referer = wp_unslash((string) ($_POST['_wp_http_referer'] ?? ''));
+    $args = [];
+    wp_parse_str((string) wp_parse_url($referer, PHP_URL_QUERY), $args);
+    if (($args['page'] ?? '') !== 'iss-payments-lite-requests') { return iss_commerce_admin_url(['view' => $fallback, 'updated' => 1]); }
+    $args = array_intersect_key($args, array_flip(['view', 's', 'request_kind', 'request_status', 'paged']));
+    foreach ($args as $key => $value) { $args[$key] = is_scalar($value) ? sanitize_text_field((string) $value) : ''; }
+    return iss_commerce_admin_url(array_merge($args, ['updated' => 1]));
+}
+
+function iss_commerce_admin_view(): string {
+    $view = iss_payments_lite_admin_get_param('view');
+    return in_array($view, ['departures', 'bookings', 'requests', 'settings', 'delivery'], true) ? $view : 'requests';
+}
 
 function iss_payments_lite_admin_get_param(string $key): string
 {
@@ -171,14 +191,14 @@ function iss_payments_lite_admin_handle_actions(): void
                 'result' => 'completed',
             ]);
         }
-        wp_safe_redirect(add_query_arg(['page' => 'iss-payments-lite-requests', 'updated' => 'settings'], admin_url(defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php')));
+        wp_safe_redirect(add_query_arg(['page' => 'iss-payments-lite-requests', 'updated' => 'settings', 'view' => 'settings'], admin_url(defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php')));
         exit;
     }
 
     if ($action === 'update_status') {
         check_admin_referer('iss_payments_lite_status');
         try { iss_payments_lite_admin_update_status(); } catch (Throwable $error) { wp_die(esc_html($error->getMessage()), '', ['response' => 409, 'back_link' => true]); }
-        wp_safe_redirect(add_query_arg(['page' => 'iss-payments-lite-requests', 'updated' => 'status'], admin_url(defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php')));
+        wp_safe_redirect(iss_commerce_admin_return_url('requests'));
         exit;
     }
 }
@@ -304,14 +324,27 @@ function iss_payments_lite_render_requests_page(): void
     );
 
     ?>
-    <div class="wrap">
-        <h1><?php esc_html_e('ISS Anfragen', 'iss-payments-lite'); ?></h1>
+    <div class="wrap iss-commerce-admin">
+        <h1><?php esc_html_e('Buchungen & Anfragen', 'iss-payments-lite'); ?></h1>
 
         <?php if (iss_payments_lite_admin_get_param('updated') !== '') : ?>
             <div class="notice notice-success is-dismissible"><p><?php esc_html_e('Gespeichert.', 'iss-payments-lite'); ?></p></div>
         <?php endif; ?>
 
-        <?php iss_commerce_render_ledger(); ?>
+        <?php
+        $view = iss_commerce_admin_view();
+        echo '<nav class="nav-tab-wrapper" aria-label="Buchungsverwaltung">';
+        foreach (['requests' => 'Anfragen', 'departures' => 'Termine & Plätze', 'bookings' => 'Buchungen', 'delivery' => 'Versand', 'settings' => 'Einstellungen'] as $key => $label) {
+            echo '<a class="nav-tab' . ($view === $key ? ' nav-tab-active' : '') . '" ' . ($view === $key ? 'aria-current="page"' : '') . ' href="' . esc_url(iss_commerce_admin_url(['view' => $key])) . '">' . esc_html($label) . '</a>';
+        }
+        echo '</nav>';
+        if (in_array($view, ['departures', 'bookings', 'delivery'], true)) {
+            iss_commerce_render_ledger($view);
+            echo '</div>';
+            return;
+        }
+        if ($view === 'settings') :
+        ?>
         <h2><?php esc_html_e('Einstellungen', 'iss-payments-lite'); ?></h2>
         <form method="post" action="<?php echo esc_url(admin_url((defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'tools.php') . '?page=iss-payments-lite-requests')); ?>">
             <?php wp_nonce_field('iss_payments_lite_settings'); ?>
@@ -353,41 +386,41 @@ function iss_payments_lite_render_requests_page(): void
             <?php submit_button(__('Einstellungen speichern', 'iss-payments-lite')); ?>
         </form>
 
-        <hr>
+        <?php else : ?>
         <h2><?php esc_html_e('Anfragen', 'iss-payments-lite'); ?></h2>
-        <form method="get" action="<?php echo esc_url(admin_url('tools.php')); ?>">
-            <input type="hidden" name="page" value="iss-payments-lite-requests">
-            <select name="request_status">
+        <form method="get" action="<?php echo esc_url(iss_commerce_admin_url()); ?>">
+            <input type="hidden" name="page" value="iss-payments-lite-requests"><input type="hidden" name="view" value="requests">
+            <select aria-label="Anfragestatus" name="request_status">
                 <option value=""><?php esc_html_e('Alle Status', 'iss-payments-lite'); ?></option>
                 <?php foreach ($status_labels as $status => $label) : ?>
                     <option value="<?php echo esc_attr($status); ?>" <?php selected($filters['status'], $status); ?>><?php echo esc_html($label); ?></option>
                 <?php endforeach; ?>
             </select>
-            <select name="request_kind">
+            <select aria-label="Anfrageart" name="request_kind">
                 <option value=""><?php esc_html_e('Alle Arten', 'iss-payments-lite'); ?></option>
                 <?php foreach ($kind_labels as $kind => $label) : ?>
                     <option value="<?php echo esc_attr($kind); ?>" <?php selected($filters['kind'], $kind); ?>><?php echo esc_html($label); ?></option>
                 <?php endforeach; ?>
             </select>
-            <input type="search" name="s" value="<?php echo esc_attr((string) $filters['search']); ?>" placeholder="<?php esc_attr_e('Suchen', 'iss-payments-lite'); ?>">
+            <input aria-label="Anfragen durchsuchen" type="search" name="s" value="<?php echo esc_attr((string) $filters['search']); ?>" placeholder="<?php esc_attr_e('Suchen', 'iss-payments-lite'); ?>">
             <?php submit_button(__('Filtern', 'iss-payments-lite'), 'secondary', '', false); ?>
             <a class="button" href="<?php echo esc_url($export_url); ?>"><?php esc_html_e('CSV exportieren', 'iss-payments-lite'); ?></a>
         </form>
 
         <p><?php echo esc_html(sprintf(_n('%d Anfrage', '%d Anfragen', $total, 'iss-payments-lite'), $total)); ?></p>
 
-        <form method="post" action="<?php echo esc_url(admin_url('tools.php?page=iss-payments-lite-requests')); ?>">
+        <form method="post" action="<?php echo esc_url(iss_commerce_admin_url(['view' => 'requests'])); ?>">
             <?php wp_nonce_field('iss_payments_lite_status'); ?>
             <input type="hidden" name="iss_payments_lite_action" value="update_status">
             <div class="tablenav top">
-                <select name="request_new_status">
+                <select aria-label="Neuer Anfragestatus" name="request_new_status">
                     <?php foreach ($status_labels as $status => $label) : ?>
                         <option value="<?php echo esc_attr($status); ?>"><?php echo esc_html($label); ?></option>
                     <?php endforeach; ?>
                 </select>
                 <?php submit_button(__('Status setzen', 'iss-payments-lite'), 'secondary', '', false); ?>
             </div>
-            <table class="widefat striped">
+            <div class="iss-commerce-table" role="region" aria-label="Anfragenliste" tabindex="0"><table class="widefat striped">
                 <thead>
                     <tr>
                         <th scope="col" class="check-column"></th>
@@ -409,7 +442,7 @@ function iss_payments_lite_render_requests_page(): void
                     <?php endif; ?>
                     <?php foreach ($rows as $row) : ?>
                         <tr>
-                            <th scope="row" class="check-column"><input type="checkbox" name="request_ids[]" value="<?php echo esc_attr((string) (int) ($row['id'] ?? 0)); ?>"></th>
+                            <th scope="row" class="check-column"><input type="checkbox" aria-label="Anfrage auswählen" name="request_ids[]" value="<?php echo esc_attr((string) (int) ($row['id'] ?? 0)); ?>"></th>
                             <td><?php echo esc_html((string) (int) ($row['id'] ?? 0)); ?></td>
                             <td><?php echo esc_html($kind_labels[(string) ($row['request_kind'] ?? '')] ?? (string) ($row['request_kind'] ?? '')); ?></td>
                             <td><?php echo esc_html($status_labels[(string) ($row['status'] ?? '')] ?? (string) ($row['status'] ?? '')); ?></td>
@@ -457,8 +490,17 @@ function iss_payments_lite_render_requests_page(): void
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
-            </table>
+            </table></div>
         </form>
+        <?php
+        echo wp_kses_post(paginate_links(['base' => add_query_arg(['view' => 'requests', 's' => $filters['search'], 'request_status' => $filters['status'], 'request_kind' => $filters['kind'], 'paged' => '%#%'], iss_commerce_admin_url()), 'format' => '', 'current' => $paged, 'total' => max(1, (int) ceil($total / $per_page))]));
+        endif; ?>
     </div>
     <?php
 }
+
+add_action('admin_enqueue_scripts', static function (): void {
+    if (iss_payments_lite_admin_get_param('page') === 'iss-payments-lite-requests') {
+        wp_enqueue_style('iss-commerce-admin', plugins_url('../assets/admin.css', __FILE__), [], ISS_COMMERCE_LITE_VERSION);
+    }
+});

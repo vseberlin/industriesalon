@@ -388,7 +388,7 @@ final class ISS_Occurrences_Service
             $review_state = 'mapped';
         }
 
-        $wpdb->query(
+        $written = $wpdb->query(
             $wpdb->prepare(
                 "INSERT INTO {$table}
                     (source_post_id, source_post_type, origin, external_id, series_key, supersaas_title, tag, fallback_url, review_state, rule, timezone, exceptions, created_at, updated_at)
@@ -422,6 +422,8 @@ final class ISS_Occurrences_Service
                 $now
             )
         );
+
+        if ($written === false) { return 0; }
 
         return (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$table} WHERE series_key = %s LIMIT 1", $series_key));
     }
@@ -1114,12 +1116,19 @@ final class ISS_Occurrences_Service
         }
 
         $match_state = isset($args['match_state']) ? sanitize_key((string) $args['match_state']) : '';
-        if ($match_state === 'active') {
+        if ($match_state === 'attention') {
+            $where[] = "s.match_state IN ('unmapped', 'invalid_source')";
+        } elseif ($match_state === 'active') {
             $where[] = 's.match_state <> %s';
             $values[] = 'ignored';
         } elseif ($match_state !== '' && $match_state !== 'all') {
             $where[] = 's.match_state = %s';
             $values[] = $match_state;
+        }
+
+        if (!empty($args['series_key'])) {
+            $where[] = 's.series_key = %s';
+            $values[] = $this->normalize_series_key((string) $args['series_key']);
         }
 
         $status = isset($args['status']) ? sanitize_key((string) $args['status']) : '';
@@ -1138,6 +1147,130 @@ final class ISS_Occurrences_Service
         }
 
         return [$where, $values];
+    }
+
+    public function get_series_occurrence_summaries(array $series_keys): array {
+        $series_keys = array_values(array_unique(array_filter(array_map('iss_occurrences_normalize_series_key', $series_keys))));
+        if (empty($series_keys)) {
+            return [];
+        }
+
+        if (!$this->tables_exist()) {
+            return [];
+        }
+
+        global $wpdb;
+
+        $table = $this->get_occurrences_table_name();
+        $now = current_time('mysql');
+        $placeholders = implode(',', array_fill(0, count($series_keys), '%s'));
+        $params = array_merge(
+            ['active', 'public', $now, 'active', 'public', $now, 'supersaas'],
+            $series_keys
+        );
+        $rows = $wpdb->get_results(
+            // phpcs:ignore WordPress.DB.PreparedSQLPlaceholders.ReplacementsWrongNumber -- Fixed conditions plus one placeholder per normalized series key; parameters are passed as an array.
+            $wpdb->prepare(
+                "SELECT series_key,
+                    COUNT(*) AS total_rows,
+                    SUM(CASE WHEN status = %s AND visibility = %s AND starts_at >= %s THEN 1 ELSE 0 END) AS future_active_rows,
+                    MIN(CASE WHEN status = %s AND visibility = %s AND starts_at >= %s THEN starts_at ELSE NULL END) AS next_start
+                FROM {$table}
+                WHERE origin = %s
+                  AND series_key IN ({$placeholders})
+                GROUP BY series_key",
+                $params
+            ),
+            ARRAY_A
+        );
+
+        $summaries = [];
+        foreach ((array) $rows as $row) {
+            $series_key = isset($row['series_key']) ? iss_occurrences_normalize_series_key((string) $row['series_key']) : '';
+            if ($series_key === '') {
+                continue;
+            }
+
+            $summaries[$series_key] = [
+                'total_rows' => (int) ($row['total_rows'] ?? 0),
+                'future_active_rows' => (int) ($row['future_active_rows'] ?? 0),
+                'next_start' => isset($row['next_start']) ? (string) $row['next_start'] : '',
+            ];
+        }
+
+        return $summaries;
+    }
+
+    public function get_event_series_summaries(): array {
+        if (!$this->supersaas_slots_table_exists()) {
+            return [];
+        }
+
+        global $wpdb;
+
+        $table = $this->get_supersaas_slots_table_name();
+        $now = current_time('mysql');
+        $rows = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT series_key,
+                    MIN(NULLIF(clean_title, '')) AS clean_title,
+                    MIN(CASE WHEN description <> '' THEN description ELSE NULL END) AS sample_description,
+                    COUNT(*) AS total_slots,
+                    SUM(CASE WHEN starts_at >= %s THEN 1 ELSE 0 END) AS future_slots,
+                    MIN(CASE WHEN starts_at >= %s THEN starts_at ELSE NULL END) AS next_start,
+                    SUM(CASE WHEN match_state = 'mapped' THEN 1 ELSE 0 END) AS mapped_slots,
+                    SUM(CASE WHEN match_state = 'ignored' THEN 1 ELSE 0 END) AS ignored_slots,
+                    MAX(last_seen_at) AS last_seen_at
+                FROM {$table}
+                WHERE schedule_key = %s
+                  AND series_key LIKE %s
+                GROUP BY series_key
+                ORDER BY series_key ASC",
+                $now,
+                $now,
+                'salonbelegung',
+                'event:%'
+            ),
+            ARRAY_A
+        );
+
+        $summaries = [];
+        foreach ((array) $rows as $row) {
+            $series_key = isset($row['series_key']) ? iss_occurrences_normalize_series_key((string) $row['series_key']) : '';
+            if ($series_key === '') {
+                continue;
+            }
+
+            $summaries[$series_key] = [
+                'series_key' => $series_key,
+                'clean_title' => trim((string) ($row['clean_title'] ?? '')),
+                'sample_description' => trim((string) ($row['sample_description'] ?? '')),
+                'total_slots' => (int) ($row['total_slots'] ?? 0),
+                'future_slots' => (int) ($row['future_slots'] ?? 0),
+                'next_start' => isset($row['next_start']) ? (string) $row['next_start'] : '',
+                'mapped_slots' => (int) ($row['mapped_slots'] ?? 0),
+                'ignored_slots' => (int) ($row['ignored_slots'] ?? 0),
+                'last_seen_at' => isset($row['last_seen_at']) ? (string) $row['last_seen_at'] : '',
+            ];
+        }
+
+        uasort($summaries, static function (array $a, array $b): int {
+            $a_next = trim((string) ($a['next_start'] ?? ''));
+            $b_next = trim((string) ($b['next_start'] ?? ''));
+            if ($a_next === '' && $b_next !== '') {
+                return 1;
+            }
+            if ($a_next !== '' && $b_next === '') {
+                return -1;
+            }
+            if ($a_next !== '' && $b_next !== '' && $a_next !== $b_next) {
+                return strcmp($a_next, $b_next);
+            }
+
+            return strcmp((string) ($a['series_key'] ?? ''), (string) ($b['series_key'] ?? ''));
+        });
+
+        return $summaries;
     }
 
     public function query_supersaas_slots(array $args = []): array
@@ -1371,11 +1504,10 @@ final class ISS_Occurrences_Service
                 'updated_at' => current_time('mysql'),
             ],
             [
-                'schedule_key' => 'salonbelegung',
                 'series_key' => $series_key,
             ],
             ['%d', '%s', '%s', '%s', '%s', '%s', '%s'],
-            ['%s', '%s']
+            ['%s']
         );
     }
 

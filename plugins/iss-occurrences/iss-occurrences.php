@@ -2,7 +2,7 @@
 /**
  * Plugin Name: ISS Occurrences
  * Description: Durable occurrence projection, SuperSaaS ingestion, and public programme query service.
- * Version: 0.1.0
+ * Version: 0.2.0
  * Author: Industriesalon
  */
 
@@ -10,7 +10,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('ISS_OCCURRENCES_VERSION', '0.1.0');
+define('ISS_OCCURRENCES_VERSION', '0.2.0');
 define('ISS_OCCURRENCES_PATH', plugin_dir_path(__FILE__));
 define('ISS_OCCURRENCES_SCHEMA_VERSION', '2026-06-29-occurrences-v11-supersaas-slot-review');
 define('ISS_OCCURRENCES_SCHEMA_OPTION', 'iss_occurrences_schema_version');
@@ -22,6 +22,7 @@ require_once ISS_OCCURRENCES_PATH . 'includes/mapping.php';
 require_once ISS_OCCURRENCES_PATH . 'includes/providers.php';
 require_once ISS_OCCURRENCES_PATH . 'includes/hooks.php';
 require_once ISS_OCCURRENCES_PATH . 'includes/supersaas/bootstrap.php';
+require_once ISS_OCCURRENCES_PATH . 'includes/admin-sync-controls.php';
 require_once ISS_OCCURRENCES_PATH . 'includes/admin-fuehrung-mapping.php';
 require_once ISS_OCCURRENCES_PATH . 'includes/admin-sync-page.php';
 require_once ISS_OCCURRENCES_PATH . 'includes/cli.php';

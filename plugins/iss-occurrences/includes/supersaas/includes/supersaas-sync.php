@@ -842,6 +842,7 @@ function iss_supersaas_reconcile_exact_title_series_sources() {
             WHERE origin = %s
               AND series_key LIKE %s
               AND supersaas_title <> ''
+              AND review_state = ''
               AND tag = ''",
             'supersaas',
             'tour:%'
@@ -1244,7 +1245,7 @@ function iss_supersaas_sync_occurrences() {
         $series_entry = ($series_key !== '' && isset($series_sources[$series_key]) && is_array($series_sources[$series_key]))
             ? $series_sources[$series_key]
             : [];
-        if ($slot_source_type === 'free' && ($series_entry['review_state'] ?? '') !== 'ignored'
+        if ($slot_source_type === 'free' && !in_array($series_entry['review_state'] ?? '', ['ignored', 'unreviewed'], true)
             && ($clean_title === '' || empty($series_entry['source_post_id']))) {
             $matched_series = iss_supersaas_match_mapped_series_from_slot_text($slot, $series_sources);
             if (!empty($matched_series)) {
@@ -1394,6 +1395,18 @@ function iss_supersaas_sync_occurrences() {
         }
 
         $series_review_state = isset($series_entry['review_state']) ? sanitize_key((string) $series_entry['review_state']) : '';
+        // Reviewed WordPress mappings outrank title/tag inference and old projections.
+        if ($series_review_state === 'mapped') {
+            $source_post_id = (int) ($series_entry['source_post_id'] ?? 0);
+            $source_post_type = (string) ($series_entry['source_post_type'] ?? '');
+        } elseif ($series_review_state === 'unreviewed') {
+            $source_post_id = 0;
+            $source_post_type = '';
+        }
+        if ($slot_source_type === 'range' && $slot_review_state === 'mapped') {
+            $source_post_id = (int) ($existing_staged_slot['source_post_id'] ?? 0);
+            $source_post_type = (string) ($existing_staged_slot['source_post_type'] ?? '');
+        }
         if ($slot_review_state === 'ignored') {
             $series_review_state = 'ignored';
         }
@@ -1413,7 +1426,7 @@ function iss_supersaas_sync_occurrences() {
             }
         }
 
-        if ($series_key !== '' && $slot_source_type === 'free' && function_exists('iss_occurrences_remember_series_source')) {
+        if ($series_key !== '' && $slot_source_type === 'free' && !in_array($series_review_state, ['ignored', 'unreviewed'], true) && function_exists('iss_occurrences_remember_series_source')) {
             iss_occurrences_remember_series_source($series_key, $source_post_id, $source_post_type, $clean_title, $tag, $fallback_url);
 
             $series_sources[$series_key] = isset($series_sources[$series_key]) && is_array($series_sources[$series_key]) ? $series_sources[$series_key] : [];

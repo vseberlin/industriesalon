@@ -144,19 +144,14 @@ function iss_supersaas_load_admin_settings_api() {
     }
 }
 
-function iss_supersaas_load_admin_menu_api() {
-    if (!function_exists('add_options_page') && defined('ABSPATH')) {
-        require_once ABSPATH . 'wp-admin/includes/plugin.php';
-    }
-}
-
 add_action('admin_notices', function () {
+    if (!current_user_can(function_exists('iss_core_capability') ? iss_core_capability('sync') : 'manage_options')) { return; }
     $settings = iss_supersaas_get_settings();
     if (empty($settings['api_key']) || empty(iss_supersaas_get_schedule_configs($settings))) {
-        $settings_url = admin_url((defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? 'admin.php' : 'options-general.php') . '?page=' . ISS_SUPERSAAS_SETTINGS_PAGE);
+        $settings_url = add_query_arg('view', 'connection', iss_occurrences_sync_admin_url());
         echo '<div class="notice notice-warning is-dismissible"><p>'
             . '<strong>SuperSaaS API:</strong> '
-            . 'API-Zugangsdaten fehlen. Das Buchungssystem ist nicht aktiv. '
+            . 'Terminabgleich nicht eingerichtet. Bitte Zugangsdaten und aktive Kalender prüfen. '
             . '<a href="' . esc_url($settings_url) . '">Jetzt einrichten →</a>'
             . '</p></div>';
     }
@@ -176,15 +171,15 @@ function iss_supersaas_register_settings() {
 
     add_settings_section(
         'iss_supersaas_main',
-        'SuperSaaS Configuration',
+        'SuperSaaS-Verbindung',
         '__return_false',
         ISS_SUPERSAAS_OPTION_GROUP
     );
 
-    add_settings_field('api_key', 'API Key', 'iss_supersaas_field_api_key', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
-    add_settings_field('base_url', 'API Base URL', 'iss_supersaas_field_base_url', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
-    add_settings_field('account_name', 'Account Name', 'iss_supersaas_field_account_name', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
-    add_settings_field('schedules', 'Schedules', 'iss_supersaas_field_schedules', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
+    add_settings_field('api_key', 'API-Schlüssel', 'iss_supersaas_field_api_key', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main', ['label_for' => 'iss-supersaas-api_key']);
+    add_settings_field('base_url', 'Server-Adresse', 'iss_supersaas_field_base_url', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main', ['label_for' => 'iss-supersaas-base_url']);
+    add_settings_field('account_name', 'Kontoname', 'iss_supersaas_field_account_name', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main', ['label_for' => 'iss-supersaas-account_name']);
+    add_settings_field('schedules', 'Kalender', 'iss_supersaas_field_schedules', ISS_SUPERSAAS_OPTION_GROUP, 'iss_supersaas_main');
 }
 add_action('admin_init', 'iss_supersaas_register_settings');
 add_filter('option_page_capability_' . ISS_SUPERSAAS_OPTION_GROUP, function () {
@@ -192,76 +187,68 @@ add_filter('option_page_capability_' . ISS_SUPERSAAS_OPTION_GROUP, function () {
 });
 
 function iss_supersaas_sanitize_settings($input) {
-    $out = [];
-    $out['schedule_id']   = isset($input['schedule_id']) ? preg_replace('/[^0-9]/', '', $input['schedule_id']) : '';
-    $out['api_key']       = isset($input['api_key']) ? sanitize_text_field($input['api_key']) : '';
-    $out['base_url']      = isset($input['base_url']) ? esc_url_raw(trim($input['base_url'])) : '';
-    $out['account_name']  = isset($input['account_name']) ? sanitize_text_field($input['account_name']) : '';
-    $out['schedule_path'] = isset($input['schedule_path']) ? trim((string) $input['schedule_path']) : '';
-    $out['schedules'] = [];
-    $schedules = isset($input['schedules']) && is_array($input['schedules']) ? $input['schedules'] : [];
-    foreach ($schedules as $index => $schedule) {
-        if (!is_array($schedule)) {
-            continue;
-        }
-        $schedule_id = isset($schedule['schedule_id']) ? preg_replace('/[^0-9]/', '', (string) $schedule['schedule_id']) : '';
-        if ($schedule_id === '') {
-            continue;
-        }
-        $key = isset($schedule['key']) ? iss_supersaas_normalize_schedule_key((string) $schedule['key']) : '';
-        if ($key === '') {
-            $key = $index === 0 ? 'public' : 'schedule-' . ($index + 1);
-        }
-        $out['schedules'][] = [
-            'enabled' => !empty($schedule['enabled']) ? 1 : 0,
-            'key' => $key,
-            'label' => isset($schedule['label']) ? sanitize_text_field((string) $schedule['label']) : $key,
-            'schedule_id' => $schedule_id,
-            'schedule_path' => isset($schedule['schedule_path']) ? trim((string) $schedule['schedule_path']) : '',
-            'source' => isset($schedule['source']) && in_array(sanitize_key((string) $schedule['source']), ['free', 'range'], true)
-                ? sanitize_key((string) $schedule['source'])
-                : 'free',
-        ];
+    $old = iss_supersaas_get_settings();
+    $input = is_array($input) ? $input : [];
+    $out = $old;
+    $errors = [];
+    $out['api_key'] = trim((string) ($input['api_key'] ?? '')) !== '' ? sanitize_text_field($input['api_key']) : $old['api_key'];
+    $out['base_url'] = esc_url_raw(trim((string) ($input['base_url'] ?? '')));
+    if (!in_array(wp_parse_url($out['base_url'], PHP_URL_SCHEME), ['https', 'http'], true) || !wp_parse_url($out['base_url'], PHP_URL_HOST)) {
+        $errors[] = 'Server-Adresse: Bitte eine vollständige HTTP- oder HTTPS-Adresse angeben.';
     }
+    $out['account_name'] = sanitize_text_field((string) ($input['account_name'] ?? ''));
+    $out['schedules'] = [];
+    $keys = [];
+    foreach ((array) ($input['schedules'] ?? []) as $index => $schedule) {
+        if (!is_array($schedule)) { continue; }
+        $raw_key = trim((string) ($schedule['key'] ?? ''));
+        $id = trim((string) ($schedule['schedule_id'] ?? ''));
+        $label = sanitize_text_field((string) ($schedule['label'] ?? ''));
+        $path = trim((string) ($schedule['schedule_path'] ?? ''));
+        if ($raw_key === '' && $id === '' && $label === '' && $path === '' && empty($schedule['enabled'])) { continue; }
+        $row = 'Kalender ' . ((int) $index + 1) . ': ';
+        $key = iss_supersaas_normalize_schedule_key($raw_key);
+        if ($key === '' || $key !== $raw_key || isset($keys[$key])) { $errors[] = $row . 'Der Schlüssel muss eindeutig sein und nur Kleinbuchstaben, Zahlen, Bindestriche oder Unterstriche enthalten.'; }
+        $existing = $old['schedules'][$index] ?? null;
+        if (is_array($existing) && !empty($existing['key']) && $key !== $existing['key']) { $errors[] = $row . 'Der Schlüssel eines bestehenden Kalenders darf nicht geändert werden.'; }
+        if (!ctype_digit($id) || (int) $id <= 0) { $errors[] = $row . 'Kalender-ID muss eine positive ganze Zahl sein. Die bisherige Konfiguration bleibt erhalten.'; }
+        $source = sanitize_key((string) ($schedule['source'] ?? ''));
+        if (!in_array($source, ['free', 'range'], true)) { $errors[] = $row . 'Bitte eine gültige Abrufart wählen.'; }
+        if (($key === 'salonbelegung') !== ($source === 'range')) { $errors[] = $row . 'Der Veranstaltungskalender benötigt den Schlüssel salonbelegung und die Abrufart Veranstaltungstermine.'; }
+        $keys[$key] = true;
+        $out['schedules'][] = ['enabled' => !empty($schedule['enabled']) ? 1 : 0, 'key' => $key, 'label' => $label ?: $key, 'schedule_id' => $id, 'schedule_path' => $path, 'source' => $source];
+    }
+    $active = array_filter($out['schedules'], static fn($schedule) => !empty($schedule['enabled']));
+    if ($active && ($out['account_name'] === '' || $out['api_key'] === '')) { $errors[] = 'Aktive Kalender benötigen Kontoname und API-Schlüssel.'; }
+    if ($errors) {
+        foreach ($errors as $index => $message) { add_settings_error(ISS_SUPERSAAS_SETTINGS_OPTION, 'calendar-' . $index, $message); }
+        return $old;
+    }
+    // Array configuration replaces the legacy fallback, including when all calendars are disabled.
+    $out['schedule_id'] = '';
+    $out['schedule_path'] = '';
     return $out;
 }
 
-function iss_supersaas_add_admin_menu() {
-    iss_supersaas_load_admin_menu_api();
-
-    $capability = function_exists('iss_core_capability') ? iss_core_capability('sync') : 'manage_options';
-
-    add_submenu_page(
-        defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'options-general.php',
-        'SuperSaaS API',
-        'SuperSaaS API',
-        $capability,
-        ISS_SUPERSAAS_SETTINGS_PAGE,
-        'iss_supersaas_render_settings_page'
-    );
+/** Redirect legacy bookmarks before core checks the removed submenu's access. */
+function iss_supersaas_redirect_legacy_settings_page(): void {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only navigation.
+    if (sanitize_key((string) ($_GET['page'] ?? '')) !== ISS_SUPERSAAS_SETTINGS_PAGE) { return; }
+    if (!current_user_can(iss_occurrences_sync_capability())) { wp_die('Keine Berechtigung.', '', ['response' => 403]); }
+    wp_safe_redirect(add_query_arg('view', 'connection', iss_occurrences_sync_admin_url()));
+    exit;
 }
-add_action('admin_menu', 'iss_supersaas_add_admin_menu');
+add_action('admin_menu', 'iss_supersaas_redirect_legacy_settings_page', 9);
 
-function iss_supersaas_render_settings_page() {
+function iss_supersaas_render_connection_form(): void {
     iss_supersaas_load_admin_settings_api();
-    iss_supersaas_load_admin_menu_api();
-    if (function_exists('iss_require_cap')) {
-        iss_require_cap(function_exists('iss_core_capability') ? iss_core_capability('sync') : 'manage_options');
-    }
-
-    ?>
-    <div class="wrap">
-        <h1>SuperSaaS API</h1>
-        <form method="post" action="options.php">
-            <?php
-            settings_fields(ISS_SUPERSAAS_OPTION_GROUP);
-            do_settings_sections(ISS_SUPERSAAS_OPTION_GROUP);
-            submit_button();
-            ?>
-        </form>
-        <p><strong>Frontend:</strong> Tour calendars are rendered by the <code>iss/tour-calendar</code> and <code>iss/tour-dates</code> blocks in <code>iss-frontend</code>.</p>
-    </div>
-    <?php
+    settings_errors();
+    echo '<h2>Verbindung und Kalender</h2><p>Diese Einstellungen bestimmen, aus welchen Kalendern Termine gelesen werden. Speichern startet keinen Import. Anschließend unter „Übersicht“ den Terminabgleich ausführen und das Ergebnis prüfen.</p>';
+    echo '<form method="post" action="' . esc_url(admin_url('options.php')) . '">';
+    settings_fields(ISS_SUPERSAAS_OPTION_GROUP);
+    do_settings_sections(ISS_SUPERSAAS_OPTION_GROUP);
+    submit_button('Verbindung speichern');
+    echo '</form>';
 }
 
 function iss_supersaas_build_slot_response($slot, $title, $start) {
@@ -285,121 +272,40 @@ function iss_supersaas_build_slot_response($slot, $title, $start) {
     ];
 }
 
-function iss_supersaas_field_schedule_id() {
-    $settings = iss_supersaas_get_settings();
-    printf(
-        '<input type="text" name="%s[schedule_id]" value="%s" class="regular-text" />',
-        esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
-        esc_attr($settings['schedule_id'])
-    );
-}
-
 function iss_supersaas_field_api_key() {
     $settings = iss_supersaas_get_settings();
-    printf(
-        '<input type="password" name="%s[api_key]" value="%s" class="regular-text" autocomplete="new-password" />',
-        esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
-        esc_attr($settings['api_key'])
-    );
+    echo '<input id="iss-supersaas-api_key" type="password" name="' . esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION) . '[api_key]" value="" class="regular-text" autocomplete="new-password">';
+    echo '<p class="description">' . esc_html($settings['api_key'] !== '' ? 'Schlüssel gespeichert. Leer lassen, um ihn beizubehalten; einen neuen Schlüssel nur zum Ersetzen eingeben.' : 'Noch kein Schlüssel gespeichert. API-Schlüssel aus dem SuperSaaS-Konto eingeben.') . '</p>';
 }
 
 function iss_supersaas_field_base_url() {
     $settings = iss_supersaas_get_settings();
-    printf(
-        '<input type="text" name="%s[base_url]" value="%s" class="regular-text" />',
-        esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
-        esc_attr($settings['base_url'])
-    );
-    echo '<p class="description">Example: https://www.supersaas.de</p>';
+    echo '<input id="iss-supersaas-base_url" type="url" name="' . esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION) . '[base_url]" value="' . esc_attr($settings['base_url']) . '" class="regular-text" required><p class="description">Zum Beispiel https://www.supersaas.de</p>';
 }
 
 function iss_supersaas_field_account_name() {
     $settings = iss_supersaas_get_settings();
-    printf(
-        '<input type="text" name="%s[account_name]" value="%s" class="regular-text" />',
-        esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
-        esc_attr($settings['account_name'])
-    );
-    echo '<p class="description">Used for booking links.</p>';
-}
-
-function iss_supersaas_field_schedule_path() {
-    $settings = iss_supersaas_get_settings();
-    printf(
-        '<input type="text" name="%s[schedule_path]" value="%s" class="regular-text" />',
-        esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
-        esc_attr($settings['schedule_path'])
-    );
-    echo '<p class="description">Required for booking links. Example: Fuehrungen_%28oeffentlich%29</p>';
+    echo '<input id="iss-supersaas-account_name" type="text" name="' . esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION) . '[account_name]" value="' . esc_attr($settings['account_name']) . '" class="regular-text"><p class="description">SuperSaaS-Kontoname für Verweise auf den Quellkalender. Buchungen werden in WordPress verwaltet.</p>';
 }
 
 function iss_supersaas_field_schedules() {
     $settings = iss_supersaas_get_settings();
-    $schedules = isset($settings['schedules']) && is_array($settings['schedules']) && !empty($settings['schedules'])
-        ? $settings['schedules']
-        : iss_supersaas_get_schedule_configs($settings);
-
-    if (empty($schedules)) {
-        $schedules = [[
-            'enabled' => 1,
-            'key' => 'public',
-            'label' => 'public',
-            'schedule_id' => isset($settings['schedule_id']) ? (string) $settings['schedule_id'] : '',
-            'schedule_path' => isset($settings['schedule_path']) ? (string) $settings['schedule_path'] : '',
-            'source' => 'free',
-        ]];
-    }
-    while (count($schedules) < 2) {
-        $schedules[] = [
-            'enabled' => 0,
-            'key' => '',
-            'label' => '',
-            'schedule_id' => '',
-            'schedule_path' => '',
-            'source' => 'free',
-        ];
-    }
-
-    echo '<table class="widefat striped" style="max-width:1080px"><thead><tr><th>Aktiv</th><th>Key</th><th>Label</th><th>Schedule ID</th><th>Schedule Path</th><th>Quelle</th></tr></thead><tbody>';
+    $schedules = !empty($settings['schedules']) ? $settings['schedules'] : iss_supersaas_get_schedule_configs($settings);
+    $schedules[] = ['enabled' => 0, 'key' => '', 'label' => '', 'schedule_id' => '', 'schedule_path' => '', 'source' => 'free'];
     foreach ($schedules as $index => $schedule) {
-        $schedule = is_array($schedule) ? $schedule : [];
-        echo '<tr>';
-        echo '<td><input type="hidden" name="' . esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION) . '[schedules][' . (int) $index . '][enabled]" value="0" />';
-        echo '<input type="checkbox" name="' . esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION) . '[schedules][' . (int) $index . '][enabled]" value="1" ' . checked(!empty($schedule['enabled']), true, false) . ' /></td>';
-        printf(
-            '<td><input type="text" name="%1$s[schedules][%2$d][key]" value="%3$s" class="regular-text" placeholder="public" /></td>',
-            esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
-            (int) $index,
-            esc_attr((string) ($schedule['key'] ?? ''))
-        );
-        printf(
-            '<td><input type="text" name="%1$s[schedules][%2$d][label]" value="%3$s" class="regular-text" /></td>',
-            esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
-            (int) $index,
-            esc_attr((string) ($schedule['label'] ?? ''))
-        );
-        printf(
-            '<td><input type="text" name="%1$s[schedules][%2$d][schedule_id]" value="%3$s" class="regular-text" /></td>',
-            esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
-            (int) $index,
-            esc_attr((string) ($schedule['schedule_id'] ?? ''))
-        );
-        printf(
-            '<td><input type="text" name="%1$s[schedules][%2$d][schedule_path]" value="%3$s" class="regular-text" placeholder="public" /></td>',
-            esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION),
-            (int) $index,
-            esc_attr((string) ($schedule['schedule_path'] ?? ''))
-        );
-        $source = isset($schedule['source']) ? sanitize_key((string) $schedule['source']) : 'free';
-        echo '<td><select name="' . esc_attr(ISS_SUPERSAAS_SETTINGS_OPTION) . '[schedules][' . (int) $index . '][source]">';
-        foreach (['free' => 'Freie Slots', 'range' => 'Termine'] as $value => $label) {
-            echo '<option value="' . esc_attr($value) . '" ' . selected($source, $value, false) . '>' . esc_html($label) . '</option>';
+        $name = ISS_SUPERSAAS_SETTINGS_OPTION . '[schedules][' . (int) $index . ']';
+        $existing = !empty($schedule['key']);
+        echo '<fieldset class="iss-sync-calendar"><legend><strong>' . esc_html($existing ? ($schedule['label'] ?: $schedule['key']) : 'Weiteren Kalender hinzufügen (optional)') . '</strong></legend>';
+        echo '<label><input type="checkbox" name="' . esc_attr($name . '[enabled]') . '" value="1" ' . checked(!empty($schedule['enabled']), true, false) . '> Kalender abrufen</label>';
+        foreach (['label' => 'Anzeigename', 'schedule_id' => 'Kalender-ID', 'key' => 'Stabiler Schlüssel', 'schedule_path' => 'Kalenderpfad bei SuperSaaS'] as $key => $label) {
+            echo '<label>' . esc_html($label) . '<input type="text" class="regular-text" name="' . esc_attr($name . '[' . $key . ']') . '" value="' . esc_attr((string) ($schedule[$key] ?? '')) . '" ' . ($key === 'key' && $existing ? 'readonly' : '') . '></label>';
         }
-        echo '</select></td>';
-        echo '</tr>';
+        echo '<label>Abrufart<select name="' . esc_attr($name . '[source]') . '">';
+        foreach (['free' => 'Führungstermine (Slots)', 'range' => 'Veranstaltungstermine (Kalenderbereich)'] as $key => $label) {
+            echo '<option value="' . esc_attr($key) . '" ' . selected($schedule['source'] ?? 'free', $key, false) . '>' . esc_html($label) . '</option>';
+        }
+        echo '</select></label><p class="description">Die Kalender-ID ist die numerische ID bei SuperSaaS. Der Schlüssel hält importierte Termine und Zuordnungen stabil; bestehende Schlüssel bleiben unverändert. „salonbelegung“ ist der Veranstaltungskalender. Deaktivieren stoppt weitere Abrufe und entfernt keine bereits importierten Termine.</p></fieldset>';
     }
-    echo '</tbody></table>';
-    echo '<p class="description">Jeder aktive Schedule wird in die SuperSaaS-Staging-Tabelle gezogen. Der Key wird für eindeutige Slot-IDs verwendet.</p>';
 }
 
 function iss_occurrences_register_public_booking_slot_routes() {

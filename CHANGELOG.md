@@ -6,6 +6,22 @@ be recovered from Git history.
 
 ## 2026-10-23
 
+- Refactored SuperSaaS administration into overview, review queue, separate
+  tour/event series and connection views in the existing occurrence owner.
+  Removed obsolete dense tables and capacity wording; moved summary SQL into
+  the owner service. Manual runs reuse existing maintenance receipts, results
+  are user-scoped, row actions preserve filters and stale mappings are rejected.
+  Explicit mappings, unlinking and ignore/review decisions now survive later
+  title inference and repeated sync. Connection validation preserves the complete
+  previous configuration on error and never renders the saved API secret.
+  Commerce 0.5.1 separates staff tasks into tabs, makes booking/mail actions
+  contextual, adds pagination and keeps tables within labelled scroll regions.
+  Occurrences 0.2.0 and commerce retain their data/booking ownership; no new
+  scheduler, route, table or migration, and no uploads artifact is required.
+  Local verification: 96 isolated admin checks, 218 commerce assertions,
+  31 public occurrence assertions, PHP/static/CSS/JS checks and authenticated
+  Chrome navigation/layout checks. Staging and production have not been deployed.
+
 - Released consent code, bounded settings migration and 27 local preview imports
   to staging through GitHub. All five staging browser scenarios and the current
   WordPress privacy checks pass; real YouTube and CARTO rendering were verified.

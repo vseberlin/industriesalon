@@ -1,0 +1,108 @@
+/* Admin-only layout; WordPress owns buttons, type and navigation. */
+.iss-sync {
+    max-width: 1200px;
+}
+
+.iss-sync .nav-tab-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.iss-sync-item {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    margin-block: 16px;
+    padding: 16px;
+    overflow-wrap: anywhere;
+}
+
+.iss-sync-item h3 {
+    margin-block-start: 0;
+}
+
+.iss-sync details {
+    margin-block: 12px;
+}
+
+.iss-sync summary {
+    cursor: pointer;
+    padding-block: 6px;
+}
+
+.iss-sync-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
+    gap: 12px;
+    margin-block: 16px;
+    padding-block: 12px;
+    border-block-end: 1px solid #dcdcde;
+}
+
+.iss-sync-form p {
+    margin: 0;
+}
+
+.iss-sync-form label,
+.iss-sync-filters label {
+    display: block;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.iss-sync-form select,
+.iss-sync-filters select,
+.iss-sync-filters input {
+    display: block;
+    max-width: 100%;
+    margin-block-start: 4px;
+}
+
+.iss-sync-filters,
+.iss-sync-overview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: end;
+}
+
+.iss-sync-status {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) 3fr;
+    gap: 12px;
+}
+
+.iss-sync-status dd {
+    margin: 0;
+}
+
+.iss-sync .regular-text {
+    max-width: 100%;
+}
+
+.iss-sync-calendar {
+    border: 1px solid #c3c4c7;
+    padding: 16px;
+    margin-block: 16px;
+}
+
+.iss-sync-calendar label {
+    display: block;
+    margin-block: 12px;
+}
+
+.iss-sync-calendar input[type="text"],
+.iss-sync-calendar select {
+    display: block;
+    max-width: 100%;
+}
+
+@media (width <= 600px) {
+    .iss-sync-status {
+        grid-template-columns: 1fr;
+    }
+
+    .iss-sync-status dt {
+        font-weight: 600;
+    }
+}
