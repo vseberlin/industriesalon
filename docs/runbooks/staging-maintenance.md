@@ -198,7 +198,9 @@ npm run test:consent
 ```
 
 Use an installed Playwright browser; `PLAYWRIGHT_CHANNEL=chrome` selects installed
-Chrome. For protected staging, use the authorized test access arrangement. Do not
+Chrome. On rate-limited staging, set `ISS_CONSENT_TEST_PAUSE_MS=45000`
+to let request budgets replenish between scenarios; remote assertions allow
+15 seconds. For protected staging, use the authorized test access arrangement. Do not
 remove server authentication to run tests. The suite needs the published website
 routes and video fixture named in `tests/e2e/specs/consent.spec.js`; update fixture
 selection deliberately if editorial URLs change, keeping equivalent coverage.

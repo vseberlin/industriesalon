@@ -2,6 +2,13 @@ const { test, expect } = require('@playwright/test');
 
 const videoPath = '/video/orte-ost-oberschoeneweide/';
 
+// Let protected staging replenish its request budget between scenarios.
+// No server rate-limit/authentication configuration is changed by this suite.
+test.beforeEach(async () => {
+  const pause = Number(process.env.ISS_CONSENT_TEST_PAUSE_MS || 0);
+  if (pause) await new Promise(resolve => setTimeout(resolve, pause));
+});
+
 // Observe outbound attempts without sending test traffic/identifiers to external providers.
 async function observe(context) {
   const requests = [];
