@@ -7,8 +7,7 @@ Production is untouched; staging remains noindex and uses test inventory/payment
 
 ## Editorial Operations account — staging
 
-The scoped `iss_editorial_operator` role is deployed (`f6b89c9` plus the menu
-follow-up). The requested staff account exists only on staging; account details
+The scoped `iss_editorial_operator` role is deployed (`f6b89c9`, menu fixes through `8aa6f11`). The requested staff account exists only on staging; account details
 and credentials remain private in `var/anja-account-20261023/`. No invitation or
 other email was sent. Existing user rows were verified unchanged.
 
@@ -16,8 +15,10 @@ The role includes the requested editorial types, own/content Profile, Operations
 with its current submenus, and Newsletter drafts. Other admin areas are hidden
 and denied; publishing/deletion and newsletter delivery capabilities are absent.
 Local checks: 366 isolated role/REST/metadata assertions and 103 Project UAT
-regressions, PHP syntax, PHPCS and PHPStan. Staging login/menu and 34 authenticated
-allowed/denied routes passed. Private roles before-images are under
+regressions, PHP syntax, PHPCS and PHPStan. Staging login/menu and 37 authenticated
+allowed/denied routes passed. Newsletter draft creation, editing and reload passed;
+the unsent fixture was removed. Existing role grants remained intact and no
+capability drift or new PHP errors remained after menu fixes. Test sessions closed. Private roles before-images are under
 `/srv/industriesalon/stage/backups/editorial-operator-20261023/`; the existing owner
 setup migration passed apply/verify. No content/subscriber/uploads transfer.
 Production is untouched. Share the private credentials manually when ready.

@@ -14,7 +14,10 @@ be recovered from Git history.
   are included; the Newsletter integration limits this role to drafts and blocks
   sending/deletion. No third-party plugin edits or parallel permission store.
   Local validation: 366 isolated role/REST/metadata checks, targeted PHPCS/PHPStan
-  and syntax checks. Role changes use the existing owner-setup migration with a
+  and syntax checks; 103 existing Project UAT checks also passed. Staging login,
+  37 allowed/denied routes, exact navigation, and Newsletter draft create/edit/reload
+  passed; the unsent test draft was removed. No account email was sent and existing
+  user rows/role grants were preserved. Role changes use the existing owner-setup migration with a
   private target backup; no content/subscriber/uploads transfer is required.
 
 - Refactored SuperSaaS administration into overview, review queue, separate
