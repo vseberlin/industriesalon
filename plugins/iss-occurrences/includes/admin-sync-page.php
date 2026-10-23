@@ -196,8 +196,8 @@ if (!function_exists('iss_occurrences_sync_event_series_title')) {
 add_action('admin_menu', function () {
     add_submenu_page(
         defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : 'tools.php',
-        'Termine & Synchronisierung',
-        'Termine & Synchronisierung',
+        'SuperSaaS-Termine',
+        'SuperSaaS-Termine',
         iss_occurrences_sync_capability(),
         'iss-occurrences-sync',
         'iss_occurrences_render_sync_page'

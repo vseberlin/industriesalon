@@ -34,7 +34,7 @@ function iss_content_editorial_sets_register_admin_page(): void
     add_submenu_page(
         $parent_slug,
         __('Intake Workbench', 'iss-content-model'),
-        __('Sets', 'iss-content-model'),
+        __('Bilder-Sets', 'iss-content-model'),
         ISS_CONTENT_EDITORIAL_SETS_CAPABILITY,
         'iss-editorial-sets',
         'iss_content_editorial_sets_render_admin_page'

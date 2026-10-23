@@ -27,6 +27,16 @@ try {
         'install_plugins', 'edit_theme_options', 'iss_send_newsletter', 'iss_delete_sets', 'iss_cleanup_data'] as $cap) {
         $assert(!current_user_can($cap), 'Deny ' . $cap);
     }
+    foreach (iss_core_editorial_operator_revoked_capabilities() as $cap) {
+        $assert(!get_role('iss_editorial_operator')->has_cap($cap), 'Revoked operator capability ' . $cap);
+        $assert(get_role('administrator')->has_cap($cap), 'Administrator retains ' . $cap);
+    }
+    foreach (['publication', 'rueckblick'] as $type) {
+        $assert(get_post_type_object($type)->show_in_menu === true, 'Top-level menu ' . $type);
+    }
+    $archive = get_post_type_object('archivbeitrag');
+    $assert($request('POST', '/wp/v2/' . ($archive->rest_base ?: 'archivbeitrag'), ['title' => 'Must not exist'])->get_status() === 403, 'Archive creation denied');
+    $assert(iss_core_apply_capability_migration(true)['changes'] === [], 'Capability migration idempotent');
     foreach (iss_core_editorial_operator_post_types() as $type) {
         $object = get_post_type_object($type);
         $assert($object && current_user_can($object->cap->create_posts), 'Create ' . $type);

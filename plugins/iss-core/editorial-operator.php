@@ -28,13 +28,12 @@ function iss_core_editorial_operator_grants(): array
 {
     $caps = [
         'read', 'upload_files', 'iss_assign_editorial_terms', 'iss_access_operations', 'iss_manage_hinweise',
-        'iss_manage_register', 'iss_manage_publications', 'iss_manage_steuerung',
+        'iss_manage_publications', 'iss_manage_steuerung',
         'iss_manage_requests', 'iss_read_sets', 'iss_create_sets', 'iss_edit_sets',
-        'iss_sync_external_sources', 'iss_manage_fallback_mode',
+        'iss_sync_external_sources',
         'iss_manage_newsletter_content',
     ];
-    // Archive items and Rückblicke are existing Operations submenus.
-    $plurals = ['pages', 'projekte', 'iss_notices', 'register_places', 'publications', 'archive_items', 'rueckblicke'];
+    $plurals = ['pages', 'projekte', 'iss_notices', 'register_places', 'publications', 'rueckblicke'];
     foreach (iss_core_editorial_capability_types() as $types) { $plurals[] = $types[1]; }
     foreach ($plurals as $plural) {
         foreach (['edit_', 'edit_others_', 'edit_private_', 'edit_published_', 'read_private_'] as $prefix) {
@@ -43,6 +42,15 @@ function iss_core_editorial_operator_grants(): array
         if ($plural !== 'pages') { $caps[] = 'create_' . $plural; }
     }
     return $caps;
+}
+
+/** Explicit revocations for the existing role; other roles retain their grants. */
+function iss_core_editorial_operator_revoked_capabilities(): array
+{
+    return array_merge([
+        'iss_manage_register', 'iss_manage_fallback_mode', 'iss_run_fallback_projection',
+        'iss_manage_archive', 'iss_import_archive',
+    ], array_values(iss_core_post_type_capabilities('archive_item', 'archive_items')));
 }
 
 function iss_core_is_editorial_operator(?WP_User $user = null): bool
@@ -54,7 +62,7 @@ function iss_core_is_editorial_operator(?WP_User $user = null): bool
 function iss_core_editorial_operator_post_types(): array
 {
     return array_merge(array_keys(iss_core_editorial_capability_types()), [
-        'page', 'projekt', 'iss_notice', 'register_place', 'publication', 'archivbeitrag', 'rueckblick',
+        'page', 'projekt', 'iss_notice', 'register_place', 'publication', 'rueckblick',
     ]);
 }
 
@@ -90,6 +98,11 @@ add_action('current_screen', static function (WP_Screen $screen): void {
     if (in_array($screen->base, ['profile', 'upload', 'media'], true)) { return; }
     if (in_array($screen->post_type, iss_core_editorial_operator_post_types(), true)
         && in_array($screen->base, ['edit', 'post'], true)) { return; }
+    if (in_array($screen->base, ['edit-tags', 'term'], true)) {
+        $taxonomy = get_taxonomy($screen->taxonomy);
+        if ($taxonomy && array_intersect($taxonomy->object_type, iss_core_editorial_operator_post_types())
+            && current_user_can($taxonomy->cap->edit_terms)) { return; }
+    }
     if ($screen->base === 'revision') {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only routing; core authorizes revision actions.
         $revision = get_post(absint($_GET['revision'] ?? 0));

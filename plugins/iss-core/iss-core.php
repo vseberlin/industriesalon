@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 define('ISS_CORE_VERSION', '0.1.0');
 define('ISS_CORE_FILE', __FILE__);
 define('ISS_CORE_PATH', plugin_dir_path(__FILE__));
-define('ISS_CORE_CAPS_VERSION', '2026-10-23-editorial-operator-1');
+define('ISS_CORE_CAPS_VERSION', '2026-10-23-editorial-operator-2');
 define('ISS_CORE_CAPS_OPTION', 'iss_caps_version');
 define('ISS_CORE_OPERATIONS_MENU_SLUG', 'iss-operations');
 
@@ -528,6 +528,14 @@ function iss_core_apply_capability_migration(bool $dry_run = false): array
         }
     }
 
+    $operator = get_role('iss_editorial_operator');
+    foreach (iss_core_editorial_operator_revoked_capabilities() as $capability) {
+        if (!$operator || !array_key_exists($capability, $operator->capabilities)) { continue; }
+        if (!$dry_run) { $operator->remove_cap($capability); }
+        $changes[] = ['role' => 'iss_editorial_operator', 'capability' => $capability,
+            'change' => $dry_run ? 'would_remove_cap' : 'remove_cap'];
+    }
+
     if (!$dry_run) {
         // WP_Role mutates its in-memory object before persistence. Verify the
         // stored option, not the object, before declaring the migration complete.
@@ -537,6 +545,11 @@ function iss_core_apply_capability_migration(bool $dry_run = false): array
                 if (empty($stored_roles[$role_name]['capabilities'][$capability])) {
                     throw new RuntimeException(esc_html('Capability migration incomplete; inspect role ' . $role_name . '.'));
                 }
+            }
+        }
+        foreach (iss_core_editorial_operator_revoked_capabilities() as $capability) {
+            if (!empty($stored_roles['iss_editorial_operator']['capabilities'][$capability])) {
+                throw new RuntimeException('Editorial operator capability revocation incomplete.');
             }
         }
         update_option(ISS_CORE_CAPS_OPTION, ISS_CORE_CAPS_VERSION, false);

@@ -123,7 +123,7 @@ function iss_content_model_register_post_types() {
         'rewrite' => ['slug' => 'rueckblick', 'with_front' => false],
         'menu_position' => 24,
         'menu_icon' => 'dashicons-format-gallery',
-        'show_in_menu' => defined('ISS_CORE_OPERATIONS_MENU_SLUG') ? ISS_CORE_OPERATIONS_MENU_SLUG : true,
+        'show_in_menu' => true,
         'supports' => ['title', 'excerpt', 'thumbnail', 'revisions', 'page-attributes', 'custom-fields'],
         'taxonomies' => ['category', 'post_tag', ISS_CONTENT_MODEL_TOPIC_TAXONOMY],
         'capability_type' => ['rueckblick', 'rueckblicke'],

@@ -6,6 +6,13 @@ be recovered from Git history.
 
 ## 2026-10-23
 
+- Cleaned the editorial Operations menu: Archivbeiträge, Register Werkzeuge and
+  Fallback-Modus are revoked for Editorial Operators, including direct access.
+  Administrators retain access. Publikationen and Rückblicke move to the main
+  menu; labels are Hinweisbanner, SuperSaaS-Termine and Bilder-Sets. The existing
+  capability migration removes stale grants with a private target before-image;
+  no content or uploads transfer is needed.
+
 - Added the bounded Editorial Operations role in the existing ISS Core capability
   system. Existing broad roles could not provide the requested content-only menu.
   Native CPT/media capabilities and object-specific metadata checks allow draft

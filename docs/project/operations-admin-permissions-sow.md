@@ -419,12 +419,14 @@ Minimum checks for implementation:
 `iss_editorial_operator` uses the existing ISS Core role migration. It may read,
 create drafts and edit existing Media, Pages, Führungen, Veranstaltungen,
 Ausstellungen, Projekte, Team and Profile content, plus the existing Operations
-submenus (including Hinweise, Places, Publications, archive entries, Rückblicke,
-Sets, Steuerung, requests, synchronization and fallback controls). Personal Profile
+submenus (Hinweisbanner, Places, Bilder-Sets, Steuerung, requests and
+SuperSaaS-Termine). Publikationen and Rückblicke are top-level menus. Personal Profile
 and Newsletter drafts remain visible. Other admin screens are denied and hidden.
 Publishing/deletion capabilities, user/plugin/theme administration and newsletter
 delivery are not granted. Operational workflows retain their existing action caps;
-this role includes synchronization and fallback controls as part of Operations.
+this role includes SuperSaaS synchronization but excludes Archivbeiträge,
+Register Werkzeuge and Fallback-Modus. The versioned migration explicitly removes
+those previously granted capabilities from this role; other roles retain access.
 
 Native capabilities now separate the requested CPTs and attachments from Posts
 and Videos. Existing roles retain their prior access through the versioned

@@ -58,8 +58,8 @@ final class Industriesalon_Notices {
             return;
         }
 
-        $page_title = __('Hinweise', 'industriesalon-notices');
-        $menu_title = __('Hinweise', 'industriesalon-notices');
+        $page_title = __('Hinweisbanner', 'industriesalon-notices');
+        $menu_title = __('Hinweisbanner', 'industriesalon-notices');
         $capability = $this->capability();
         $slug = 'edit.php?post_type=' . self::POST_TYPE;
 
@@ -74,16 +74,16 @@ final class Industriesalon_Notices {
 
     public function register_post_type(): void {
         $labels = [
-            'name'                  => __('Hinweise', 'industriesalon-notices'),
+            'name'                  => __('Hinweisbanner', 'industriesalon-notices'),
             'singular_name'         => __('Hinweis', 'industriesalon-notices'),
-            'menu_name'             => __('Hinweise', 'industriesalon-notices'),
+            'menu_name'             => __('Hinweisbanner', 'industriesalon-notices'),
             'name_admin_bar'        => __('Hinweis', 'industriesalon-notices'),
             'add_new'               => __('Neu hinzufügen', 'industriesalon-notices'),
             'add_new_item'          => __('Hinweis hinzufügen', 'industriesalon-notices'),
             'new_item'              => __('Neuer Hinweis', 'industriesalon-notices'),
             'edit_item'             => __('Hinweis bearbeiten', 'industriesalon-notices'),
             'view_item'             => __('Hinweis ansehen', 'industriesalon-notices'),
-            'all_items'             => __('Alle Hinweise', 'industriesalon-notices'),
+            'all_items'             => __('Hinweisbanner', 'industriesalon-notices'),
             'search_items'          => __('Hinweise suchen', 'industriesalon-notices'),
             'not_found'             => __('Keine Hinweise gefunden.', 'industriesalon-notices'),
             'not_found_in_trash'    => __('Keine Hinweise im Papierkorb gefunden.', 'industriesalon-notices'),
