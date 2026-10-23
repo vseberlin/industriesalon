@@ -59,8 +59,8 @@ add_action('admin_menu', static function (): void {
     global $submenu;
     // Upstream retains hidden editor routes; only expose the draft workflow.
     $submenu['newsletter_main_index'] = [
-        [__('Newsletter', 'iss-newsletter'), 'iss_manage_newsletter_content', 'newsletter_emails_index'],
-        [__('Neu erstellen', 'iss-newsletter'), 'iss_manage_newsletter_content', 'admin.php?page=newsletter_emails_composer'],
+        [__('Newsletter', 'iss-newsletter'), 'iss_manage_newsletter_content', 'newsletter_emails_index', __('Newsletter', 'iss-newsletter')],
+        [__('Neu erstellen', 'iss-newsletter'), 'iss_manage_newsletter_content', 'admin.php?page=newsletter_emails_composer', __('Neuer Newsletter', 'iss-newsletter')],
     ];
 }, PHP_INT_MAX);
 
