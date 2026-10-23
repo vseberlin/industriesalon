@@ -5,49 +5,46 @@ Website source is `/home/vladimir/wp-website`; staging checkout is
 (`4666d81`, final code correction `9531b65`). Local and staging acceptance passed.
 Production is untouched; staging remains noindex and uses test inventory/payments.
 
-## Consent and privacy — release prepared
+## Consent and privacy — staging release
 
-Consent implementation and local acceptance are complete. GitHub/staging delivery
-is authorized and in progress from baseline `4e31fd0`; target acceptance follows
-the paired code, settings and preview-media import.
-See [ISS Consent](plugins/iss-consent/README.md) and the existing
-[maintenance runbook](docs/runbooks/staging-maintenance.md#consent-and-privacy-review).
-YouTube/CARTO have separate choices plus accept-all/decline-all in a compact
-nonmodal bottom popup. Atlas retains CARTO; the added static fallback has been
-removed. The user confirms its API key is already configured on staging. All 28 published videos
-now have local previews: 27 imported thumbnails and one preserved editorial image. Newsletter
-double opt-in/no-tracking policy and the native German privacy notice are updated.
-Site Health and Operations flag updates, settings drift and a 30-day browser
-review. The complete matching browser receipt is recorded locally.
+Code `067dc7b` and paced browser checks `5d199ba` are on GitHub and staging.
+The paired consent settings migration and offline preview import are applied.
+All 28 published videos have local previews (27 imported, one editorial image
+preserved); no subscriber/schema transfer or account import was performed.
+Atlas keeps CARTO with its existing staging key. The compact bottom popup offers
+accept-all, decline-all and separate choices; the native privacy notice and
+newsletter double opt-in/no-tracking adapter are deployed.
 
-Passed: 26 isolated PHP assertions, all five browser scenarios (including mobile,
-keyboard, no-JS, expiry and cross-tab withdrawal), native core-block validation
-for all 26 privacy-section blocks and the newsletter pattern, targeted PHPStan,
-PHP syntax, ESLint, Stylelint and diff checks. Operations/Site Health rendering
-passed via CLI; interactive admin/editor checks require the normal staff login.
-The footer retains its identical pre-existing image validation warning. PHPCS
-retains the same 24 pre-existing errors in `iss-content/includes/videos.php` as
-HEAD; other changed production PHP passes. Manual Chrome checked privacy layout,
-Atlas consent controls and actual YouTube embedding. The existing staging CARTO
-key is now installed in the ignored local WordPress runtime configuration, with
-a verified private before-image (`wp-config-before-carto.php`). No staging
-configuration was changed. Manual Chrome proved actual CARTO tiles (18/18 loaded),
-street/river basemap, markers and zoom after consent. All local consent health
-rows now pass. The key is absent from Git and shared documentation.
+Local acceptance: 26 isolated PHP assertions, five browser scenarios, native
+core-block validation, targeted PHPStan/PHP syntax/ESLint/Stylelint and diff checks.
+The same 24 pre-existing PHPCS findings in `iss-content/includes/videos.php` and
+one pre-existing footer image validation warning remain; no new findings.
+Staging acceptance: all five browser scenarios passed; the matching receipt is
+recorded, all 11 privacy checks pass and Site Health reports good. Manual Chrome
+verified actual YouTube embedding and CARTO tiles/zoom with 76 markers. All 27
+imported originals match the manifest; generated sizes exist and repeat import is a no-op. Before/after
+digests prove target users/usermeta, roles, URL/noindex, CARTO key and newsletter
+tables are unchanged. Operations rendering passed via CLI; authenticated
+interactive admin/editor review still uses the normal staff login. Services are
+healthy and release checks found no new PHP warnings/fatals. No email was sent.
 
-Private before-image, test evidence and runtime tools: `var/consent-20261023/`.
-For this release, deploy the paired code/settings migration with
-target-local backup, preserve template overrides/accounts and existing CARTO
-configuration, purge page caches, and rerun target acceptance. No schema or
-subscriber transfer; the canonical map assets already exist. Video previews
-require `var/consent-20261023/video-thumbnails.tar.gz`, its SHA-256 and
-`thumbnails-manifest.json`, paired with the documented offline `wp iss-content
-videos thumbnails --source-dir=... --apply --before=...` API import. All 27
-originals were hash-verified (about 1.1 MB); target IDs/sizes are regenerated and
-existing featured images are preserved. `thumbnails-before.json` records rollback.
-Hetzner hosting is confirmed. Before production verify the actual newsletter delivery
-supplier (the supplied `industriesalon.de` is only the sender domain), processing
-agreements and retention practice. No newsletter or user mail was sent.
+Verified full before-release backup:
+`/srv/industriesalon/stage/backups/iss-backup-20261023T111347Z/`
+(124 tables, seven fully read/hash-verified artifacts). Private local evidence:
+`var/consent-20261023/`; target evidence/settings and thumbnail before-images:
+`/srv/industriesalon/stage/var/consent-20261023/`. The 27-image originals archive,
+checksum and manifest travelled privately and were applied through the video
+owner; target attachment IDs/image sizes were generated locally. Never restore
+old accounts or subscriber data for rollback. Preserve later editorial choices.
+
+[ISS Consent](plugins/iss-consent/README.md) and the
+[maintenance procedure](docs/runbooks/staging-maintenance.md#consent-and-privacy-review)
+cover update invalidation, 30-day checks and recovery. Staging checks use
+`ISS_CONSENT_TEST_PAUSE_MS=45000` to respect its existing request limits; server
+protections are unchanged. Local CARTO also uses private runtime configuration.
+Hetzner hosting is confirmed. Before production confirm the actual newsletter
+delivery supplier (`industriesalon.de` is the sender domain), processing
+agreements and retention practice. Production remains untouched.
 
 ## Tour panel consistency
 
@@ -128,9 +125,9 @@ mapping, editorial history/media/relations and qualified source conflicts remain
 protected. Existing signed upload generations and private intake moderation
 must not be overwritten by historical backups.
 
-The verified full staging backup remains at
-`/srv/industriesalon/stage/backups/iss-backup-20261022T094828Z/`
-(119 tables, all seven artifacts verified). Target accounts remain target-owned;
+The latest verified full staging backup is
+`/srv/industriesalon/stage/backups/iss-backup-20261023T111347Z/`
+(124 tables, all seven artifacts verified). Target accounts remain target-owned;
 the unrestricted SQL importer stays disabled. Follow
 [content sync](docs/infrastructure/sync.md). Never replay retired credentials,
 sessions or authentication backups. Private incident evidence remains retained.

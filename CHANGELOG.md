@@ -6,6 +6,12 @@ be recovered from Git history.
 
 ## 2026-10-23
 
+- Released consent code, bounded settings migration and 27 local preview imports
+  to staging through GitHub. All five staging browser scenarios and the current
+  WordPress privacy checks pass; real YouTube and CARTO rendering were verified.
+  Target accounts, authentication and newsletter records were preserved, with a
+  verified full backup before release.
+
 - Removed the consent-era static Atlas fallback at the owner’s request. CARTO
   remains the interactive basemap; consent still gates tile requests and
   withdrawal removes tiles. Existing staging key plumbing is unchanged. The

@@ -4,12 +4,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Release the local consent/privacy changes when staging delivery is authorized,
-  using the [paired settings migration and checks](docs/runbooks/staging-maintenance.md#consent-and-privacy-review).
-  Preserve target CARTO credentials; local keyed tile loading is now verified.
-  Confirm the actual newsletter mail supplier and production processing/retention
-  details before production release. Complete authenticated admin/editor review.
-
+- Before production, confirm the newsletter delivery supplier, processing and
+  retention details, and complete authenticated consent admin/editor review.
+  Consent code/settings and local video previews are deployed to staging;
+  ongoing checks follow the [maintenance procedure](docs/runbooks/staging-maintenance.md#consent-and-privacy-review).
 - Complete real booking/voucher/mail activation after the commerce test release:
   reconcile the nine legacy reservations and subsequent changes; verify current
   voucher balances and one redemption authority; configure the authenticated
