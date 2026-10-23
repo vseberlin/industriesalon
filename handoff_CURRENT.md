@@ -5,10 +5,10 @@ Website source is `/home/vladimir/wp-website`; staging checkout is
 (`4666d81`, final code correction `9531b65`). Local and staging acceptance passed.
 Production is untouched; staging remains noindex and uses test inventory/payments.
 
-## SuperSaaS admin refactor — release checkpoint
+## SuperSaaS admin refactor — staging release
 
-Occurrences 0.2.0 and commerce 0.5.1 are ready for the authorized GitHub/staging
-release above `35e07ca`. Staging acceptance is pending; production is untouched.
+Occurrences 0.2.0 and commerce 0.5.1 are deployed through GitHub at `e668797`.
+Local and staging acceptance passed; production is untouched.
 `Operations → Termine & Synchronisierung` now separates overview, review,
 tour/event series and connection settings. `Buchungen & Anfragen` separates
 requests, capacity, bookings, delivery and settings with contextual actions.
@@ -22,10 +22,19 @@ layouts (including expanded mapping forms). Real mappings, settings, bookings
 and inventory were preserved by the isolated tests. No real sync was manually
 triggered, no mail sent, no accounts/permissions changed. There is no schema,
 content or uploads migration. Existing target data must remain target-owned.
-Staging preflight passed: clean checkout at `35e07ca`, healthy services and all
-seven hashes verified for `backups/iss-backup-20261023T111347Z/` (124 tables).
-Next: deploy the paired plugin changes, verify target-owned data and admin/public
-routes, then record the final shared reference. Rollback uses code only.
+Staging passed 96 isolated admin checks, 31 public-date checks, read-only commerce
+verification, seven HTTP page/asset checks and authenticated Chrome desktop/mobile
+review. The first admin run detected a changing options checksum during concurrent
+page checks; the standalone rerun passed with all protected tables unchanged.
+Before/after release hashes matched for accounts, roles, URLs/noindex, sync/commerce
+settings and capacity. The existing worker continued polling its two retained test
+payments (changing check timestamps); no booking or mail action was invoked.
+Containers and worker remained healthy; no new FPM/Nginx errors. No restart or
+data transfer was needed. Source rollback target is `35e07ca`; retain target data.
+All seven hashes were reverified for the 124-table backup at
+`/srv/industriesalon/stage/backups/iss-backup-20261023T111347Z/`.
+Private preservation receipts: `var/supersaas-admin-release-20261023/` locally.
+No further release step is queued; production activation remains separate.
 
 ## Consent and privacy — staging release
 

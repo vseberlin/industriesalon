@@ -20,7 +20,11 @@ be recovered from Git history.
   scheduler, route, table or migration, and no uploads artifact is required.
   Local verification: 96 isolated admin checks, 218 commerce assertions,
   31 public occurrence assertions, PHP/static/CSS/JS checks and authenticated
-  Chrome navigation/layout checks. Staging and production have not been deployed.
+  Chrome navigation/layout checks. Released `e668797` through GitHub to staging;
+  96 isolated admin checks, 31 public-date checks, commerce verification,
+  seven HTTP checks and authenticated desktop/mobile admin review passed there.
+  Target credentials, roles, configuration and capacity were preserved; no
+  data import, restart or booking/mail action. Production remains untouched.
 
 - Released consent code, bounded settings migration and 27 local preview imports
   to staging through GitHub. All five staging browser scenarios and the current
