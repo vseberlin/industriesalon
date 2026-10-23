@@ -11,7 +11,9 @@ be recovered from Git history.
   Administrators retain access. Publikationen and Rückblicke move to the main
   menu; labels are Hinweisbanner, SuperSaaS-Termine and Bilder-Sets. The existing
   capability migration removes stale grants with a private target before-image;
-  no content or uploads transfer is needed.
+  no content or uploads transfer is needed. Local checks passed 379 assertions
+  plus PHPCS/PHPStan/syntax; staging passed exact-menu and 30 authenticated route
+  checks, with account/other-role preservation verified and no email sent.
 
 - Added the bounded Editorial Operations role in the existing ISS Core capability
   system. Existing broad roles could not provide the requested content-only menu.

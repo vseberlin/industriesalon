@@ -7,7 +7,7 @@ Production is untouched; staging remains noindex and uses test inventory/payment
 
 ## Editorial Operations account — staging
 
-The staff account remains staging-only; credentials are private in
+Operations cleanup `4e61969` is deployed on staging. The staff account remains staging-only; credentials are private in
 `var/anja-account-20261023/`. No email was sent. The Operations cleanup removes
 Archivbeiträge, Register Werkzeuge and Fallback-Modus from the editorial role,
 including direct access. Place editing remains available. Administrators retain
@@ -18,14 +18,17 @@ Local checks: 379 isolated role/REST/metadata assertions, native menu inspection
 PHP syntax, PHPCS and PHPStan passed. The versioned owner-setup migration removes
 stale grants and retains a private role before-image. Staging before-image and
 account preservation digests: `backups/operations-cleanup-20261023/`. No content,
-subscriber or uploads transfer is required. Target deployment and authenticated
-menu/direct-route verification are the remaining release steps.
+subscriber or uploads transfer was required. Staging verified the exact menu and
+30 authenticated allowed/denied routes, including publication taxonomy screens.
+Only the requested editorial capabilities changed; accounts, role assignments
+and other roles matched the before-image. Services and homepage are healthy,
+with no new PHP errors. The test login session was logged out; no email was sent.
 
 ## SuperSaaS admin refactor — staging release
 
 Occurrences 0.2.0 and commerce 0.5.1 are deployed through GitHub at `e668797`.
 Local and staging acceptance passed; production is untouched.
-`Operations → Termine & Synchronisierung` now separates overview, review,
+`Operations → SuperSaaS-Termine` now separates overview, review,
 tour/event series and connection settings. `Buchungen & Anfragen` separates
 requests, capacity, bookings, delivery and settings with contextual actions.
 The [occurrence admin contract](plugins/iss-occurrences/README.md) documents
