@@ -413,3 +413,30 @@ Minimum checks for implementation:
 - Whether long-running destructive jobs (archive import of ~11k objects, cleanup)
   need an explicit lock to prevent concurrent runs, or whether concurrency stays
   an accepted out-of-scope risk.
+
+## Editorial Operations role (23 October 2026)
+
+`iss_editorial_operator` uses the existing ISS Core role migration. It may read,
+create drafts and edit existing Media, Pages, Führungen, Veranstaltungen,
+Ausstellungen, Projekte, Team and Profile content, plus the existing Operations
+submenus (including Hinweise, Places, Publications, archive entries, Rückblicke,
+Sets, Steuerung, requests, synchronization and fallback controls). Personal Profile
+and Newsletter drafts remain visible. Other admin screens are denied and hidden.
+Publishing/deletion capabilities, user/plugin/theme administration and newsletter
+delivery are not granted. Operational workflows retain their existing action caps;
+this role includes synchronization and fallback controls as part of Operations.
+
+Native capabilities now separate the requested CPTs and attachments from Posts
+and Videos. Existing roles retain their prior access through the versioned
+migration. Metadata checks use the specific post's edit permission; shared terms
+use a separate assignment capability. The Newsletter adapter uses the upstream
+role switch and a request allowlist for draft editing, denying delivery, tests,
+deletion and configuration routes without changing third-party plugin files.
+
+Deploy code together and run `ops/migrations/2026-10-11-owner-setup.php`
+`check|apply|verify`, retaining a private target-local before-image on apply.
+No content, subscriber or uploads transfer is needed. Account creation is a
+separate target-owned WordPress API operation; never include credentials in Git
+or send invitations unless requested. Verify with
+`tests/e2e/bin/editorial-operator.php` on disposable local records, the existing
+Project UAT harness, and authenticated target menu/direct-route checks.

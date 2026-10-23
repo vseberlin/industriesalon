@@ -40,6 +40,9 @@ function iss_content_model_register_post_types() {
     ]);
 
     register_post_type(ISS_CONTENT_MODEL_VERANSTALTUNG_POST_TYPE, [
+        'capability_type' => ['veranstaltung', 'veranstaltungen'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities') ? iss_core_post_type_capabilities('veranstaltung', 'veranstaltungen') : [],
+        'map_meta_cap' => true,
         'labels' => [
             'name' => __('Veranstaltungen', 'iss-content-model'),
             'singular_name' => __('Veranstaltung', 'iss-content-model'),
@@ -58,6 +61,9 @@ function iss_content_model_register_post_types() {
     ]);
 
     register_post_type(ISS_CONTENT_MODEL_AUSSTELLUNG_POST_TYPE, [
+        'capability_type' => ['ausstellung', 'ausstellungen'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities') ? iss_core_post_type_capabilities('ausstellung', 'ausstellungen') : [],
+        'map_meta_cap' => true,
         'labels' => [
             'name' => __('Ausstellungen', 'iss-content-model'),
             'singular_name' => __('Ausstellung', 'iss-content-model'),
@@ -128,6 +134,9 @@ function iss_content_model_register_post_types() {
     ]);
 
     register_post_type(ISS_CONTENT_MODEL_TEAM_POST_TYPE, [
+        'capability_type' => ['team_member', 'team_members'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities') ? iss_core_post_type_capabilities('team_member', 'team_members') : [],
+        'map_meta_cap' => true,
         'labels' => [
             'name' => __('Team', 'iss-content-model'),
             'singular_name' => __('Teammitglied', 'iss-content-model'),
@@ -164,6 +173,9 @@ function iss_content_model_register_post_types() {
     ]);
 
     register_post_type(ISS_CONTENT_MODEL_ENTITY_PROFILE_POST_TYPE, [
+        'capability_type' => ['entity_profile', 'entity_profiles'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities') ? iss_core_post_type_capabilities('entity_profile', 'entity_profiles') : [],
+        'map_meta_cap' => true,
         'labels' => [
             'name' => __('Profile', 'iss-content-model'),
             'singular_name' => __('Profil', 'iss-content-model'),

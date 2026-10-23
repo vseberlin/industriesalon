@@ -61,8 +61,8 @@ function iss_graph_register_profile_meta(): void
         'type' => 'integer',
         'single' => true,
         'show_in_rest' => true,
-        'auth_callback' => static function (): bool {
-            return current_user_can('edit_posts');
+        'auth_callback' => static function ($allowed, $meta_key, $post_id): bool {
+            return current_user_can('edit_post', (int) $post_id);
         },
         'sanitize_callback' => 'absint',
     ]);

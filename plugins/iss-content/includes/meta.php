@@ -157,8 +157,8 @@ function iss_content_model_register_meta() {
                 'show_in_rest' => true,
                 'default' => $config['default'],
                 'sanitize_callback' => 'iss_content_model_sanitize_meta_value',
-                'auth_callback' => static function () {
-                    return current_user_can('edit_posts');
+                'auth_callback' => static function ($allowed, $meta_key, $post_id) {
+                    return current_user_can('edit_post', (int) $post_id);
                 },
             ]);
         }

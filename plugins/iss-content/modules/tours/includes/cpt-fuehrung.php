@@ -28,6 +28,9 @@ function iss_fuehrungen_register_post_type() {
     ];
 
     register_post_type(ISS_FUEHRUNGEN_POST_TYPE, [
+        'capability_type' => ['fuehrung', 'fuehrungen'],
+        'capabilities' => function_exists('iss_core_post_type_capabilities') ? iss_core_post_type_capabilities('fuehrung', 'fuehrungen') : [],
+        'map_meta_cap' => true,
         'labels'              => $labels,
         'public'              => true,
         'show_in_rest'        => true,

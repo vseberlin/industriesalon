@@ -124,8 +124,8 @@ add_action('init', function () {
             'type'              => $config['type'],
             'default'           => $config['default'],
             'sanitize_callback' => $config['sanitize'],
-            'auth_callback'     => static function () {
-                return current_user_can('edit_posts');
+            'auth_callback'     => static function ($allowed, $meta_key, $post_id) {
+                return current_user_can('edit_post', (int) $post_id);
             },
         ];
 

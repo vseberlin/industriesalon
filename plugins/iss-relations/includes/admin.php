@@ -608,7 +608,7 @@ function iss_relations_ajax_station_objects(): void
 {
     check_ajax_referer('iss_relations_station_objects', 'nonce');
 
-    if (!current_user_can('edit_posts')) {
+    if (!(current_user_can('edit_posts') || current_user_can('edit_register_places'))) {
         wp_send_json_error(['message' => __('Keine Berechtigung.', 'iss-relations')], 403);
     }
 
@@ -636,7 +636,7 @@ function iss_relations_ajax_station_stories(): void
 {
     check_ajax_referer('iss_relations_station_objects', 'nonce');
 
-    if (!current_user_can('edit_posts')) {
+    if (!(current_user_can('edit_posts') || current_user_can('edit_register_places'))) {
         wp_send_json_error(['message' => __('Keine Berechtigung.', 'iss-relations')], 403);
     }
 

@@ -6,6 +6,17 @@ be recovered from Git history.
 
 ## 2026-10-23
 
+- Added the bounded Editorial Operations role in the existing ISS Core capability
+  system. Existing broad roles could not provide the requested content-only menu.
+  Native CPT/media capabilities and object-specific metadata checks allow draft
+  creation and editing without Posts/Videos or administrator privileges. Existing
+  roles retain their permissions. Operations submenus and personal/content profiles
+  are included; the Newsletter integration limits this role to drafts and blocks
+  sending/deletion. No third-party plugin edits or parallel permission store.
+  Local validation: 366 isolated role/REST/metadata checks, targeted PHPCS/PHPStan
+  and syntax checks. Role changes use the existing owner-setup migration with a
+  private target backup; no content/subscriber/uploads transfer is required.
+
 - Refactored SuperSaaS administration into overview, review queue, separate
   tour/event series and connection views in the existing occurrence owner.
   Removed obsolete dense tables and capacity wording; moved summary SQL into

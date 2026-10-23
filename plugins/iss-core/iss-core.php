@@ -12,16 +12,18 @@ if (!defined('ABSPATH')) {
 define('ISS_CORE_VERSION', '0.1.0');
 define('ISS_CORE_FILE', __FILE__);
 define('ISS_CORE_PATH', plugin_dir_path(__FILE__));
-define('ISS_CORE_CAPS_VERSION', '2026-10-21-project-picker-read-1');
+define('ISS_CORE_CAPS_VERSION', '2026-10-23-editorial-operator-1');
 define('ISS_CORE_CAPS_OPTION', 'iss_caps_version');
 define('ISS_CORE_OPERATIONS_MENU_SLUG', 'iss-operations');
 
 require_once __DIR__ . '/maintenance.php';
 require_once __DIR__ . '/project-uat.php';
+require_once __DIR__ . '/editorial-operator.php';
 
 function iss_core_default_capability_definitions(): array
 {
     $definitions = [
+        'iss_assign_editorial_terms' => ['label' => 'Assign editorial terms', 'owner' => 'iss-core'],
         'iss_access_operations' => ['label' => 'Access Operations menu', 'owner' => 'iss-core'],
         'iss_manage_steuerung' => ['label' => 'Manage central site controls', 'owner' => 'industriesalon-steuerung'],
         'iss_manage_hinweise' => ['label' => 'Manage notices', 'owner' => 'industriesalon-notices'],
@@ -122,8 +124,13 @@ function iss_core_default_capability_definitions(): array
         'edit_published_archive_items' => ['label' => 'Edit published archive items', 'owner' => 'iss-archive'],
         'create_archive_items' => ['label' => 'Create archive items', 'owner' => 'iss-archive'],
     ];
-    foreach (iss_core_post_type_capabilities('projekt', 'projekte') as $capability) {
-        $definitions[$capability] = ['label' => $capability, 'owner' => 'iss-content'];
+    foreach (array_merge(['projekt' => ['projekt', 'projekte']], iss_core_editorial_capability_types()) as $types) {
+        foreach (iss_core_post_type_capabilities(...$types) as $capability) {
+            $definitions[$capability] = ['label' => $capability, 'owner' => 'iss-core'];
+        }
+    }
+    foreach (['edit_pages', 'edit_others_pages', 'edit_private_pages', 'edit_published_pages', 'read_private_pages'] as $capability) {
+        $definitions[$capability] = ['label' => $capability, 'owner' => 'wordpress'];
     }
     return $definitions;
 }
@@ -444,16 +451,18 @@ function iss_core_operations_role_grants(): array
             'iss_access_operations',
             'iss_manage_requests',
         ], $technical_caps),
+        'iss_editorial_operator' => iss_core_editorial_operator_grants(),
         'iss_project_uat' => ['read', 'upload_files', 'create_projekte', 'edit_projekte', 'edit_others_projekte', 'edit_published_projekte', 'iss_read_sets'],
     ];
 
-    // Preserve each existing role's project access when separating it from posts.
+    // Preserve native access for existing roles as CPTs gain separate capabilities.
     foreach (wp_roles()->roles as $role_name => $role) {
-        foreach (iss_core_post_type_capabilities('projekt', 'projekte') as $native => $project) {
-            if (in_array($native, ['edit_post', 'read_post', 'delete_post'], true)) { continue; }
-            $native = $native === 'create_posts' ? 'edit_posts' : $native;
-            if (!empty($role['capabilities'][$native])) {
-                $grants[$role_name][] = $project;
+        if (!empty($role['capabilities']['edit_posts'])) { $grants[$role_name][] = 'iss_assign_editorial_terms'; }
+        foreach (array_merge(['projekt' => ['projekt', 'projekte']], iss_core_editorial_capability_types()) as $types) {
+            foreach (iss_core_post_type_capabilities(...$types) as $native => $dedicated) {
+                if (in_array($native, ['edit_post', 'read_post', 'delete_post'], true)) { continue; }
+                $native = $native === 'create_posts' ? 'edit_posts' : $native;
+                if (!empty($role['capabilities'][$native])) { $grants[$role_name][] = $dedicated; }
             }
         }
     }
@@ -469,6 +478,7 @@ function iss_core_project_role_labels(): array
         'iss_intake_helper' => 'ISS Intake Helper',
         'iss_technical_maintainer' => 'ISS Technical Maintainer',
         'iss_project_uat' => 'ISS Projekte UAT',
+        'iss_editorial_operator' => 'ISS Editorial Operator',
     ];
 }
 

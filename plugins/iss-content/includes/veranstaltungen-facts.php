@@ -38,8 +38,8 @@ function iss_content_model_register_veranstaltung_fact_meta(): void
             'default' => '',
             'show_in_rest' => true,
             'sanitize_callback' => 'iss_content_model_sanitize_mysql_datetime',
-            'auth_callback' => static function () {
-                return current_user_can('edit_posts');
+            'auth_callback' => static function ($allowed, $meta_key, $post_id) {
+                return current_user_can('edit_post', (int) $post_id);
             },
         ]);
     }

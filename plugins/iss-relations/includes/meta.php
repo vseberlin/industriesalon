@@ -74,8 +74,8 @@ function iss_relations_register_meta(): void
                 'schema' => $schema,
             ],
             'sanitize_callback' => 'iss_relations_sanitize_meta_value',
-            'auth_callback' => static function () {
-                return current_user_can('edit_posts');
+            'auth_callback' => static function ($allowed, $meta_key, $post_id) {
+                return current_user_can('edit_post', (int) $post_id);
             },
         ]);
     }

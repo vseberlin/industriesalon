@@ -14,6 +14,7 @@ define('ISS_NEWSLETTER_VERSION', '0.1.0');
 define('ISS_NEWSLETTER_DEFAULTS_VERSION', '2026-10-11-defaults-v1');
 
 require_once __DIR__ . '/privacy.php';
+require_once __DIR__ . '/editorial-access.php';
 
 function iss_newsletter_render_form_block(): string
 {

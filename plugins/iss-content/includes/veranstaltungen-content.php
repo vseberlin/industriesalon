@@ -431,8 +431,8 @@ function iss_content_model_register_veranstaltung_content_meta(): void
         'default' => '',
         'show_in_rest' => $editor_available,
         'sanitize_callback' => $editor_available ? 'iss_content_model_sanitize_veranstaltung_content_json' : null,
-        'auth_callback' => static function () use ($editor_available) {
-            return $editor_available && current_user_can('edit_posts');
+        'auth_callback' => static function ($allowed, $meta_key, $post_id) use ($editor_available) {
+            return $editor_available && current_user_can('edit_post', (int) $post_id);
         },
     ]);
 }

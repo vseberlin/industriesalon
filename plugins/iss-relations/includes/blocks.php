@@ -658,7 +658,7 @@ function iss_relations_register_rest_routes(): void
         'methods' => WP_REST_Server::CREATABLE,
         'callback' => 'iss_relations_rest_preview_related_cards',
         'permission_callback' => static function (): bool {
-            return current_user_can('edit_posts');
+            return (current_user_can('edit_posts') || current_user_can('edit_register_places'));
         },
     ]);
 }
