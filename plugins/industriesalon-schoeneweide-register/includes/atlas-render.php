@@ -102,6 +102,7 @@ function iss_register_render_schoneweide_atlas(array $attributes = []): string
     $html .= '<p class="iss-atlas-loading">Akteure werden geladen.</p>';
     $html .= '</div>';
     $html .= '</div>';
+    if (function_exists('iss_consent_prompt')) { $html .= iss_consent_prompt('carto'); }
     $html .= '<div class="iss-atlas-app__map-stage">';
     $html .= '<div class="iss-atlas-app__map-surface">';
     $html .= '<div class="iss-atlas-app__map-canvas" data-iss-schoneweide-map></div>';

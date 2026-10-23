@@ -1,0 +1,116 @@
+/* Consent component: shared tokens and native WordPress buttons. */
+.iss-consent-dialog {
+  box-sizing: border-box;
+  position: fixed;
+  inset: auto 1rem 1rem auto;
+  z-index: 100000;
+  width: min(36rem, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: 0;
+  padding: var(--iss-space-md);
+  overflow-y: auto;
+  border: 1px solid var(--iss-border-strong);
+  border-radius: var(--iss-radius-sm);
+  background: var(--iss-surface-paper);
+  color: var(--iss-black);
+  box-shadow: 0 4px 24px rgb(0 0 0 / 18%);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.iss-consent-dialog h2 {
+  margin: 0 0 var(--iss-space-sm);
+  font-size: 1.125rem;
+  line-height: 1.3;
+}
+
+.iss-consent-dialog :where(p) {
+  margin-block: 0 var(--iss-space-sm);
+}
+
+.iss-consent-dialog__actions {
+  display: flex;
+  gap: var(--iss-space-xs);
+  margin-bottom: var(--iss-space-sm);
+}
+
+.iss-consent-dialog__actions .wp-block-button {
+  flex: 1;
+}
+
+.iss-consent-dialog__actions .wp-block-button__link {
+  width: 100%;
+  padding: 0.65rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.iss-consent-dialog summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.iss-consent-dialog__service {
+  margin-block: var(--iss-space-md);
+  padding-block-start: var(--iss-space-sm);
+  border-top: 1px solid var(--iss-border);
+}
+
+.iss-consent-dialog__service input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--iss-accent);
+}
+
+.iss-consent-dialog__links {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--iss-space-md);
+  margin: var(--iss-space-sm) 0 0;
+}
+
+.iss-consent-dialog__links button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.iss-consent-poster {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--iss-border-strong);
+  background: var(--iss-surface-dark);
+  color: var(--iss-white);
+  cursor: pointer;
+}
+
+.iss-consent-poster img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iss-consent-poster span {
+  position: absolute;
+  inset: auto 1rem 1rem;
+  width: fit-content;
+  padding: 0.5rem 1rem;
+  background: var(--iss-surface-dark);
+  color: var(--iss-white);
+  font-weight: 600;
+}
+
+.iss-consent-notice[hidden],
+[data-iss-consent-frame][hidden] {
+  display: none;
+}

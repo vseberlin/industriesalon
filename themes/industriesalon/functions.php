@@ -3,6 +3,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
+require_once __DIR__ . '/includes/consent.php';
+
 $industriesalon_fuehrungen_filters_helper = get_stylesheet_directory() . '/assets/css/staging/industriesalon-fuehrungen-filters.php';
 if (file_exists($industriesalon_fuehrungen_filters_helper)) {
     require_once $industriesalon_fuehrungen_filters_helper;

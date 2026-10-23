@@ -23,6 +23,10 @@ parameters:
     - plugins/iss-relations
     - plugins/iss-archive
   scanFiles:
+    - plugins/iss-consent/iss-consent.php
+    - plugins/iss-consent/health.php
+    - plugins/iss-newsletter/privacy.php
+    - plugins/newsletter/statistics/statistics.php
     - plugins/newsletter/includes/classes.php
     - plugins/iss-newsletter/iss-newsletter.php
     - themes/industriesalon/functions.php

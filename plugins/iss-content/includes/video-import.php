@@ -833,8 +833,28 @@ function iss_content_model_import_videos_from_remote_page($url, $args = []) {
     ];
 }
 
+require_once __DIR__ . '/video-thumbnails.php';
+
 if (defined('WP_CLI') && WP_CLI) {
     class ISS_Content_Model_Video_CLI_Command {
+        /**
+         * Import missing published-video previews into the Media Library.
+         *
+         * ## OPTIONS
+         *
+         * [--apply]
+         * : Download and assign missing previews; otherwise list candidates only.
+         *
+         * [--before=<path>]
+         * : New private before-image path, required with --apply.
+         *
+         * [--source-dir=<path>]
+         * : Import packaged youtube-VIDEOID.jpg originals without external requests.
+         */
+        public function thumbnails($args, $assoc_args) {
+            iss_content_model_video_thumbnails_cli($assoc_args);
+        }
+
         /**
          * Import videos from a remote page with YouTube embeds.
          *

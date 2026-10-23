@@ -69,8 +69,21 @@
     });
 
     window.L.control.zoom({ position: 'bottomright' }).addTo(map);
-    var basemap = provider.getBasemapConfig(config);
-    window.L.tileLayer(basemap.tileUrl, basemap.options).addTo(map);
+    // CARTO remains the Atlas basemap; load tiles only after consent.
+    var externalMap = null;
+    function syncBasemap() {
+      var allowed = config.basemapProvider === 'carto' && window.issConsent && window.issConsent.has('carto');
+      if (allowed && !externalMap) {
+        var basemap = provider.getBasemapConfig(config);
+        externalMap = window.L.tileLayer(basemap.tileUrl, basemap.options).addTo(map);
+      } else if (!allowed && externalMap) {
+        map.removeLayer(externalMap);
+        externalMap = null;
+      }
+    }
+    syncBasemap();
+    window.addEventListener('iss-consent-change', syncBasemap);
+    map.on('unload', function () { window.removeEventListener('iss-consent-change', syncBasemap); });
 
     map.createPane('issAtlasOverlays');
     map.getPane('issAtlasOverlays').style.zIndex = 350;

@@ -80,6 +80,12 @@
       return;
     }
 
+    if (!window.issConsent) { return; }
+    if (!window.issConsent.has('youtube')) {
+      window.issConsent.request('youtube', function () { showFrame(root, embedUrl, titleText, autoplay); });
+      return;
+    }
+
     var poster = root.querySelector("[data-video-player-poster]");
     var frameWrap = root.querySelector("[data-video-player-frame-wrap]");
     var frame = root.querySelector("[data-video-player-frame]");
@@ -93,6 +99,7 @@
       frame.src = nextSrc;
     }
     frame.title = titleText || "";
+    frame.setAttribute('data-iss-consent-frame', 'youtube');
     frame.hidden = false;
     frameWrap.hidden = false;
 
@@ -100,6 +107,18 @@
       poster.hidden = true;
     }
   }
+
+  window.addEventListener('iss-consent-change', function () {
+    if (window.issConsent && window.issConsent.has('youtube')) { return; }
+    document.querySelectorAll('[data-video-player]').forEach(function (player) {
+      var frame = player.querySelector('[data-video-player-frame]');
+      var wrap = player.querySelector('[data-video-player-frame-wrap]');
+      var poster = player.querySelector('[data-video-player-poster]');
+      if (frame) { frame.removeAttribute('src'); frame.hidden = true; }
+      if (wrap) { wrap.hidden = true; }
+      if (poster) { poster.hidden = false; }
+    });
+  });
 
   function getPlayer(root) {
     return root ? root.querySelector("[data-video-player]") : null;

@@ -12,4 +12,5 @@ Use this as the default verification map. Add task-specific checks when risk war
 | Deploy | repo state, containers/services, logs, homepage, changed routes |
 | Upload sync | source/target inspection, referenced-media coverage, matching SQL dependency check, dry-run, counts, sizes, hashes or representative media URLs |
 | Search/mail/service | service status, logs, configured provider, frontend behavior, fallback behavior |
+| External embeds, consent, newsletter or related updates | `npm run test:consent` against target; native Site Health/`wp iss consent-check`; follow [consent maintenance](../runbooks/staging-maintenance.md#consent-and-privacy-review), including disclosure review |
 | Documentation | `git diff --check`, no broad duplicate policy, docs remain task-loaded |

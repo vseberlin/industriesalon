@@ -13,6 +13,8 @@ if (!defined('ABSPATH')) {
 define('ISS_NEWSLETTER_VERSION', '0.1.0');
 define('ISS_NEWSLETTER_DEFAULTS_VERSION', '2026-10-11-defaults-v1');
 
+require_once __DIR__ . '/privacy.php';
+
 function iss_newsletter_render_form_block(): string
 {
     if (!shortcode_exists('newsletter_form')) {
@@ -96,7 +98,7 @@ function iss_newsletter_configure_defaults(): void
         'email_placeholder' => __('Ihre E-Mail-Adresse', 'iss-newsletter'),
         'name' => __('Vorname', 'iss-newsletter'),
         'surname' => __('Nachname', 'iss-newsletter'),
-        'privacy' => __('Ich akzeptiere die Datenschutzerklärung.', 'iss-newsletter'),
+        'privacy' => iss_newsletter_privacy_defaults()['newsletter_form']['privacy'],
         'subscribe' => __('Anmelden', 'iss-newsletter'),
         'title_female' => __('Frau', 'iss-newsletter'),
     ]);

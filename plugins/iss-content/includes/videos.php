@@ -329,11 +329,7 @@ function iss_content_model_get_video_thumbnail_url(int $post_id, string $video_u
         return $featured_image;
     }
 
-    $watch_url = iss_content_model_normalize_video_watch_url($video_url);
-    if (preg_match('~youtube\.com/watch\?v=([^&]+)~i', $watch_url, $matches)) {
-        return 'https://img.youtube.com/vi/' . rawurlencode($matches[1]) . '/hqdefault.jpg';
-    }
-
+    // Use the existing local artwork/fallback; remote thumbnails disclose visitor data before playback.
     return '';
 }
 
@@ -1169,9 +1165,12 @@ function iss_content_model_render_video_player_block($attributes = [], $content 
     <section <?php echo $wrapper; ?>>
         <div class="iss-video-single-player__layout">
             <div class="iss-video-single-player__media">
+                <?php if (function_exists('iss_consent_prompt')) { echo iss_consent_prompt('youtube', ['url' => $card['thumbnail_url'], 'title' => $card['title']]); } // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Theme-owned escaped consent renderer. ?>
                 <iframe
+                    data-iss-consent-frame="youtube"
                     data-video-single-frame
-                    src="<?php echo esc_url($card['embed_url']); ?>"
+                    data-iss-consent-src="<?php echo esc_url($card['embed_url']); ?>"
+                    hidden
                     title="<?php echo esc_attr($card['title']); ?>"
                     loading="lazy"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

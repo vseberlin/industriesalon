@@ -590,6 +590,7 @@ function iss_core_render_operations_page(): void
     echo '<div class="wrap">';
     echo '<h1>' . esc_html__('Operations', 'iss-core') . '</h1>';
     echo '<p>' . esc_html__('Zentrale Einstiegsseite fuer operative Admin-Oberflaechen.', 'iss-core') . '</p>';
+    do_action('iss_core_operations_page');
     echo '</div>';
 }
 

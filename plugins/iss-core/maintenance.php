@@ -103,6 +103,9 @@ function iss_core_maintenance_status(?int $now = null): array
 }
 
 add_filter('iss_core_status_rows', static function (array $rows): array {
+    if (!function_exists('iss_consent_checks')) {
+        $rows[] = iss_core_status_row('privacy', 'ISS Consent', 'error', 'Consent owner inactive; external-media protection and browser verification require review.');
+    }
     foreach (iss_core_maintenance_status() as $status) {
         $rows[] = iss_core_status_row('maintenance', (string) $status['owner'], (string) $status['status'], (string) wp_json_encode($status));
     }

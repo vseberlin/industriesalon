@@ -12,7 +12,7 @@ module.exports = [
   },
   js.configs.recommended,
   {
-    files: ["tests/e2e/specs/**/*.js"],
+    files: ["tests/e2e/specs/**/*.js", "tests/e2e/*.config.js"],
     languageOptions: { sourceType: "commonjs", globals: { ...globals.node, ...globals.browser } },
   },
   {

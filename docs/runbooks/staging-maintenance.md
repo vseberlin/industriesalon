@@ -160,3 +160,82 @@ and three-engine frontend checks, then staff/editor acceptance and a verified
 backup before coordinated staging delivery. Do not add unattended package,
 plugin or core upgrades to this runner. Record release/rollback commits and
 acceptance separately from successful scheduled maintenance.
+
+## Consent and privacy review
+
+After WordPress, theme or plugin updates, new embeds/providers, tracking or
+newsletter changes, and at least every 30 days, review **Tools → Site Health**
+and **Operations → Datenschutz und externe Inhalte**. These use the same
+read-only checks as `wp iss consent-check`. Updates invalidate browser acceptance;
+a missing/stale receipt remains a warning until a matching complete report is
+recorded. No new cron job or unattended settings repair is needed.
+
+On each target, apply the paired consent settings migration once after deploying
+the matching code. From the repository with the target's existing WP-CLI wrapper:
+
+```sh
+wp eval-file ops/migrations/2026-10-23-consent.php check --use-include
+wp eval-file ops/migrations/2026-10-23-consent.php apply /PRIVATE/new-consent-before.json --use-include
+wp eval-file ops/migrations/2026-10-23-consent.php verify --use-include
+wp iss consent-fingerprint
+```
+
+Paths must be visible inside the target runtime. Keep the verified before-image
+private; it contains target configuration. Preserve DB template overrides before
+reconciliation. There are no schema/subscriber changes. Video preview attachments
+require their paired private originals/manifest and the [owner import](../../plugins/iss-consent/README.md#local-video-previews); code alone does not restore thumbnails.
+Purge any page/CDN caches after deployment so previously cached active embeds
+cannot bypass the server-side gate.
+
+Run the repository browser suite against that target, with the exact `home_url`
+(origin/port/scheme included) and the fingerprint returned above:
+
+```sh
+PLAYWRIGHT_BASE_URL='https://TARGET' \
+ISS_CONSENT_FINGERPRINT='TARGET_FINGERPRINT' \
+ISS_CONSENT_REPORT='/PRIVATE/consent-browser.json' \
+npm run test:consent
+```
+
+Use an installed Playwright browser; `PLAYWRIGHT_CHANNEL=chrome` selects installed
+Chrome. For protected staging, use the authorized test access arrangement. Do not
+remove server authentication to run tests. The suite needs the published website
+routes and video fixture named in `tests/e2e/specs/consent.spec.js`; update fixture
+selection deliberately if editorial URLs change, keeping equivalent coverage.
+It intercepts external origins, checks that there are no attempts before consent,
+then tests separate choices, persistence, expiry, cross-tab withdrawal, the consent-gated
+CARTO Atlas basemap, video library, newsletter links, keyboard/mobile and no-JS use.
+It does not subscribe anyone or send messages. Screenshots and JSON are private
+verification artifacts. Do not run the isolated PHP option-table fixture on a
+production site.
+
+After all five scenarios pass, copy the JSON privately to the same target runtime
+and record it within one hour (using paths visible to WP-CLI):
+
+```sh
+wp iss consent-record-browser /PRIVATE/consent-browser.json
+wp iss consent-check
+```
+
+The recorder rejects another origin/fingerprint, stale reports, failed, skipped
+or missing scenarios. Record no receipt for an incomplete check. Separately verify
+actual YouTube playback/CARTO tiles using voluntary test consent, then withdraw;
+a missing private `INDUSTRIESALON_CARTO_KEY` is a separate configuration warning.
+Never put that key in reports or Git. Stubbed responses establish gating, not provider availability. After newsletter
+vendor upgrades inspect the adapter hooks/cookie names and verify confirmation,
+profile and unsubscribe links in an isolated no-delivery fixture. Real mailbox
+delivery tests require the existing explicit mail authorization.
+
+Review provider/privacy terms and actual data flows monthly, including new
+browser requests, scripts, storage, account cookies, SMTP supplier, processor
+agreements, international transfers and deletion/retention practice. Update
+`/verein/#datenschutz` when those facts change. Material changes to consent
+purposes/providers also require a new `ISS_CONSENT_POLICY`. Hetzner hosting is
+confirmed; `industriesalon.de` is the newsletter sender domain, not evidence of
+the delivery supplier. Verify that supplier before production release. Technical
+health status does not certify legal compliance or completion of this manual
+review. Record the review date/findings with the private release evidence.
+
+On failure keep the affected external integration or newsletter delivery off,
+fix through its existing owner, rerun the relevant checks, then record acceptance.
+See [ISS Consent](../../plugins/iss-consent/README.md) for boundaries and recovery.

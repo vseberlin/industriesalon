@@ -12,6 +12,7 @@
     "wp-env:clean": "wp-env destroy",
     "wp-env:logs": "wp-env logs",
     "test:e2e": "playwright test -c playwright.config.js",
+    "test:consent": "playwright test -c tests/e2e/consent.config.js",
     "test:e2e:a11y": "playwright test -c playwright.config.js tests/e2e/specs/accessibility.spec.js",
     "test:e2e:headed": "playwright test -c playwright.config.js --headed",
     "test:e2e:debug": "playwright test -c playwright.config.js --debug",

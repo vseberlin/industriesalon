@@ -5,6 +5,8 @@ if (!defined('ABSPATH')) {
 }
 
 $constants = [
+    'COOKIEPATH' => '/',
+    'COOKIE_DOMAIN' => '',
     'ISS_CONTENT_MODEL_PATH' => __DIR__ . '/../plugins/iss-content/',
     'ISS_FUEHRUNGEN_PATH' => __DIR__ . '/../plugins/iss-content/modules/tours/',
     'ISS_FUEHRUNGEN_URL' => 'https://example.test/wp-content/plugins/iss-content/modules/tours/',

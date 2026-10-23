@@ -4,6 +4,35 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-23
+
+- Removed the consent-era static Atlas fallback at the owner’s request. CARTO
+  remains the interactive basemap; consent still gates tile requests and
+  withdrawal removes tiles. Existing staging key plumbing is unchanged. The
+  same key is configured in ignored local runtime settings with a private backup;
+  actual local CARTO tiles and zoom passed browser verification.
+
+- Restored video previews with 27 locally imported YouTube thumbnails, preserving
+  the existing editorial featured image. Reused WordPress Media Library and the
+  video import owner for explicit, idempotent imports and offline release copies;
+  frontend requests never fetch remote previews. Replaced long inline consent
+  notices with image/play controls and a compact nonmodal bottom popup, equal
+  accept-all/decline-all actions and expandable individual choices. Local preview
+  health checks, before-images and paired private media/API artifacts accompany
+  the change. Privacy text now describes local previews and the bottom popup.
+
+- Added the missing consent owner for YouTube and CARTO, with theme-owned native
+  controls, separate choices and withdrawal. Videos no longer load external
+  thumbnails; Atlas retains its CARTO basemap behind consent.
+  Reused WordPress Site Health and ISS Operations for update-invalidated,
+  30-day browser review receipts instead of adding a scheduler. The existing
+  newsletter adapter enforces double opt-in, removes individual tracking and
+  persistent identity cookies while preserving signed legacy links. Updated the
+  native German privacy notice, including confirmed Hetzner hosting. A bounded
+  target-local settings migration pairs plugin activation/newsletter options/
+  WordPress privacy-page selection; no subscriber or schema transfer.
+  Added browser/PHP privacy regression coverage and the regular update procedure.
+
 ## 2026-10-22
 
 - Removed repeated tour names beneath dates in the shared Führungen panel;

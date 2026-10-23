@@ -1,9 +1,53 @@
-# Current handoff — 22 October 2026
+# Current handoff — 23 October 2026
 
 Website source is `/home/vladimir/wp-website`; staging checkout is
 `/srv/industriesalon/stage/repo`. Commerce 0.5.0 is deployed through GitHub
 (`4666d81`, final code correction `9531b65`). Local and staging acceptance passed.
 Production is untouched; staging remains noindex and uses test inventory/payments.
+
+## Consent and privacy — release prepared
+
+Consent implementation and local acceptance are complete. GitHub/staging delivery
+is authorized and in progress from baseline `4e31fd0`; target acceptance follows
+the paired code, settings and preview-media import.
+See [ISS Consent](plugins/iss-consent/README.md) and the existing
+[maintenance runbook](docs/runbooks/staging-maintenance.md#consent-and-privacy-review).
+YouTube/CARTO have separate choices plus accept-all/decline-all in a compact
+nonmodal bottom popup. Atlas retains CARTO; the added static fallback has been
+removed. The user confirms its API key is already configured on staging. All 28 published videos
+now have local previews: 27 imported thumbnails and one preserved editorial image. Newsletter
+double opt-in/no-tracking policy and the native German privacy notice are updated.
+Site Health and Operations flag updates, settings drift and a 30-day browser
+review. The complete matching browser receipt is recorded locally.
+
+Passed: 26 isolated PHP assertions, all five browser scenarios (including mobile,
+keyboard, no-JS, expiry and cross-tab withdrawal), native core-block validation
+for all 26 privacy-section blocks and the newsletter pattern, targeted PHPStan,
+PHP syntax, ESLint, Stylelint and diff checks. Operations/Site Health rendering
+passed via CLI; interactive admin/editor checks require the normal staff login.
+The footer retains its identical pre-existing image validation warning. PHPCS
+retains the same 24 pre-existing errors in `iss-content/includes/videos.php` as
+HEAD; other changed production PHP passes. Manual Chrome checked privacy layout,
+Atlas consent controls and actual YouTube embedding. The existing staging CARTO
+key is now installed in the ignored local WordPress runtime configuration, with
+a verified private before-image (`wp-config-before-carto.php`). No staging
+configuration was changed. Manual Chrome proved actual CARTO tiles (18/18 loaded),
+street/river basemap, markers and zoom after consent. All local consent health
+rows now pass. The key is absent from Git and shared documentation.
+
+Private before-image, test evidence and runtime tools: `var/consent-20261023/`.
+For this release, deploy the paired code/settings migration with
+target-local backup, preserve template overrides/accounts and existing CARTO
+configuration, purge page caches, and rerun target acceptance. No schema or
+subscriber transfer; the canonical map assets already exist. Video previews
+require `var/consent-20261023/video-thumbnails.tar.gz`, its SHA-256 and
+`thumbnails-manifest.json`, paired with the documented offline `wp iss-content
+videos thumbnails --source-dir=... --apply --before=...` API import. All 27
+originals were hash-verified (about 1.1 MB); target IDs/sizes are regenerated and
+existing featured images are preserved. `thumbnails-before.json` records rollback.
+Hetzner hosting is confirmed. Before production verify the actual newsletter delivery
+supplier (the supplied `industriesalon.de` is only the sender domain), processing
+agreements and retention practice. No newsletter or user mail was sent.
 
 ## Tour panel consistency
 
