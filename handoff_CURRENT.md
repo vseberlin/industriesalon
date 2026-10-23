@@ -5,6 +5,23 @@ Website source is `/home/vladimir/wp-website`; staging checkout is
 (`4666d81`, final code correction `9531b65`). Local and staging acceptance passed.
 Production is untouched; staging remains noindex and uses test inventory/payments.
 
+## Editorial Operations account — staging
+
+The scoped `iss_editorial_operator` role is deployed (`f6b89c9` plus the menu
+follow-up). The requested staff account exists only on staging; account details
+and credentials remain private in `var/anja-account-20261023/`. No invitation or
+other email was sent. Existing user rows were verified unchanged.
+
+The role includes the requested editorial types, own/content Profile, Operations
+with its current submenus, and Newsletter drafts. Other admin areas are hidden
+and denied; publishing/deletion and newsletter delivery capabilities are absent.
+Local checks: 366 isolated role/REST/metadata assertions and 103 Project UAT
+regressions, PHP syntax, PHPCS and PHPStan. Staging login/menu and 34 authenticated
+allowed/denied routes passed. Private roles before-images are under
+`/srv/industriesalon/stage/backups/editorial-operator-20261023/`; the existing owner
+setup migration passed apply/verify. No content/subscriber/uploads transfer.
+Production is untouched. Share the private credentials manually when ready.
+
 ## SuperSaaS admin refactor — staging release
 
 Occurrences 0.2.0 and commerce 0.5.1 are deployed through GitHub at `e668797`.

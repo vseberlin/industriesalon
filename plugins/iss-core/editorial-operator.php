@@ -71,6 +71,7 @@ add_action('admin_menu', static function (): void {
     foreach ($menu as $item) {
         if (!in_array($item[2], $allowed, true)) { remove_menu_page($item[2]); }
     }
+    remove_submenu_page('upload.php', 'mla-menu');
 }, PHP_INT_MAX);
 
 add_action('admin_bar_menu', static function (WP_Admin_Bar $bar): void {
