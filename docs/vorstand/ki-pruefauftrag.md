@@ -1,10 +1,54 @@
-# KI-Prüfauftrag: Konzept- und Designvorschläge gegen den Bestand prüfen
+# KI-Vorlagen: Vorschläge aus dem Bestand entwickeln und prüfen
 
-Dieser Text ist eine Kopiervorlage für ChatGPT, Claude, Gemini, Cursor oder andere
-KI-Werkzeuge. Er sorgt dafür, dass die KI **zuerst den vorhandenen Code liest** und
+Zwei Kopiervorlagen für ChatGPT, Claude, Gemini, Cursor oder andere KI-Werkzeuge.
+Beide sorgen dafür, dass die KI **zuerst liest, was es schon gibt**, statt isoliert
+zu entwerfen oder neu zu bauen.
+
+- **Vorlage A – Entwurf:** Wer mit KI ein Konzept oder Design erstellt, beginnt hier.
+- **Vorlage B – Prüfung:** Ein fertiger Vorschlag wird vor der Vorstandsbesprechung
+  gegen den Bestand geprüft. Das Ergebnis gehört zu jedem Vorschlag dazu.
+
+## Vorlage A – Entwurf aus dem Bestand
+
+Den eigenen Wunsch unter **AUFGABE** einsetzen.
+
+```text
+Du entwirfst ein Konzept oder Design für die Website des Industriesalon
+Schöneweide e.V. Die Website existiert bereits und hat ein festes Repertoire.
+
+Lies zuerst vollständig:
+- https://raw.githubusercontent.com/vseberlin/industriesalon/main/docs/vorstand/bestand.md
+- https://raw.githubusercontent.com/vseberlin/industriesalon/main/docs/architecture/plugin-map.md
+Wenn du diese Dateien nicht öffnen kannst, sage das und höre auf. Entwirf nichts
+ohne sie.
+
+AUFGABE:
+<<< hier beschreiben, was erreicht werden soll – für wen, mit welchem Inhalt >>>
+
+Arbeitsweise:
+1. Wähle den passenden Inhaltstyp und die Gestaltungsvariante aus bestand.md.
+2. Baue die Seite aus vorhandenen Bausteinen und Darstellungen. Nenne für jeden
+   Abschnitt Baustein und Darstellung beim Namen.
+3. Verwende nur Farben, Schriften und Größenstufen aus Kapitel 6.
+4. Wenn etwas wirklich fehlt, beschreibe es am Ende in einer eigenen Liste
+   „Fehlt im Bestand", mit Begründung, warum keine vorhandene Darstellung reicht.
+5. Baue keine eigene Website, App oder Datenhaltung. Inhalte (Termine, Objekte,
+   Orte, Personen) kommen aus der bestehenden Plattform.
+6. Liefere am Ende: Seitenaufbau als Liste (Baustein → Darstellung → Inhalt),
+   gewählte Variante, Liste „Fehlt im Bestand". Ein Mockup ist optional und muss
+   denselben Aufbau zeigen.
+
+Schreibe auf Deutsch.
+```
+
+---
+
+## Vorlage B – Prüfung gegen den Bestand
+
+Diese Vorlage sorgt dafür, dass die KI **zuerst den vorhandenen Code liest** und
 einen Vorschlag daran misst, statt ihn isoliert zu bewerten oder neu zu bauen.
 
-## Warum eine feste Vorlage?
+### Warum eine feste Vorlage?
 
 KI-Antworten hängen stark von der Frage ab. „Wie machen wir unsere Website
 einfacher und moderner?" setzt voraus, dass sie zu kompliziert und veraltet ist,
@@ -12,7 +56,7 @@ und die KI wird diese Annahme meist bestätigen. Eine neutrale, immer gleiche Fr
 liefert vergleichbare Ergebnisse für alle Vorstandsmitglieder und schützt alle
 Beteiligten vor Bestätigungsfehlern, auch die technische Leitung.
 
-## So wird sie benutzt
+### So wird sie benutzt
 
 1. Ein KI-Werkzeug mit Zugriff auf GitHub oder Webseiten öffnen. Ein reiner Chat
    ohne Lesezugriff reicht nicht; dann gilt Punkt 0 der Vorlage.
@@ -34,7 +78,10 @@ Gegenstand: Die Website und digitale Sammlung des Industriesalon Schöneweide e.
 Repository: https://github.com/vseberlin/industriesalon (Branch main)
 
 0. LESEPFLICHT
-Lies, bevor du urteilst, mindestens diese Dateien vollständig:
+Lies, bevor du urteilst, mindestens diese Dateien vollständig, die erste zuerst:
+- https://raw.githubusercontent.com/vseberlin/industriesalon/main/docs/vorstand/bestand.md
+  (Bestandskatalog: alle Inhaltstypen, Bausteine, Darstellungen,
+  Gestaltungsvarianten, Funktionen, Vorlagen und Design-Tokens)
 - https://raw.githubusercontent.com/vseberlin/industriesalon/main/AGENTS.md
 - https://raw.githubusercontent.com/vseberlin/industriesalon/main/docs/README.md
 - https://raw.githubusercontent.com/vseberlin/industriesalon/main/docs/architecture/plugin-map.md
@@ -60,6 +107,22 @@ Dateipfad als Beleg.
 <<< hier den Vorschlag einsetzen, oder „keiner – nur Bestandsaufnahme" >>>
 
 3. ABGLEICH (nur wenn ein Vorschlag vorliegt)
+Zuerst die ZUORDNUNGSTABELLE. Zerlege den Vorschlag in einzelne Elemente
+(Seiten, Abschnitte, Funktionen, Gestaltungsmerkmale) und ordne jedes einem
+Eintrag aus bestand.md zu:
+
+| Element des Vorschlags | Entspricht im Bestand (Kapitel, Eintrag) | Status |
+
+Status ist genau einer von:
+- VORHANDEN – direkt nutzbar, nur redaktionell
+- KONFIGURIERBAR – vorhanden, braucht andere Darstellung, Variante oder Einstellung
+- ERWEITERUNG – fehlt, gehört aber in einen vorhandenen Baustein oder
+  Inhaltstyp (zuständigen Teil nennen)
+- NEU – lässt sich nichts im Bestand zuordnen (begründen)
+
+Zähle am Ende, wie viele Elemente in welchem Status sind.
+
+Dann:
 a) Welche Teile des Vorschlags kann das bestehende System bereits ganz oder
    teilweise? Nenne den zuständigen Teil laut plugin-map.md.
 b) Was davon würde ein paralleles System erzeugen (doppelte Daten, doppelte
@@ -78,7 +141,19 @@ Gib eine der folgenden Empfehlungen und begründe sie in höchstens fünf Sätze
   nicht leisten kann, und mit Regeln für den Datenaustausch)
 - Nicht empfehlenswert
 
-5. REGELN FÜR DEINE ANTWORT
+5. REGELN FÜR DESIGNVORSCHLÄGE
+Wenn der Vorschlag ein Design, Mockup oder Layout enthält oder du selbst eines
+vorschlägst:
+- Verwende nur die Farben, Schriften und Größenstufen aus bestand.md Kapitel 6.
+  Jede andere Farbe oder Schrift einzeln begründen.
+- Benenne für jeden Bereich des Designs den Baustein und die Darstellung aus
+  Kapitel 2 und die Gestaltungsvariante aus Kapitel 3.
+- Wenn das Design wie eine vorhandene Variante aussieht, sage das, statt es als
+  neu darzustellen.
+- Erfinde keine Inhalte, Termine oder Objekte, die es nicht gibt. Platzhalter
+  als solche kennzeichnen.
+
+6. REGELN FÜR DEINE ANTWORT
 - Jede Behauptung über den Code braucht einen Dateipfad. Was du nicht geprüft
   hast, kennzeichne als Vermutung.
 - Schlage keinen Neubau, Framework-Wechsel oder Plattformwechsel vor, solange du
@@ -93,8 +168,8 @@ Gib eine der folgenden Empfehlungen und begründe sie in höchstens fünf Sätze
 
 ---
 
-## Was diese Vorlage nicht ist
+## Was diese Vorlagen nicht sind
 
-Sie ersetzt kein Gespräch mit der technischen Leitung. Sie soll das Gespräch auf
+Sie ersetzen kein Gespräch mit der technischen Leitung. Sie soll das Gespräch auf
 eine gemeinsame Grundlage stellen: Was gibt es schon, was fehlt wirklich, und was
 kostet es dauerhaft.

@@ -7,7 +7,8 @@ Sammlungsobjekte aus einer gemeinsamen Datenbasis.
 ## Einstieg
 
 - **Vorstand und Nicht-Entwickler:** [docs/vorstand/README.md](docs/vorstand/README.md)
-- **Vorschläge mit KI prüfen:** [docs/vorstand/ki-pruefauftrag.md](docs/vorstand/ki-pruefauftrag.md)
+- **Was es schon gibt:** [docs/vorstand/bestand.md](docs/vorstand/bestand.md)
+- **Vorschläge mit KI entwerfen und prüfen:** [docs/vorstand/ki-pruefauftrag.md](docs/vorstand/ki-pruefauftrag.md)
 - **Entwickler und KI-Agenten:** zuerst [AGENTS.md](AGENTS.md), dann
   [docs/README.md](docs/README.md) und
   [docs/architecture/plugin-map.md](docs/architecture/plugin-map.md)
@@ -15,7 +16,7 @@ Sammlungsobjekte aus einer gemeinsamen Datenbasis.
 ## Hinweis für KI-Werkzeuge
 
 Bevor du dieses Repository bewertest oder Änderungen vorschlägst: Lies
-`AGENTS.md`, `docs/architecture/plugin-map.md` und
+`docs/vorstand/bestand.md`, `AGENTS.md`, `docs/architecture/plugin-map.md` und
 `docs/agent/no-parallel-systems.md`. Urteile nicht nach Ordnerstruktur oder
 Dateigröße. Unter `plugins/` liegen auch Fremd-Plugins
 (`media-library-assistant`, `newsletter`, `query-monitor`,

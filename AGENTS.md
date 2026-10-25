@@ -27,6 +27,7 @@ All changes must be lean, reversible where practical, documented, tested, and ju
 - Inspect before changing: existing tools, helpers, theme configuration, build steps, enqueue logic, template authority, plugin boundaries, and prior solutions.
 - Do not invent parallel systems when WordPress, Gutenberg, the theme, or an existing plugin already provides the right mechanism.
 - Use `docs/agent/no-parallel-systems.md` before adding a new block, helper, table, CSS primitive, service, route, or runbook.
+- When adding or renaming a CPT, gesture, treatment, skin, public function, template, pattern or design token, update `docs/vorstand/bestand.md` in the same change; board members and their AI tools design from it.
 - Keep public presentation in the theme unless an existing plugin explicitly owns a renderer. Keep plugins focused on data, contracts, business logic, imports, and dynamic block data.
 - Prefer editor-visible Gutenberg structures, native blocks, reusable patterns, stable semantic classes, and server-rendered output.
 - Do not rely on Gutenberg-generated class chains, fragile DOM structure, selector escalation, inline styles, or hidden shortcode-like workflows.

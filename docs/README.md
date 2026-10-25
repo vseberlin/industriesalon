@@ -24,7 +24,8 @@ This directory is the repo-owned source for durable project, agent, architecture
 ## Common Task Routing
 
 - Vorstand / non-developer entry and AI review prompt for proposals:
-  [Vorstand README](vorstand/README.md), [KI-Prüfauftrag](vorstand/ki-pruefauftrag.md)
+  [Vorstand README](vorstand/README.md), [Bestandskatalog](vorstand/bestand.md),
+  [KI-Vorlagen](vorstand/ki-pruefauftrag.md)
 - Content/editorial: `docs/architecture/content-model.md`, `docs/project/uat.md`
 - Website audits and text, visual, and functional corrections:
   [Consolidated correction plan 20 October 2026](project/website-correction-plan-2026-10-20.md)

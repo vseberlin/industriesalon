@@ -40,13 +40,14 @@ Die genaue, verbindliche Zuständigkeitskarte steht in
 
 ## Wie bringe ich einen Vorschlag ein?
 
-1. **Beschreiben, nicht bauen.** Was soll Besucherinnen, Besuchern oder dem
-   Verein ermöglicht werden? Ein kurzer Text oder eine Skizze genügt. Ein
-   KI-generiertes Design ist als Anschauung willkommen, aber noch keine
-   Entscheidung.
-2. **Mit KI prüfen lassen, aber mit der festen Vorlage.** Den
-   [KI-Prüfauftrag](ki-pruefauftrag.md) verwenden. Er zwingt die KI, zuerst den
-   vorhandenen Code zu lesen und zu sagen, was es schon gibt.
+1. **Erst den Bestand lesen.** Der [Bestandskatalog](bestand.md) zeigt alle
+   Inhaltstypen, Bausteine, Gestaltungsvarianten und Funktionen, die es schon gibt.
+   Die meisten Wünsche lassen sich daraus zusammensetzen, oft ohne Programmierung.
+2. **Mit KI entwerfen und prüfen, aber mit den festen Vorlagen.**
+   [Vorlage A](ki-pruefauftrag.md#vorlage-a--entwurf-aus-dem-bestand) für den
+   Entwurf, [Vorlage B](ki-pruefauftrag.md#vorlage-b--prüfung-gegen-den-bestand)
+   für die Prüfung. Ein Vorschlag wird besprochen, wenn er die Zuordnungstabelle
+   aus Vorlage B enthält.
 3. **Ergebnis vollständig teilen** mit dem Vorstand und der technischen Leitung.
 4. **Gemeinsam entscheiden**, ob der Vorschlag im Bestand umgesetzt wird, als
    abgegrenzte Erweiterung entsteht oder zurückgestellt wird.
@@ -71,6 +72,7 @@ Ehrlich benannt, damit sie nicht erst durch eine KI-Prüfung auffallen:
 
 ## Weiterlesen
 
-- [KI-Prüfauftrag](ki-pruefauftrag.md): Kopiervorlage für KI-Werkzeuge
+- [Bestandskatalog](bestand.md): was es schon gibt
+- [KI-Vorlagen](ki-pruefauftrag.md): Entwurf und Prüfung mit KI-Werkzeugen
 - [Dokumentationsübersicht](../README.md) (englisch, technisch)
 - [AGENTS.md](../../AGENTS.md): Regeln für Entwickler und KI-Agenten

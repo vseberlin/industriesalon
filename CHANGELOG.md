@@ -4,6 +4,16 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-25 — Bestandskatalog and AI drafting template
+
+- Added `docs/vorstand/bestand.md`, a German capability catalog derived from the
+  registries (CPTs, gestures and treatments, skins per format, functions,
+  templates, patterns, theme tokens). The AI templates now require reading it
+  first: template A drafts proposals from existing parts, template B maps every
+  proposal element to the catalog (VORHANDEN/KONFIGURIERBAR/ERWEITERUNG/NEU) and
+  restricts designs to existing skins and tokens. `AGENTS.md` requires updating
+  the catalog with registry changes. Documentation only; no artifact needed.
+
 ## 2026-10-25 — Vorstand entry and AI review prompt
 
 - Added a short root `README.md`, a German non-developer overview
