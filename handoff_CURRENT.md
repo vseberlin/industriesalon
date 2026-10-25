@@ -1,5 +1,16 @@
 # Current handoff — 23 October 2026
 
+## Personal Profile sidebar cleanup — deployed 25 October 2026
+
+Code `678334c` removes the redundant personal Profile item from the editorial
+operator sidebar locally and on staging. Account-toolbar links and direct profile
+access remain available; Personen & Organisationen remains in the sidebar.
+Local PHP lint, PHPCS/PHPStan and native role/menu/route checks passed. Staging
+PHP lint and Anja's existing Chrome session verified the sidebar and profile
+access. Both homepages returned 200; containers and recent PHP logs passed.
+No DB/uploads artifact, role migration or account change was needed. Unrelated
+local edits remain outside this release. No further action is queued.
+
 ## Personen & Organisationen — deployed 25 October 2026
 
 Code `9a0e5f2` is deployed locally and through GitHub main to staging. The former

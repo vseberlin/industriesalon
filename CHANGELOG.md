@@ -11,6 +11,9 @@ be recovered from Git history.
   available; Personen & Organisationen is retained. No capability/account changes,
   database migration or uploads artifact are needed.
 - Local PHP lint, PHPCS, PHPStan and native role/menu/route checks passed.
+  Code `678334c` is deployed through GitHub main. Staging Chrome verified the
+  missing sidebar item, retained Personen & Organisationen, working profile page
+  and account-toolbar links. Both homepages returned 200; services/logs passed.
 
 ## 2026-10-25 — Personen & Organisationen admin label
 
