@@ -1,15 +1,20 @@
 # Current handoff — 23 October 2026
 
-## ISS-Betrieb label — verified 25 October 2026
+## ISS-Betrieb dashboard — verified 25 October 2026
 
-Code release `a4ed6b4` is deployed locally and on staging through GitHub main.
-The shared Operations menu, page title and heading now read `ISS-Betrieb`.
-Anja Meyer remains a staging-only account. Authenticated HTTP checks as Anja
-verified all three labels, unchanged menu destinations and denied Users/Plugins
-routes; the test session was logged out. Locally the editorial role was simulated
-in memory without creating an account. PHP lint, PHPCS, PHPStan and both homepage
-checks passed; staging containers are healthy and checked logs show no PHP errors.
-No capability, account, schema, content or media migration is needed.
+Code release `b74b9fb` is deployed locally and on staging through GitHub main.
+ISS-Betrieb opens a responsive dashboard derived from the permitted WordPress
+submenus. Anja sees six linked cards; existing technical checks are collapsed
+below them. Her account remains staging-only. Local in-memory role checks cover
+six editorial and eight administrator cards, URL construction and scoped CSS.
+Authenticated staging HTTP checks verified all six destinations (200), exact
+sidebar parity and Users/Plugins denial (403); the test session was logged out.
+Chrome checks in Anja's existing session verified desktop/mobile layout, visible
+keyboard focus, card navigation, return via ISS-Betrieb and expandable checks.
+PHP lint, PHPCS, PHPStan, targeted Stylelint and both homepage checks passed.
+Staging containers are healthy; inspected logs contain no PHP errors. No account,
+capability, schema, content or uploads migration is needed. Runtime check evidence
+is private in `var/operations-dashboard-20261025/`.
 
 Paired navigation replay: scout returned 11,558 characters versus 12,194 for
 scoped rg plus equivalent sed ranges (about 2,890 vs 3,048 tokens using chars/4,
