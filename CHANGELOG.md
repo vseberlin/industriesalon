@@ -4,6 +4,17 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-25 — Editorial operator dashboard
+
+- Restored Dashboard navigation and made it the editorial operator login landing
+  page. Native WordPress dashboard widgets now present the current permitted menu
+  sections with short German descriptions and links, replacing the standard cards.
+  Existing ISS Core role/menu ownership and WordPress widget APIs cover this need;
+  the Operations URL resolver is shared instead of adding a parallel navigation
+  registry, custom layout or route. Administrators and Project UAT are unaffected.
+- PHP lint, targeted PHPCS/PHPStan and 74 read-only menu/widget/role checks passed
+  locally. No database, uploads, capability migration or account change is needed.
+
 ## 2026-10-25 — Remove redundant personal Profile navigation
 
 - Removed the personal Profile entry from the editorial operator sidebar through

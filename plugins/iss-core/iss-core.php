@@ -620,6 +620,14 @@ function iss_core_enqueue_operations_assets(string $hook): void
 }
 add_action('admin_enqueue_scripts', 'iss_core_enqueue_operations_assets');
 
+/** Resolve native and plugin menu entries through the registered WordPress hooks. */
+function iss_core_admin_menu_url(string $slug, string $parent): string
+{
+    return get_plugin_page_hook($slug, $parent)
+        ? menu_page_url($slug, false)
+        : admin_url($slug);
+}
+
 function iss_core_render_operations_page(): void
 {
     iss_require_cap(iss_core_capability('manage'));
@@ -633,9 +641,7 @@ function iss_core_render_operations_page(): void
         if ($item[2] === ISS_CORE_OPERATIONS_MENU_SLUG || !current_user_can($item[1])) {
             continue;
         }
-        $url = get_plugin_page_hook($item[2], ISS_CORE_OPERATIONS_MENU_SLUG)
-            ? menu_page_url($item[2], false)
-            : admin_url($item[2]);
+        $url = iss_core_admin_menu_url($item[2], ISS_CORE_OPERATIONS_MENU_SLUG);
         echo '<a class="card iss-core-operation" href="' . esc_url($url) . '">';
         echo '<h2 class="iss-core-operation-title">' . esc_html(wp_strip_all_tags($item[0])) . '</h2>';
         echo '<span aria-hidden="true">' . esc_html__('Öffnen →', 'iss-core') . '</span>';

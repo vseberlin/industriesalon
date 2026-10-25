@@ -7,6 +7,26 @@ Work that depends on editor or user-acceptance feedback.
 - Revamp editorial creation toward local CPT-first authoring where editors create `Veranstaltung`, `Ausstellung`, or `Führung` once with minimal fields.
 - Confirm that created items appear automatically in calendar, timeline, and cards without normal publishing depending on SaaS.
 
+## Editorial Operator Dashboard
+
+The `iss_editorial_operator` role used by Anja opens the native Dashboard after
+login. Its standard widgets are replaced by menu cards with short German
+descriptions and links. Labels, order, available sections and destinations come
+from the current permitted WordPress menu, including the Newsletter draft
+submenu. Dashboard does not link to itself. Personal Profile stays outside the
+sidebar and remains available through the account toolbar.
+
+ISS Core uses native dashboard widgets and shares menu URL resolution with
+ISS-Betrieb; no separate navigation registry, CSS layout or dashboard route is
+introduced. Native widget layout, keyboard controls and responsive behavior
+remain available. Administrators and Project UAT keep their existing dashboards
+and navigation. No role migration or account/content/media transfer is needed.
+
+Run `wp eval-file tests/e2e/bin/editorial-dashboard.php --use-include` for read-only
+menu, widget, destination and role-preservation checks. The CLI may omit upstream
+Newsletter admin registration; verify its card and destination in Anja's existing
+browser session, along with dashboard navigation and desktop/mobile layout.
+
 ## Project Dossier Authoring
 
 Projects use the shared `iss-editorial` JSON canvas. The dedicated

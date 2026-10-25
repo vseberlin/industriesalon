@@ -68,19 +68,20 @@ function iss_core_editorial_operator_post_types(): array
 
 add_filter('login_redirect', static function ($redirect, $requested, $user) {
     return $user instanceof WP_User && iss_core_is_editorial_operator($user)
-        ? admin_url('edit.php?post_type=page') : $redirect;
+        ? admin_url('index.php') : $redirect;
 }, 10, 3);
 
 add_action('admin_menu', static function (): void {
     if (!iss_core_is_editorial_operator()) { return; }
     global $menu;
     // Personal profile remains available through the account toolbar.
-    $allowed = ['upload.php', ISS_CORE_OPERATIONS_MENU_SLUG, 'newsletter_main_index'];
+    $allowed = ['index.php', 'upload.php', ISS_CORE_OPERATIONS_MENU_SLUG, 'newsletter_main_index'];
     foreach (iss_core_editorial_operator_post_types() as $type) { $allowed[] = 'edit.php?post_type=' . $type; }
     foreach ($menu as $item) {
         if (!in_array($item[2], $allowed, true)) { remove_menu_page($item[2]); }
     }
     remove_submenu_page('upload.php', 'mla-menu');
+    remove_submenu_page('index.php', 'update-core.php');
 }, PHP_INT_MAX);
 
 add_action('admin_bar_menu', static function (WP_Admin_Bar $bar): void {
@@ -92,11 +93,7 @@ add_action('admin_bar_menu', static function (WP_Admin_Bar $bar): void {
 
 add_action('current_screen', static function (WP_Screen $screen): void {
     if (!iss_core_is_editorial_operator()) { return; }
-    if ($screen->base === 'dashboard') {
-        wp_safe_redirect(admin_url('edit.php?post_type=page'));
-        exit;
-    }
-    if (in_array($screen->base, ['profile', 'upload', 'media'], true)) { return; }
+    if (in_array($screen->base, ['dashboard', 'profile', 'upload', 'media'], true)) { return; }
     if (in_array($screen->post_type, iss_core_editorial_operator_post_types(), true)
         && in_array($screen->base, ['edit', 'post'], true)) { return; }
     if (in_array($screen->base, ['edit-tags', 'term'], true)) {
@@ -118,6 +115,69 @@ add_action('current_screen', static function (WP_Screen $screen): void {
     if (function_exists('iss_newsletter_editorial_pages') && in_array($plugin_page, iss_newsletter_editorial_pages(), true)) { return; }
     wp_die(esc_html__('Dieses Konto hat keinen Zugriff auf diesen Bereich.', 'iss-core'), '', ['response' => 403]);
 });
+
+/** Descriptions decorate the current menu; WordPress remains the navigation authority. */
+function iss_core_editorial_dashboard_cards(): array
+{
+    global $menu, $submenu;
+    $descriptions = [
+        'upload.php' => __('Bilder und Dateien hochladen und verwalten.', 'iss-core'),
+        'edit.php?post_type=page' => __('Texte und Inhalte der Website-Seiten bearbeiten.', 'iss-core'),
+        'edit.php?post_type=fuehrung' => __('Führungen anlegen und Tourbeschreibungen pflegen.', 'iss-core'),
+        'edit.php?post_type=veranstaltung' => __('Veranstaltungen anlegen und Programminformationen pflegen.', 'iss-core'),
+        'edit.php?post_type=ausstellung' => __('Ausstellungen und ihre Beschreibungen bearbeiten.', 'iss-core'),
+        'edit.php?post_type=projekt' => __('Projekte vorstellen und ihre Inhalte ergänzen.', 'iss-core'),
+        'edit.php?post_type=rueckblick' => __('Über vergangene Veranstaltungen und Projekte berichten.', 'iss-core'),
+        'edit.php?post_type=team_member' => __('Teammitglieder und ihre Aufgaben vorstellen.', 'iss-core'),
+        ISS_CORE_OPERATIONS_MENU_SLUG => __('Hinweise, Orte, Buchungen, Bilder-Sets und weitere Betriebsbereiche öffnen.', 'iss-core'),
+        'edit.php?post_type=entity_profile' => __('Personen und Organisationen vorstellen und ihre Profile pflegen.', 'iss-core'),
+        'edit.php?post_type=publication' => __('Publikationen anlegen und ihre Beschreibungen bearbeiten.', 'iss-core'),
+        'newsletter_main_index' => __('Newsletter-Entwürfe erstellen und bearbeiten.', 'iss-core'),
+    ];
+    $cards = [];
+    foreach ($menu as $item) {
+        if (in_array($item[2], ['index.php', 'profile.php'], true)
+            || str_contains($item[4] ?? '', 'wp-menu-separator') || !current_user_can($item[1])) {
+            continue;
+        }
+        $target = $item[2];
+        foreach ($submenu[$item[2]] ?? [] as $child) {
+            if (current_user_can($child[1])) {
+                $target = $child[2];
+                break;
+            }
+        }
+        $cards[] = [
+            'id' => 'iss-editorial-menu-' . sanitize_key($item[2]),
+            'title' => wp_strip_all_tags($item[0]),
+            'url' => iss_core_admin_menu_url($target, $item[2]),
+            'description' => $descriptions[$item[2]] ?? __('Diesen Bereich der Website bearbeiten.', 'iss-core'),
+        ];
+    }
+    return $cards;
+}
+
+function iss_core_setup_editorial_dashboard(): void
+{
+    if (!iss_core_is_editorial_operator()) { return; }
+    global $wp_meta_boxes;
+    foreach ($wp_meta_boxes['dashboard'] ?? [] as $context => $priorities) {
+        foreach ($priorities as $boxes) {
+            foreach (array_keys($boxes) as $id) { remove_meta_box($id, 'dashboard', $context); }
+        }
+    }
+    $contexts = ['normal', 'side', 'column3', 'column4'];
+    foreach (iss_core_editorial_dashboard_cards() as $index => $card) {
+        wp_add_dashboard_widget($card['id'], $card['title'], static function () use ($card): void {
+            echo '<p>' . esc_html($card['description']) . '</p>';
+            echo '<p><a class="button" href="' . esc_url($card['url']) . '" aria-label="';
+            /* translators: %s: Name of the admin menu section. */
+            echo esc_attr(sprintf(__('%s öffnen', 'iss-core'), $card['title']));
+            echo '">' . esc_html__('Öffnen', 'iss-core') . '</a></p>';
+        }, null, null, $contexts[$index % count($contexts)]);
+    }
+}
+add_action('wp_dashboard_setup', 'iss_core_setup_editorial_dashboard', PHP_INT_MAX);
 
 // Shared terms remain assignable without granting generic Posts access.
 add_filter('register_taxonomy_args', static function (array $args): array {
