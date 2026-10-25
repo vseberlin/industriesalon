@@ -3,7 +3,10 @@ document.addEventListener('DOMContentLoaded', function () {
   var panels = document.querySelectorAll('.iss-panel');
 
   function activate(hash) {
-    var target = hash || '#iss-general';
+    var selectedTab = Array.from(tabs).find(function (tab) {
+      return tab.getAttribute('href') === hash;
+    });
+    var target = selectedTab ? hash : '#iss-general';
     tabs.forEach(function (tab) {
       tab.classList.toggle('nav-tab-active', tab.getAttribute('href') === target);
     });

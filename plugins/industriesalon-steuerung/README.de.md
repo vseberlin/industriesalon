@@ -14,10 +14,12 @@ Hier pflegen Sie:
 - Besuchszeiten
 - Bürozeiten
 - Sondertage
-- Preise
 - Barrierefreiheit
 - häufige Fragen
-- Mission Statement
+
+Die Bereiche `Preise` und `Mission Statement` sowie das Feld `Buchungslink` unter
+`Kontakt` entfallen nach dem UAT. Vorhandene Werte bleiben für bestehende
+Inhaltsblöcke und JSON-Sicherungen erhalten; normales Speichern löscht sie nicht.
 
 Die Angaben werden danach automatisch an verschiedenen Stellen der Website ausgegeben.
 

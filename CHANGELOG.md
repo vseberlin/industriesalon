@@ -4,6 +4,17 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-25 — Steuerung UAT simplification
+
+- Removed the Preise and Mission Statement tabs and the Kontakt Buchungslink
+  field. Existing values, public renderers and JSON backup compatibility remain;
+  normal settings saves cannot clear the retired values. Removed-tab bookmarks
+  fall back to Standort & Adresse. Updated the editorial guide and asset version.
+- PHP lint, PHPCS, PHPStan, targeted ESLint and 18 read-only WordPress runtime
+  checks passed; the local homepage returned 200. Visual admin verification was
+  unavailable because the local browser required login. No database or uploads
+  artifact is needed; existing options are preserved. Local changes only.
+
 ## 2026-10-25 — ISS-Betrieb dashboard
 
 - Replaced the ISS-Betrieb landing page's technical-list emphasis with linked

@@ -1,5 +1,15 @@
 # Current handoff — 23 October 2026
 
+## Steuerung UAT simplification — local, 25 October 2026
+
+Removed Preise and Mission Statement sections and Kontakt's Buchungslink field.
+Existing option values, frontend consumers and JSON backups remain compatible;
+normal saves preserve the retired values. Old tab hashes select Standort & Adresse.
+PHP lint, PHPCS, PHPStan, targeted ESLint and 18 read-only runtime checks passed;
+homepage HTTP 200. Browser admin check stopped at local login, so visual acceptance
+remains unverified. Staging deployment is authorized; target verification is pending.
+No DB or uploads artifact is required. Existing unrelated local edits remain in place.
+
 ## ISS-Betrieb dashboard — verified 25 October 2026
 
 Code release `b74b9fb` is deployed locally and on staging through GitHub main.

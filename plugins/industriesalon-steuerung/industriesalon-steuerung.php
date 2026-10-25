@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Industriesalon Steuerung
- * Description: Zentrale Seiteneinstellungen für Industriesalon: Öffnungszeiten, Bürozeiten, Kontakt, Adresse, Mission Statement, Barrierefreiheit und Preise mit wiederverwendbarer Ausgabe per PHP und Gutenberg-Blöcke.
- * Version: 0.3.0
+ * Description: Zentrale Seiteneinstellungen für Industriesalon: Öffnungszeiten, Bürozeiten, Kontakt, Adresse und Barrierefreiheit mit wiederverwendbarer Ausgabe per PHP und Gutenberg-Blöcke.
+ * Version: 0.3.1
  * Author: OpenAI
  * Text Domain: industriesalon-steuerung
  */
@@ -12,7 +12,7 @@ if (! defined('ABSPATH')) {
 }
 
 final class Industriesalon_Steuerung {
-    private const VERSION = '0.3.0';
+    private const VERSION = '0.3.1';
     private const CAPABILITY = 'iss_manage_steuerung';
 
     private const OPTION_GENERAL = 'iss_control_general';
@@ -237,17 +237,8 @@ final class Industriesalon_Steuerung {
             'default'           => $this->default_accessibility(),
         ]);
 
-        register_setting('iss_control_group', self::OPTION_PRICES, [
-            'type'              => 'array',
-            'sanitize_callback' => [$this, 'sanitize_prices'],
-            'default'           => $this->default_prices(),
-        ]);
-
-        register_setting('iss_control_group', self::OPTION_MISSION_STATEMENT, [
-            'type'              => 'array',
-            'sanitize_callback' => [$this, 'sanitize_mission_statement'],
-            'default'           => $this->default_mission_statement(),
-        ]);
+        // Retired sections stay available to existing renderers and JSON backups,
+        // but must not be reset by options.php when absent from this form.
     }
 
     public function render_admin_page(): void {
@@ -262,8 +253,6 @@ final class Industriesalon_Steuerung {
         $maps = get_option(self::OPTION_MAPS, $this->default_maps());
         $hours = get_option(self::OPTION_HOURS, $this->default_hours());
         $accessibility = get_option(self::OPTION_ACCESSIBILITY, $this->default_accessibility());
-        $prices = get_option(self::OPTION_PRICES, $this->default_prices());
-        $mission_statement = get_option(self::OPTION_MISSION_STATEMENT, $this->default_mission_statement());
         $days = $this->days();
         ?>
         <div class="wrap iss-admin">
@@ -277,9 +266,7 @@ final class Industriesalon_Steuerung {
                 <a href="#iss-contact" class="nav-tab"><?php esc_html_e('Kontakt', 'industriesalon-steuerung'); ?></a>
                 <a href="#iss-maps" class="nav-tab"><?php esc_html_e('Google Maps / Anfahrt', 'industriesalon-steuerung'); ?></a>
                 <a href="#iss-hours" class="nav-tab"><?php esc_html_e('Besuchszeiten', 'industriesalon-steuerung'); ?></a>
-                <a href="#iss-prices" class="nav-tab"><?php esc_html_e('Preise', 'industriesalon-steuerung'); ?></a>
                 <a href="#iss-accessibility" class="nav-tab"><?php esc_html_e('Barrierefreiheit', 'industriesalon-steuerung'); ?></a>
-                <a href="#iss-mission-statement" class="nav-tab"><?php esc_html_e('Mission Statement', 'industriesalon-steuerung'); ?></a>
                 <a href="#iss-tools" class="nav-tab"><?php esc_html_e('Werkzeuge', 'industriesalon-steuerung'); ?></a>
             </nav>
 
@@ -323,7 +310,6 @@ final class Industriesalon_Steuerung {
                         <?php $this->email_field(self::OPTION_CONTACT, 'booking_email', __('E-Mail für Buchungen', 'industriesalon-steuerung'), $contact['booking_email'] ?? '', 'buchung@industriesalon.de', __('Optional. Nur wenn Buchungen über eine eigene Adresse laufen.', 'industriesalon-steuerung')); ?>
                         <?php $this->text_field(self::OPTION_CONTACT, 'contact_person', __('Ansprechperson', 'industriesalon-steuerung'), $contact['contact_person'] ?? '', true, 'Max Mustermann', __('Optional.', 'industriesalon-steuerung')); ?>
                         <?php $this->url_field(self::OPTION_CONTACT, 'website', __('Website', 'industriesalon-steuerung'), $contact['website'] ?? '', 'https://www.industriesalon.de'); ?>
-                        <?php $this->url_field(self::OPTION_CONTACT, 'booking_url', __('Buchungslink', 'industriesalon-steuerung'), $contact['booking_url'] ?? '', '/fuehrungen/', __('Interne Angebotsseite mit Buchungsdialog. SuperSaaS liefert ausschließlich den Terminplan.', 'industriesalon-steuerung')); ?>
                         <?php $this->url_field(self::OPTION_CONTACT, 'instagram', __('Instagram', 'industriesalon-steuerung'), $contact['instagram'] ?? '', 'https://instagram.com/...', __('Optional.', 'industriesalon-steuerung')); ?>
                         <?php $this->url_field(self::OPTION_CONTACT, 'facebook', __('Facebook', 'industriesalon-steuerung'), $contact['facebook'] ?? '', 'https://facebook.com/...', __('Optional.', 'industriesalon-steuerung')); ?>
                         <?php $this->url_field(self::OPTION_CONTACT, 'youtube', __('YouTube', 'industriesalon-steuerung'), $contact['youtube'] ?? '', 'https://youtube.com/...', __('Optional.', 'industriesalon-steuerung')); ?>
@@ -406,30 +392,6 @@ final class Industriesalon_Steuerung {
                     </div>
                     <div class="iss-grid iss-grid--1">
                         <?php $this->textarea_field(self::OPTION_ACCESSIBILITY, 'note', __('Zusätzlicher Hinweis', 'industriesalon-steuerung'), $accessibility['note'] ?? '', 5, true, 'Ein Teil der Ausstellung ist nur eingeschränkt zugänglich.', __('Nur das eintragen, was Besucher wirklich wissen müssen.', 'industriesalon-steuerung')); ?>
-                    </div>
-                </section>
-
-                <section id="iss-prices" class="iss-panel" hidden>
-                    <h2><?php esc_html_e('Preise', 'industriesalon-steuerung'); ?></h2>
-                    <p class="iss-panel__hint"><?php esc_html_e('Preise und Hinweise für Besucher.', 'industriesalon-steuerung'); ?></p>
-                    <div class="iss-grid iss-grid--2">
-                        <?php $this->text_field(self::OPTION_PRICES, 'adult', __('Regulär', 'industriesalon-steuerung'), $prices['adult'] ?? '', true, '5 €'); ?>
-                        <?php $this->text_field(self::OPTION_PRICES, 'reduced', __('Ermäßigt', 'industriesalon-steuerung'), $prices['reduced'] ?? ''); ?>
-                        <?php $this->text_field(self::OPTION_PRICES, 'group', __('Gruppen', 'industriesalon-steuerung'), $prices['group'] ?? '', true, 'auf Anfrage', __('Optional.', 'industriesalon-steuerung')); ?>
-                        <?php $this->text_field(self::OPTION_PRICES, 'school', __('Schulklassen', 'industriesalon-steuerung'), $prices['school'] ?? '', true, 'nach Vereinbarung', __('Optional.', 'industriesalon-steuerung')); ?>
-                        <?php $this->text_field(self::OPTION_PRICES, 'tour', __('Hinweis zu Führungen oder Buchungen', 'industriesalon-steuerung'), $prices['tour'] ?? '', true, 'Führungen nur nach Voranmeldung.'); ?>
-                        <?php $this->text_field(self::OPTION_PRICES, 'rental', __('Freier Eintritt / Hinweise', 'industriesalon-steuerung'), $prices['rental'] ?? '', true, 'Kinder bis … frei', __('Optional.', 'industriesalon-steuerung')); ?>
-                    </div>
-                    <div class="iss-grid iss-grid--1">
-                        <?php $this->textarea_field(self::OPTION_PRICES, 'note', __('Hinweis', 'industriesalon-steuerung'), $prices['note'] ?? '', 4); ?>
-                    </div>
-                </section>
-
-                <section id="iss-mission-statement" class="iss-panel" hidden>
-                    <h2><?php esc_html_e('Mission Statement', 'industriesalon-steuerung'); ?></h2>
-                    <p class="iss-panel__hint"><?php esc_html_e('Kurztext für die redaktionelle Selbstbeschreibung auf Seiten und in Inhaltsblöcken.', 'industriesalon-steuerung'); ?></p>
-                    <div class="iss-grid iss-grid--1">
-                        <?php $this->textarea_field(self::OPTION_MISSION_STATEMENT, 'content', __('Mission Statement', 'industriesalon-steuerung'), $mission_statement['content'] ?? '', 8, true, '', __('Kurz und prägnant formulieren.', 'industriesalon-steuerung')); ?>
                     </div>
                 </section>
 
@@ -1801,13 +1763,16 @@ final class Industriesalon_Steuerung {
 
     public function sanitize_contact($input): array {
         $input = is_array($input) ? $input : [];
+        // The retired booking-link field is absent on normal saves; explicit
+        // values in existing JSON backups still pass through the same sanitizer.
+        $stored = get_option(self::OPTION_CONTACT, $this->default_contact());
         return [
             'phone'          => sanitize_text_field($input['phone'] ?? ''),
             'email'          => sanitize_email($input['email'] ?? ''),
             'booking_email'  => sanitize_email($input['booking_email'] ?? ''),
             'contact_person' => sanitize_text_field($input['contact_person'] ?? ''),
             'website'        => $this->normalize_public_url((string) ($input['website'] ?? '')),
-            'booking_url'    => $this->normalize_public_url((string) ($input['booking_url'] ?? '')),
+            'booking_url'    => $this->normalize_public_url((string) ($input['booking_url'] ?? $stored['booking_url'] ?? '')),
             'instagram'      => $this->normalize_public_url((string) ($input['instagram'] ?? '')),
             'facebook'       => $this->normalize_public_url((string) ($input['facebook'] ?? '')),
             'youtube'        => $this->normalize_public_url((string) ($input['youtube'] ?? '')),

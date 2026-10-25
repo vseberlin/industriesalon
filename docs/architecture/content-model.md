@@ -10,6 +10,10 @@ a visitor venue. Online, external, future and historical special exhibitions
 retain their own metadata without inheriting current museum conditions.
 The overview reuses `industriesalon/visit-info`; its optional `show_admission`
 setting reads the same central prices. Empty prices never mean free admission.
+After UAT, the Steuerung settings form omits Preise, Mission Statement and the
+Kontakt booking-link field. Their stored values remain available to existing
+renderers and JSON backups; normal form saves preserve them. This UI reduction
+does not migrate or delete institutional facts.
 
 This repo uses WordPress editorial content as the primary authoring surface. Custom plugins define CPTs, fields, dynamic blocks, imports, and data contracts; the theme owns public composition and visual presentation.
 
