@@ -1,14 +1,17 @@
 # Current handoff — 23 October 2026
 
-## Steuerung UAT simplification — local, 25 October 2026
+## Steuerung UAT simplification — deployed 25 October 2026
 
-Removed Preise and Mission Statement sections and Kontakt's Buchungslink field.
-Existing option values, frontend consumers and JSON backups remain compatible;
-normal saves preserve the retired values. Old tab hashes select Standort & Adresse.
-PHP lint, PHPCS, PHPStan, targeted ESLint and 18 read-only runtime checks passed;
-homepage HTTP 200. Browser admin check stopped at local login, so visual acceptance
-remains unverified. Staging deployment is authorized; target verification is pending.
-No DB or uploads artifact is required. Existing unrelated local edits remain in place.
+Code release `98f84aa` is deployed through GitHub main to staging. Preise and
+Mission Statement sections and Kontakt's Buchungslink field are removed. Existing
+values, frontend consumers and JSON backups remain compatible; the complete
+Steuerung option digest is unchanged before/after deployment. No DB or uploads
+artifact, account change or restart was needed.
+Local PHP lint, PHPCS, PHPStan, ESLint and 18 read-only runtime checks passed;
+staging passed the same 18 checks and PHP lint. In Anja's existing browser session,
+verified the simplified Kontakt form, six tabs and both retired bookmarks falling
+back to Standort & Adresse. Homepage HTTP 200; containers healthy; inspected logs
+show no PHP errors. Existing unrelated local edits remain outside this release.
 
 ## ISS-Betrieb dashboard — verified 25 October 2026
 

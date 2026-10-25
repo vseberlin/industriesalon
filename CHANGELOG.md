@@ -11,9 +11,12 @@ be recovered from Git history.
   normal settings saves cannot clear the retired values. Removed-tab bookmarks
   fall back to Standort & Adresse. Updated the editorial guide and asset version.
 - PHP lint, PHPCS, PHPStan, targeted ESLint and 18 read-only WordPress runtime
-  checks passed; the local homepage returned 200. Visual admin verification was
-  unavailable because the local browser required login. No database or uploads
-  artifact is needed; existing options are preserved. Local changes only.
+  checks passed locally; staging passed PHP lint and the same 18 runtime checks.
+  Released code `98f84aa` via GitHub main. Anja's existing staging session verified
+  the six tabs, simplified Kontakt form
+  and fallback from both retired bookmarks. The options digest stayed unchanged;
+  homepage returned 200, containers stayed healthy and inspected logs showed no
+  PHP errors. No database/uploads artifact, account change or restart was needed.
 
 ## 2026-10-25 — ISS-Betrieb dashboard
 
