@@ -4,6 +4,18 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-25 — ISS-Betrieb dashboard
+
+- Replaced the ISS-Betrieb landing page's technical-list emphasis with linked
+  cards for the current user's permitted submenus, in sidebar order. ISS Core
+  reads WordPress's existing menu registry and native URL hooks; no parallel
+  navigation configuration or permission model is introduced. Native admin card
+  surfaces gain a small dashboard-only responsive stylesheet. Links and the
+  collapsed technical-checks section work without JavaScript or custom CSS.
+- Local runtime verification covers six editorial-role and eight administrator
+  cards, both native content and plugin routes, and page-scoped asset loading.
+  This code-only presentation change needs no database or uploads artifact.
+
 ## 2026-10-25 — ISS-Betrieb admin label
 
 - Renamed the shared Operations menu, page title and heading to `ISS-Betrieb`,

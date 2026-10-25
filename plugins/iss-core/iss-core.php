@@ -606,15 +606,46 @@ function iss_core_register_operations_menu(): void
 }
 add_action('admin_menu', 'iss_core_register_operations_menu', 5);
 
+function iss_core_enqueue_operations_assets(string $hook): void
+{
+    if ($hook !== 'toplevel_page_' . ISS_CORE_OPERATIONS_MENU_SLUG) {
+        return;
+    }
+    wp_enqueue_style(
+        'iss-core-operations',
+        plugins_url('assets/operations.css', ISS_CORE_FILE),
+        [],
+        (string) filemtime(ISS_CORE_PATH . 'assets/operations.css')
+    );
+}
+add_action('admin_enqueue_scripts', 'iss_core_enqueue_operations_assets');
+
 function iss_core_render_operations_page(): void
 {
     iss_require_cap(iss_core_capability('manage'));
+    global $submenu;
 
     echo '<div class="wrap">';
     echo '<h1>' . esc_html__('ISS-Betrieb', 'iss-core') . '</h1>';
-    echo '<p>' . esc_html__('Zentrale Einstiegsseite fuer operative Admin-Oberflaechen.', 'iss-core') . '</p>';
+    echo '<p>' . esc_html__('Wählen Sie den Bereich, den Sie bearbeiten möchten.', 'iss-core') . '</p>';
+    echo '<nav class="iss-core-operations-grid" aria-label="' . esc_attr__('Betriebsbereiche', 'iss-core') . '">';
+    foreach ($submenu[ISS_CORE_OPERATIONS_MENU_SLUG] ?? [] as $item) {
+        if ($item[2] === ISS_CORE_OPERATIONS_MENU_SLUG || !current_user_can($item[1])) {
+            continue;
+        }
+        $url = get_plugin_page_hook($item[2], ISS_CORE_OPERATIONS_MENU_SLUG)
+            ? menu_page_url($item[2], false)
+            : admin_url($item[2]);
+        echo '<a class="card iss-core-operation" href="' . esc_url($url) . '">';
+        echo '<h2 class="iss-core-operation-title">' . esc_html(wp_strip_all_tags($item[0])) . '</h2>';
+        echo '<span aria-hidden="true">' . esc_html__('Öffnen →', 'iss-core') . '</span>';
+        echo '</a>';
+    }
+    echo '</nav>';
+    echo '<details class="iss-core-operations-checks"><summary>' . esc_html__('Technische Prüfungen', 'iss-core') . '</summary>';
+    echo '<div class="iss-core-operations-checks-content">';
     do_action('iss_core_operations_page');
-    echo '</div>';
+    echo '</div></details></div>';
 }
 
 function iss_core_migrate_domain_plugin_basenames(bool $persist = true): void

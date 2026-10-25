@@ -1,0 +1,49 @@
+/* Admin-only layout; native WordPress cards supply the surface. */
+.iss-core-operations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.iss-core-operation {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 24px;
+  min-width: 0;
+  max-width: none;
+  margin: 0;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.iss-core-operation:hover {
+  border-color: currentColor;
+}
+
+.iss-core-operation:focus-visible {
+  outline: 2px solid var(--wp-admin-theme-color, #2271b1);
+  outline-offset: 3px;
+}
+
+.iss-core-operation-title {
+  margin: 0;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.iss-core-operations-checks {
+  margin-top: 24px;
+}
+
+.iss-core-operations-checks summary {
+  padding: 12px 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.iss-core-operations-checks-content {
+  overflow-x: auto;
+}
