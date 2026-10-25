@@ -4,6 +4,14 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-25 — Vorstand entry and AI review prompt
+
+- Added a short root `README.md`, a German non-developer overview
+  (`docs/vorstand/README.md`) and a fixed, neutral AI review prompt
+  (`docs/vorstand/ki-pruefauftrag.md`) so board proposals made with AI tools are
+  assessed against the plugin ownership map and no-parallel-systems rule before
+  decisions. Documentation only; no code, database or uploads artifact needed.
+
 ## 2026-10-25 — Editorial operator dashboard
 
 - Restored Dashboard navigation and made it the editorial operator login landing
