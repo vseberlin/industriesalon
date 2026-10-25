@@ -74,7 +74,8 @@ add_filter('login_redirect', static function ($redirect, $requested, $user) {
 add_action('admin_menu', static function (): void {
     if (!iss_core_is_editorial_operator()) { return; }
     global $menu;
-    $allowed = ['upload.php', 'profile.php', ISS_CORE_OPERATIONS_MENU_SLUG, 'newsletter_main_index'];
+    // Personal profile remains available through the account toolbar.
+    $allowed = ['upload.php', ISS_CORE_OPERATIONS_MENU_SLUG, 'newsletter_main_index'];
     foreach (iss_core_editorial_operator_post_types() as $type) { $allowed[] = 'edit.php?post_type=' . $type; }
     foreach ($menu as $item) {
         if (!in_array($item[2], $allowed, true)) { remove_menu_page($item[2]); }

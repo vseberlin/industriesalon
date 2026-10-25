@@ -4,6 +4,14 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-25 — Remove redundant personal Profile navigation
+
+- Removed the personal Profile entry from the editorial operator sidebar through
+  its existing menu allowlist. Account-toolbar access and the profile route remain
+  available; Personen & Organisationen is retained. No capability/account changes,
+  database migration or uploads artifact are needed.
+- Local PHP lint, PHPCS, PHPStan and native role/menu/route checks passed.
+
 ## 2026-10-25 — Personen & Organisationen admin label
 
 - Renamed the Profile content menu and list heading to `Personen & Organisationen`
