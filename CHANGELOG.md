@@ -4,6 +4,13 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-25 — Personen & Organisationen admin label
+
+- Renamed the Profile content menu and list heading to `Personen & Organisationen`
+  to describe both supported entity kinds. Singular profile actions, public URLs,
+  content and capabilities are unchanged. No database or uploads artifact is needed.
+- Local PHP syntax, targeted PHPCS/PHPStan and WordPress label registration passed.
+
 ## 2026-10-25 — Steuerung UAT simplification
 
 - Removed the Preise and Mission Statement tabs and the Kontakt Buchungslink

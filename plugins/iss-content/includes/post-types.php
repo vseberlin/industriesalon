@@ -177,9 +177,9 @@ function iss_content_model_register_post_types() {
         'capabilities' => function_exists('iss_core_post_type_capabilities') ? iss_core_post_type_capabilities('entity_profile', 'entity_profiles') : [],
         'map_meta_cap' => true,
         'labels' => [
-            'name' => __('Profile', 'iss-content-model'),
+            'name' => __('Personen & Organisationen', 'iss-content-model'),
             'singular_name' => __('Profil', 'iss-content-model'),
-            'menu_name' => __('Profile', 'iss-content-model'),
+            'menu_name' => __('Personen & Organisationen', 'iss-content-model'),
             'add_new_item' => __('Neues Profil anlegen', 'iss-content-model'),
             'edit_item' => __('Profil bearbeiten', 'iss-content-model'),
         ],
