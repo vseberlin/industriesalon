@@ -1,5 +1,24 @@
 # Current handoff — 23 October 2026
 
+## ISS-Betrieb label — verified 25 October 2026
+
+Code release `a4ed6b4` is deployed locally and on staging through GitHub main.
+The shared Operations menu, page title and heading now read `ISS-Betrieb`.
+Anja Meyer remains a staging-only account. Authenticated HTTP checks as Anja
+verified all three labels, unchanged menu destinations and denied Users/Plugins
+routes; the test session was logged out. Locally the editorial role was simulated
+in memory without creating an account. PHP lint, PHPCS, PHPStan and both homepage
+checks passed; staging containers are healthy and checked logs show no PHP errors.
+No capability, account, schema, content or media migration is needed.
+
+Paired navigation replay: scout returned 11,558 characters versus 12,194 for
+scoped rg plus equivalent sed ranges (about 2,890 vs 3,048 tokens using chars/4,
+5.2% less). These are output-size estimates, not measured model/session billing;
+shared guidance, reasoning, edits, deployment and verification are excluded.
+Private commands/results: `var/menu-label-20261025/navigation-comparison.json`.
+Existing local scout/boundary/documentation edits remain uncommitted and outside
+this release. This checkpoint supersedes older release-status statements below.
+
 Website source is `/home/vladimir/wp-website`; staging checkout is
 `/srv/industriesalon/stage/repo`. Commerce 0.5.0 is deployed through GitHub
 (`4666d81`, final code correction `9531b65`). Local and staging acceptance passed.
