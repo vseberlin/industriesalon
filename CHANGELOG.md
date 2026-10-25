@@ -4,6 +4,13 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-25 — ISS-Betrieb admin label
+
+- Renamed the shared Operations menu, page title and heading to `ISS-Betrieb`,
+  including the editorial operator interface used by Anja Meyer. The existing
+  `iss-operations` route, submenu destinations and capability gates are unchanged.
+  This code-only label update needs no database migration or uploads artifact.
+
 ## 2026-10-23
 
 - Cleaned the editorial Operations menu: Archivbeiträge, Register Werkzeuge and

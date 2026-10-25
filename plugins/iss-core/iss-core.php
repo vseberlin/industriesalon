@@ -595,8 +595,8 @@ register_activation_hook(__FILE__, 'iss_core_maybe_run_capability_migration');
 function iss_core_register_operations_menu(): void
 {
     add_menu_page(
-        __('Operations', 'iss-core'),
-        __('Operations', 'iss-core'),
+        __('ISS-Betrieb', 'iss-core'),
+        __('ISS-Betrieb', 'iss-core'),
         iss_core_capability('manage'),
         ISS_CORE_OPERATIONS_MENU_SLUG,
         'iss_core_render_operations_page',
@@ -611,7 +611,7 @@ function iss_core_render_operations_page(): void
     iss_require_cap(iss_core_capability('manage'));
 
     echo '<div class="wrap">';
-    echo '<h1>' . esc_html__('Operations', 'iss-core') . '</h1>';
+    echo '<h1>' . esc_html__('ISS-Betrieb', 'iss-core') . '</h1>';
     echo '<p>' . esc_html__('Zentrale Einstiegsseite fuer operative Admin-Oberflaechen.', 'iss-core') . '</p>';
     do_action('iss_core_operations_page');
     echo '</div>';
