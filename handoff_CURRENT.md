@@ -1,5 +1,20 @@
 # Current handoff — 23 October 2026
 
+## Anja's editorial dashboard — deployed 25 October 2026
+
+Code `e9d9f12` is deployed locally and through GitHub main to staging. Dashboard
+is now available to the editorial operator and is its login landing page. Twelve
+native menu cards replace the standard widgets, with German descriptions and
+links derived from the permitted menu. Newsletter opens drafts; personal Profile
+remains toolbar-only. Administrator and Project UAT behavior stays unchanged.
+PHP lint, PHPCS/PHPStan and 74 read-only local/staging runtime checks passed.
+Anja's Chrome session verified all 12 destinations, return navigation and 1920,
+1024 and 390px layouts without horizontal overflow. Both homepages returned 200;
+staging containers and recent PHP logs passed. No DB/uploads artifact, account
+change or capability migration was needed. Unrelated local edits remain outside
+the release; no further dashboard work is queued. See the editorial dashboard
+contract and check command in `docs/project/uat.md`.
+
 ## Personal Profile sidebar cleanup — deployed 25 October 2026
 
 Code `678334c` removes the redundant personal Profile item from the editorial

@@ -13,7 +13,11 @@ be recovered from Git history.
   the Operations URL resolver is shared instead of adding a parallel navigation
   registry, custom layout or route. Administrators and Project UAT are unaffected.
 - PHP lint, targeted PHPCS/PHPStan and 74 read-only menu/widget/role checks passed
-  locally. No database, uploads, capability migration or account change is needed.
+  locally and on staging (74 checks each); code release `e9d9f12` is deployed
+  through GitHub main. Anja's Chrome session verified 12 cards, all destinations,
+  dashboard return navigation and layouts at 1920, 1024 and 390px without overflow.
+  Both homepages returned 200; staging services and inspected recent PHP logs passed.
+  No database, uploads, capability migration or account change is needed.
 
 ## 2026-10-25 — Remove redundant personal Profile navigation
 
