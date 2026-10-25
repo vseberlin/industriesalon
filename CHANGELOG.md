@@ -9,7 +9,10 @@ be recovered from Git history.
 - Renamed the Profile content menu and list heading to `Personen & Organisationen`
   to describe both supported entity kinds. Singular profile actions, public URLs,
   content and capabilities are unchanged. No database or uploads artifact is needed.
-- Local PHP syntax, targeted PHPCS/PHPStan and WordPress label registration passed.
+- Local PHP syntax, targeted PHPCS/PHPStan and native WordPress menu checks passed.
+  Code `9a0e5f2` is deployed through GitHub main to staging; Anja's existing Chrome
+  session verified the sidebar and list heading, including readable line wrapping.
+  Staging PHP lint, homepage HTTP 200, service and recent PHP-log checks passed.
 
 ## 2026-10-25 — Steuerung UAT simplification
 

@@ -1,5 +1,16 @@
 # Current handoff — 23 October 2026
 
+## Personen & Organisationen — deployed 25 October 2026
+
+Code `9a0e5f2` is deployed locally and through GitHub main to staging. The former
+Profile content menu and list heading now read `Personen & Organisationen`.
+Local native menu/label checks, PHP lint, PHPCS and PHPStan passed. Staging PHP
+lint and Anja's existing Chrome session verified the sidebar, readable wrapping
+and list heading. Both homepages returned HTTP 200; staging containers are healthy
+and inspected recent PHP logs show no errors. No DB/uploads artifact, account,
+capability or public URL change was needed. Existing unrelated local edits remain
+outside this release; no further action is queued for this label change.
+
 ## Steuerung UAT simplification — deployed 25 October 2026
 
 Code release `98f84aa` is deployed through GitHub main to staging. Preise and
