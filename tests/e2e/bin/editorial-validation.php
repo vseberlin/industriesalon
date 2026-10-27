@@ -15,13 +15,19 @@ $before = $snapshot();
 $old_user = get_current_user_id();
 $admin = get_users(['role' => 'administrator', 'number' => 1])[0];
 wp_set_current_user($admin->ID);
-$id = 0; $sets = []; $tables = []; $guard = null;
+$id = 0; $sets = []; $tables = []; $guard = null; $editor_filter = null;
 $trash = [
     ['type' => 'retired_kind', 'title' => 'Retained "title"', 'body' => '<old-tag data-key="x">Exact recovery</old-tag>', 'custom' => ['enabled' => false, 'nullable' => null, 'list' => [1, 'two']], 'deleted_at' => '2020-01-01', 'original_index' => 2],
     ['type' => 'dynamic_slot', 'slot_key' => 'retired_slot', 'treatment' => 'retired.treatment', 'media_refs' => ['old_shape' => ['must' => 'survive']]],
     ['type' => 'kapitel', 'title' => 'Known type with unknown fields', 'retired_field' => ['nested' => 'Keep this']],
 ];
 try {
+    foreach (['event.gespraech' => 'typografisch', 'event.festival' => 'buehne'] as $entity => $skin) {
+        $raw_event = ['schema_version' => 1, 'entity_key' => $entity, 'sections' => []];
+        $editor_event = apply_filters('iss_editorial_editor_document', $raw_event, 0, 'veranstaltung');
+        $assert($editor_event['skin'] === $skin && $editor_event['entity_key'] === $entity, 'Editor derives a valid skin through the existing legacy entity mapping without rewriting the entity');
+        $assert(!is_wp_error(iss_editorial_validate_document($editor_event, 'veranstaltung')), 'Legacy and current event editor copies remain saveable');
+    }
     foreach (iss_editorial_get_registered_formats() as $slug => $format) {
         $doc = iss_editorial_get_empty_document($slug);
         $doc['deleted_sections'] = $trash;
@@ -96,6 +102,10 @@ try {
     $insert(1900000607, 'publish', iss_editorial_encode_document(['schema_version' => 3, 'sections' => [$trash[0]]]));
     $insert(1900000608, 'auto-draft', '');
     $insert(1900000609, 'inherit', '{broken', 'revision');
+    foreach ([1900000610 => iss_editorial_encode_document($doc), 1900000611 => '{broken'] as $draft_id => $raw) {
+        $insert($draft_id, 'inherit', $raw, 'revision');
+        $wpdb->update($wpdb->posts, ['post_parent' => 1900000500, 'post_name' => '1900000500-autosave-v1', 'post_author' => $draft_id], ['ID' => $draft_id]);
+    }
     $guard = static function (string $sql): string {
         if (preg_match('/^\s*(INSERT|UPDATE|DELETE|REPLACE|ALTER|CREATE|DROP|TRUNCATE)\b/i', $sql)) { throw new RuntimeException('Read-only CLI attempted a write'); }
         return $sql;
@@ -108,6 +118,19 @@ try {
     $assert($report['checked'] === 109 && $report['invalid'] === 4, 'CLI crosses a 100-row boundary and excludes revisions');
     $assert(array_column($report['errors'], 'post_id') === [1900000605, 1900000606, 1900000607, 1900000608], 'CLI identifies trash/private/published/auto-draft documents, including disabled JSON');
     $assert(array_column($report['errors'], 'code') === ['editorial_invalid_json', 'editorial_invalid_schema', 'editorial_unknown_section', 'editorial_invalid_json'], 'CLI validates raw JSON before lossy normalization');
+    $extended = WP_CLI::runcommand('iss-editorial validate-all --include-drafts --editor-view --format=json', ['launch' => false, 'return' => 'all', 'exit_error' => false]);
+    $extended_report = json_decode($extended->stdout, true);
+    $assert($extended->return_code === 1 && $extended_report['invalid'] === 5, 'Extended gate includes invalid private recovery');
+    $assert($extended_report['drafts']['checked'] === 2 && $extended_report['drafts']['invalid'] === 1 && $extended_report['drafts']['missing_base'] === 2, 'Extended gate counts private drafts without treating ordinary revisions as drafts');
+    $editor_filter = static function (array $document, int $post_id): array {
+        if ($post_id === 1900000501) { $document['unexpected_upgrade_field'] = 'Detect editor-only incompatibility'; }
+        return $document;
+    };
+    add_filter('iss_editorial_editor_document', $editor_filter, 99, 2);
+    $extended = WP_CLI::runcommand('iss-editorial validate-all --include-drafts --editor-view --format=json', ['launch' => false, 'return' => 'all', 'exit_error' => false]);
+    $extended_report = json_decode($extended->stdout, true);
+    $assert($extended->return_code === 1 && $extended_report['invalid'] === 6 && in_array(1900000501, array_column($extended_report['errors'], 'post_id'), true), 'Editor-copy hydration is validated as a separate compatibility boundary');
+    remove_filter('iss_editorial_editor_document', $editor_filter, 99); $editor_filter = null;
     $table = WP_CLI::runcommand('iss-editorial validate-all', ['launch' => false, 'return' => 'all', 'exit_error' => false]);
     $assert($table->return_code === 1 && str_contains($table->stdout, '1900000605') && str_contains($table->stdout, 'editorial_invalid_json'), 'Default table output identifies invalid documents and fails the gate');
     $assert($snapshot() === $audit_before, 'Failed audit has no database side effects');
@@ -119,9 +142,10 @@ try {
     $assert($result->return_code === 0 && $report['checked'] === 105 && $report['invalid'] === 0, 'Valid canonical documents with retired trash pass the gate');
     WP_CLI::log("PASS: $checks validation/trash/CLI checks.");
 } finally {
+    if ($editor_filter) { remove_filter('iss_editorial_editor_document', $editor_filter, 99); }
     if ($guard) { remove_filter('query', $guard); }
     foreach (array_reverse($tables) as $table) { $wpdb->query("DROP TEMPORARY TABLE IF EXISTS `$table`"); }
-    foreach (range(1900000500, 1900000609) as $fixture_id) { clean_post_cache($fixture_id); }
+    foreach (range(1900000500, 1900000611) as $fixture_id) { clean_post_cache($fixture_id); }
     if ($id) { wp_delete_post($id, true); }
     foreach ($sets as $set_id) {
         $service = iss_content_editorial_sets_service();

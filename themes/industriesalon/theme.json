@@ -243,7 +243,7 @@
       },
       "h1": {
         "typography": {
-          "fontSize": "clamp(2.2rem, 4vw, 3.9rem)",
+          "fontSize": "min(clamp(2.2rem, 4vw, 3.9rem), var(--iss-heading-fit-limit))",
           "fontWeight": "700",
           "lineHeight": "1.14",
           "fontFamily": "var:preset|font-family|plex-serif"
@@ -256,7 +256,7 @@
       },
       "h2": {
         "typography": {
-          "fontSize": "clamp(1.75rem, 3vw, 2.7rem)",
+          "fontSize": "min(clamp(1.75rem, 3vw, 2.7rem), var(--iss-heading-fit-limit))",
           "fontWeight": "700",
           "lineHeight": "1.13",
           "fontFamily": "var:preset|font-family|plex-serif"
@@ -269,7 +269,7 @@
       },
       "h3": {
         "typography": {
-          "fontSize": "clamp(1.35rem, 2vw, 1.85rem)",
+          "fontSize": "min(clamp(1.35rem, 2vw, 1.85rem), var(--iss-heading-fit-limit))",
           "fontWeight": "600",
           "lineHeight": "1.16"
         },

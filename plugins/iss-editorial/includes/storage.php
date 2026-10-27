@@ -794,7 +794,7 @@ function iss_editorial_validate_document($value, string $format_slug)
             $comparison['sections'][$index] = $section;
             $type = (string) ($section['type'] ?? '');
             if (!isset($format['sections'][$type])) {
-                return new WP_Error('editorial_unknown_section', sprintf(__('Abschnitt %d hat einen unbekannten Typ (%s). Er wurde nicht entfernt.', 'iss-editorial'), $index + 1, $type));
+                return new WP_Error('editorial_unknown_section', sprintf(__('Abschnitt %d hat einen unbekannten Typ (%s). Er wurde nicht entfernt.', 'iss-editorial'), $index + 1, $type), ['path' => "sections[$index].type"]);
             }
             $supports = (array) $format['sections'][$type]['supports'];
             $allowed = array_merge(['type', 'kicker', 'title', 'body', 'anchor', 'deleted_at', 'original_index', 'restored_from'], $supports);
@@ -803,7 +803,7 @@ function iss_editorial_validate_document($value, string $format_slug)
             }
             foreach ($section as $key => $value) {
                 if (!in_array($key, $allowed, true) && $value !== '' && $value !== [] && $value !== null) {
-                    return new WP_Error('editorial_unsupported_field', sprintf(__('Abschnitt %1$d: Das Feld „%2$s“ wird hier nicht unterstützt. Der Inhalt bleibt erhalten.', 'iss-editorial'), $index + 1, $key));
+                    return new WP_Error('editorial_unsupported_field', sprintf(__('Abschnitt %1$d: Das Feld „%2$s“ wird hier nicht unterstützt. Der Inhalt bleibt erhalten.', 'iss-editorial'), $index + 1, $key), ['path' => "sections[$index].$key"]);
                 }
             }
             $collections = ['media_refs', 'object_refs', 'links', 'facts', 'items', 'sheets', 'source_refs', 'dynamic_refs', 'rail_options', 'album_source'];
@@ -822,7 +822,7 @@ function iss_editorial_validate_document($value, string $format_slug)
                 $values = $field === 'items' ? array_column((array) ($section['items'] ?? []), 'text') : [$section[$field] ?? ''];
                 foreach ($values as $text) {
                     if (!is_string($text) || ($document['schema_version'] < 3 && preg_match('/class="[^"]*iss-(ink|mark)-preset-/', $text)) || !iss_editorial_rich_text_is_supported($text, $profile)) {
-                        return new WP_Error('editorial_unsupported_markup', sprintf(__('Abschnitt %d: Die Textformatierung muss geprüft werden. Der Entwurf bleibt erhalten.', 'iss-editorial'), $index + 1));
+                        return new WP_Error('editorial_unsupported_markup', sprintf(__('Abschnitt %d: Die Textformatierung muss geprüft werden. Der Entwurf bleibt erhalten.', 'iss-editorial'), $index + 1), ['path' => "sections[$index].$field"]);
                     }
                 }
             }
@@ -841,7 +841,7 @@ function iss_editorial_validate_document($value, string $format_slug)
                     continue;
                 }
                 if (!is_array($section[$key]) || !array_is_list($section[$key]) || count($section[$key]) !== count((array) ($normalized[$key] ?? []))) {
-                    return new WP_Error('editorial_incomplete_items', sprintf(__('Abschnitt %1$d: Bitte die Einträge unter „%2$s“ vervollständigen oder entfernen.', 'iss-editorial'), $index + 1, $key));
+                    return new WP_Error('editorial_incomplete_items', sprintf(__('Abschnitt %1$d: Bitte die Einträge unter „%2$s“ vervollständigen oder entfernen.', 'iss-editorial'), $index + 1, $key), ['path' => "sections[$index].$key"]);
                 }
             }
             if (!empty($section['treatment']) && (($normalized['treatment'] ?? '') !== $section['treatment']
@@ -918,12 +918,16 @@ function iss_editorial_get_document(int $post_id, string $format_slug, bool $pre
 /** Let a data owner wrap the native metadata write and its required projections. */
 function iss_editorial_persist_document(int $post_id, string $format_slug, callable $write): bool
 {
-    $write = apply_filters('iss_editorial_document_writer', $write, $post_id, $format_slug);
-    if (!is_callable($write) || $write() !== true) {
-        return false;
+    $owned = iss_core_has_post_write_lock($post_id);
+    if (!iss_core_acquire_post_write_lock($post_id)) { return false; }
+    try {
+        $write = apply_filters('iss_editorial_document_writer', $write, $post_id, $format_slug);
+        if (!is_callable($write) || $write() !== true) { return false; }
+        do_action('iss_editorial_document_saved', $post_id, $format_slug, iss_editorial_get_document($post_id, $format_slug));
+        return true;
+    } finally {
+        if (!$owned) { iss_core_release_post_write_locks($post_id); }
     }
-    do_action('iss_editorial_document_saved', $post_id, $format_slug, iss_editorial_get_document($post_id, $format_slug));
-    return true;
 }
 
 /** Called inside the owning writer boundary, including Place transactions. */

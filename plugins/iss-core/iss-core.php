@@ -20,6 +20,46 @@ require_once __DIR__ . '/maintenance.php';
 require_once __DIR__ . '/project-uat.php';
 require_once __DIR__ . '/editorial-operator.php';
 
+add_action('admin_enqueue_scripts', static function (): void {
+    wp_register_script('iss-admin-request', plugins_url('assets/admin-request.js', ISS_CORE_FILE), [], (string) filemtime(ISS_CORE_PATH . 'assets/admin-request.js'), true);
+}, 5);
+
+/** Serialize checked editorial writes on this DB connection; native heartbeat remains the user lock. */
+function iss_core_post_write_lock_name(int $post_id): string
+{
+    global $wpdb;
+    return 'iss-post-' . substr(hash('sha256', (string) constant('DB_NAME') . ':' . $wpdb->prefix . ':' . $post_id), 0, 48);
+}
+
+function iss_core_has_post_write_lock(int $post_id): bool
+{
+    return !empty($GLOBALS['iss_core_post_write_locks'][iss_core_post_write_lock_name($post_id)]);
+}
+
+function iss_core_acquire_post_write_lock(int $post_id): bool
+{
+    global $wpdb;
+    $name = iss_core_post_write_lock_name($post_id);
+    if (!empty($GLOBALS['iss_core_post_write_locks'][$name])) { return true; }
+    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Connection-local mutex, never cached.
+    if ((string) $wpdb->get_var($wpdb->prepare('SELECT GET_LOCK(%s, 0)', $name)) !== '1') { return false; }
+    $GLOBALS['iss_core_post_write_locks'][$name] = true;
+    return true;
+}
+
+function iss_core_release_post_write_locks(?int $post_id = null): void
+{
+    global $wpdb;
+    $names = $post_id === null ? array_keys($GLOBALS['iss_core_post_write_locks'] ?? []) : [iss_core_post_write_lock_name($post_id)];
+    foreach ($names as $name) {
+        if (empty($GLOBALS['iss_core_post_write_locks'][$name])) { continue; }
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- Release this request's connection-local mutex.
+        $wpdb->get_var($wpdb->prepare('SELECT RELEASE_LOCK(%s)', $name));
+        unset($GLOBALS['iss_core_post_write_locks'][$name]);
+    }
+}
+add_action('shutdown', 'iss_core_release_post_write_locks', 10, 0);
+
 function iss_core_default_capability_definitions(): array
 {
     $definitions = [

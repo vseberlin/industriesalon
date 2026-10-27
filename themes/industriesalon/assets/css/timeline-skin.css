@@ -36,7 +36,7 @@
 }
 
 .iss-timeline__section-title {
-  font-size: clamp(1.4rem, 2.1vw, 2rem);
+  font-size: min(clamp(1.4rem, 2.1vw, 2rem), var(--iss-heading-fit-limit));
   line-height: 1.2;
 }
 
@@ -76,7 +76,7 @@
 }
 
 .iss-timeline__title {
-  font-size: clamp(1.35rem, 2.2vw, 2.05rem);
+  font-size: min(clamp(1.35rem, 2.2vw, 2.05rem), var(--iss-heading-fit-limit));
   line-height: 1.15;
   font-weight: 700;
 }
@@ -439,7 +439,7 @@
 
 .iss-timeline-query__title {
   margin: 0;
-  font-size: clamp(1.75rem, 2.5vw, 2.5rem);
+  font-size: min(clamp(1.75rem, 2.5vw, 2.5rem), var(--iss-heading-fit-limit));
   line-height: 1.15;
   letter-spacing: -0.035em;
 }
@@ -531,7 +531,7 @@
   font-size: var(--iss-programme-title-size, clamp(1.25rem, 1.7vw, 1.8rem));
   line-height: 1.15;
   letter-spacing: -0.03em;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .iss-timeline--programme .iss-timeline__summary {

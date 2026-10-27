@@ -39,7 +39,7 @@
 
 .iss-calendar-query__head .iss-heading__title {
   margin: 0;
-  font-size: clamp(2.6rem, 5vw, 5rem);
+  font-size: min(clamp(2.6rem, 5vw, 5rem), var(--iss-heading-fit-limit));
   line-height: 1;
   letter-spacing: -0.05em;
 }

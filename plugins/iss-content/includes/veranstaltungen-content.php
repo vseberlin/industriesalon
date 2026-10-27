@@ -515,7 +515,9 @@ add_filter('iss_editorial_editor_document', static function (array $document, in
     if ($format === 'veranstaltung') {
         $document['entity_key'] = get_post_meta($post_id, '_iss_entity_key', true) ?: ($document['entity_key'] ?? 'event.general');
         if (empty($document['skin']) || !get_metadata_raw('post', $post_id, iss_editorial_get_document_meta_key($format), true)) {
-            $document['skin'] = iss_content_model_veranstaltung_entity_default_skin($document['entity_key']);
+            // Derive defaults through the owner's existing legacy entity mapping;
+            // leave the authored key intact until an explicit save.
+            $document['skin'] = iss_content_model_veranstaltung_entity_default_skin(iss_content_model_sanitize_veranstaltung_entity_key($document['entity_key']));
         }
     }
     return $document;

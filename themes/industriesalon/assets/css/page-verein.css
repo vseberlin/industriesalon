@@ -22,7 +22,7 @@
 }
 
 .iss-verein-hero .iss-heading__title {
-  max-width: 10ch;
+  max-width: min(100%, var(--iss-heading-measure));
 }
 
 .iss-verein-hero .iss-heading__text {
@@ -148,7 +148,7 @@
 
 .iss-verein-story__intro h2,
 .iss-verein-story__chapter h3 {
-  max-width: 14ch;
+  max-width: min(100%, var(--iss-heading-measure));
   text-wrap: balance;
 }
 

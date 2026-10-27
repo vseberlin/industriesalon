@@ -496,6 +496,12 @@ function iss_relations_route_relation_hash(array $relations): string
     return hash('sha256', wp_json_encode($rows));
 }
 
+function iss_relations_route_draft_token(int $post_id): string
+{
+    $raw = get_post_meta($post_id, ISS_RELATIONS_ROUTE_DRAFT_META_KEY, true);
+    return is_array($raw) ? hash('sha256', (string) wp_json_encode($raw)) : '';
+}
+
 function iss_relations_get_route_draft(int $post_id): array
 {
     if (!iss_relations_supports_route_drafts($post_id)) {
@@ -583,11 +589,15 @@ function iss_relations_add_route_snapshot(int $post_id, array $canonical, array 
         'published_hash' => iss_relations_route_relation_hash($draft),
     ]);
 
+    $kept = array_slice($snapshots, 0, 10);
     update_post_meta(
         $post_id,
         ISS_RELATIONS_ROUTE_SNAPSHOTS_META_KEY,
-        array_slice($snapshots, 0, 10)
+        wp_slash($kept)
     );
+    if (get_post_meta($post_id, ISS_RELATIONS_ROUTE_SNAPSHOTS_META_KEY, true) !== $kept) {
+        throw new RuntimeException('Route history could not be stored; publication stopped.');
+    }
 }
 
 function iss_relations_ensure_route_station_source_relations(array $relations): void
@@ -625,7 +635,11 @@ function iss_relations_publish_route_draft(int $post_id): array
     iss_relations_add_route_snapshot($post_id, $canonical, $published, (array) ($draft['trash'] ?? []));
     iss_relations_update_post_relations($post_id, $published);
     iss_relations_ensure_route_station_source_relations($published);
-    update_post_meta($post_id, ISS_RELATIONS_ROUTE_GRAPH_HASH_META_KEY, iss_relations_route_relation_hash($published));
+    $hash = iss_relations_route_relation_hash($published);
+    update_post_meta($post_id, ISS_RELATIONS_ROUTE_GRAPH_HASH_META_KEY, $hash);
+    if (get_post_meta($post_id, ISS_RELATIONS_ROUTE_GRAPH_HASH_META_KEY, true) !== $hash) {
+        throw new RuntimeException('Route synchronization marker could not be stored; draft retained.');
+    }
     delete_post_meta($post_id, ISS_RELATIONS_ROUTE_DRAFT_META_KEY);
     iss_relations_sync_post_read_models($post_id);
 

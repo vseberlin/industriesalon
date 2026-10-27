@@ -1670,6 +1670,14 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
    Use --uncaged only when a layout already controls measure.
    ===================================================================== */
 
+/* Keep names and words intact where possible; only unbreakable overflow may split. */
+:where(h1, h2, h3, h4, h5, h6) {
+  hyphens: manual;
+  word-break: normal;
+  overflow-wrap: break-word;
+  text-wrap: balance;
+}
+
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
 .iss-heading {
   --iss-heading-max-width: 46rem;
@@ -1686,6 +1694,8 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
   margin-right: var(--iss-heading-margin-right);
   padding-right: var(--iss-heading-pad-right);
   box-sizing: border-box;
+  container-type: inline-size;
+  min-width: 0;
 }
 
 /* .iss-heading: Base class for iss heading; apply on primary wrapper/scope. */
@@ -1729,6 +1739,7 @@ nav.iss-menu-shell__quick-grid > .wp-block-navigation__container {
 .iss-heading__title {
   margin: 0;
   color: var(--iss-heading-title-color);
+  max-width: 100%;
 }
 
 /* .iss-heading__text: Element class for `iss-heading`; apply on `text` element. */
@@ -2387,7 +2398,7 @@ html {
 .iss-page--narrative .iss-heading__title,
 .iss-page--compact .iss-heading__title,
 .iss-compact-scope .iss-heading__title {
-  font-size: clamp(1.55rem, 2vw, 2.15rem);
+  font-size: min(clamp(1.55rem, 2vw, 2.15rem), var(--iss-heading-fit-limit));
   line-height: 1.08;
   letter-spacing: -0.025em;
 }
@@ -2395,7 +2406,7 @@ html {
 .iss-page--narrative h1:not([class*="__title"]),
 .iss-page--compact h1:not([class*="__title"]),
 .iss-compact-scope h1:not([class*="__title"]) {
-  font-size: clamp(1.85rem, 2.8vw, 2.7rem);
+  font-size: min(clamp(1.85rem, 2.8vw, 2.7rem), var(--iss-heading-fit-limit));
   line-height: 1.06;
 }
 

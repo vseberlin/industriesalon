@@ -46,10 +46,10 @@
   margin: 0;
   color: var(--iss-ausstellung-type-ink);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2.05rem, 4.6vw, 4.4rem);
+  font-size: min(clamp(2.05rem, 4.6vw, 4.4rem), var(--iss-heading-fit-limit));
   font-weight: 600;
   line-height: 1;
-  hyphens: auto;
+  hyphens: manual;
   overflow-wrap: break-word;
 }
 

@@ -4,6 +4,49 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-27 — Responsive heading sizing and word wrapping
+
+- Shared heading tokens now limit large type by available copy-column width.
+  Existing theme, renderer and skin rules consume the limit at their source;
+  no page override stylesheet or JavaScript sizing layer was added. Editor
+  styles now load the same token sheet as public pages.
+- Removed automatic heading hyphenation and arbitrary anywhere wrapping, and
+  replaced restrictive 10–18ch title widths with the shared readable measure.
+  This resolves tour titles such as Elektropolis and Licht und Transparenz,
+  and landing words constrained despite ample column space. Font families,
+  content and ordinary paragraph hyphenation remain unchanged.
+- Local browser acceptance spans phone, tablet, laptop and desktop widths;
+  lint, runtime/editor token checks and existing editorial CSS tests pass.
+  Code-only, with no template/content/DB/uploads artifact. Prepared for the staging release; see the current handoff for verification.
+
+## 2026-10-27 — Explicit editor failure and recovery
+
+- Established the fail-loud contract: visible, accessible errors, retained input,
+  actionable recovery and no false save confirmations. JSON failures preserve
+  codes/field paths; repair, comparison and downloadable recovery use existing
+  WordPress documents/autosaves and owner endpoints.
+- Bounded request/preview waits, exact-snapshot lost-response reconciliation,
+  heartbeat nonce renewal, explicit stale-draft comparison, validated repair and
+  native-dialog focus handling replace recurring dead ends. Alerts stay within
+  the expanded workspace and remain interactive.
+- Routes check canonical/draft versions, retain edits made during requests and
+  reject incomplete station saves. Publication verifies history and stored state.
+  Shared save/preview actions flush route drafts without publishing them.
+- Existing fetch/API paths had no shared timeout/error contract; ISS Core now owns
+  the small shared admin request helper and connection-scoped write mutex. Domain
+  recovery remains in its current plugins. No new table, role change, content
+  migration, uploads artifact or private content transfer is required.
+- Extended the existing validation gate to private drafts and editor-hydrated
+  copies, and added HTTP/DOM regressions for the failure paths. The gate exposed
+  an event adapter deriving an empty skin from legacy entity keys; defaults now
+  use the existing owner mapping without rewriting stored documents.
+- Local verification: 1,846 PHP/HTTP checks, 122 DOM tests, targeted static checks
+  and Chrome recovery/native-save acceptance pass. All 191 canonical documents
+  pass the expanded audit; one existing private landing draft has an incomplete
+  link and correctly keeps that audit nonzero. Content remains unchanged.
+  Prepared for the staging release; see the current handoff.
+
+
 ## 2026-10-27 — Legacy tour text editing and repair
 
 - Elektropolis's private version-1 draft contained old column-layout wrappers.

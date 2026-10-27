@@ -1,5 +1,28 @@
 # Current handoff — 23 October 2026
 
+
+## Editor recovery and responsive headings — release prepared 27 October 2026
+
+The release combines the explicit error/recovery contract with responsive heading
+sizing across the shared theme, renderers and skins. Requests have bounded waits,
+visible actionable errors, retained input, checked versions and explicit recovery.
+Headings adapt to available copy-column width with manual hyphenation and a shared
+measure; the editor loads the same tokens. See the editorial platform contract and
+theme README.
+
+Local verification: 1,846 PHP/HTTP checks, 122 DOM tests, 3 editorial CSS tests and
+targeted static checks passed. Chrome verified editor recovery/conflict/native save
+and 13 public pages at six widths (78 layouts, 320–1920px), with no split heading
+words or horizontal overflow. Temporary local fixtures were removed.
+All 191 local canonical documents validate. One existing local private landing
+autosave (33794, page 13301) has an incomplete section-6 link; explicit owner repair
+remains pending. Differing draft bases require comparison, never automatic cleanup.
+
+Prepared in an isolated checkout based on shared main a2a0ccf; unrelated edits in
+the original main worktree remain preserved. This code-only release requires no
+schema/role/content migration, database import or uploads artifact. Private drafts
+and accounts remain target-owned. Push/deployment and staging acceptance pending.
+
 ## Elektropolis legacy draft repair — deployed 27 October 2026
 
 Code `29a0f6c` is deployed on staging. The private v1 draft contained old column

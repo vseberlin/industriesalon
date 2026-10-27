@@ -19,7 +19,7 @@
 
 .iss-events-intro h1 {
   margin: 0;
-  font-size: clamp(2.4rem, 4.5vw, 4.4rem);
+  font-size: min(clamp(2.4rem, 4.5vw, 4.4rem), var(--iss-heading-fit-limit));
   line-height: 1.06;
   letter-spacing: -0.04em;
 }
@@ -42,7 +42,7 @@
 .iss-programme-overview__section h2,
 .iss-events-contact h2 {
   margin: 0 0 1rem;
-  font-size: clamp(1.5rem, 2.2vw, 2.1rem);
+  font-size: min(clamp(1.5rem, 2.2vw, 2.1rem), var(--iss-heading-fit-limit));
   line-height: 1.15;
 }
 

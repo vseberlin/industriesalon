@@ -22,6 +22,7 @@
 }
 
 .iss-landing-section__copy {
+  container-type: inline-size;
   display: grid;
   gap: 0.85rem;
   max-width: 56rem;
@@ -38,7 +39,7 @@
   max-width: 28ch;
   color: var(--iss-landing-ink);
   font-family: var(--iss-landing-serif);
-  font-size: clamp(2rem, 4.2vw, 4.4rem);
+  font-size: min(clamp(2rem, 4.2vw, 4.4rem), var(--iss-heading-fit-limit));
   font-weight: 600;
   line-height: 0.98;
   text-wrap: balance;
@@ -73,7 +74,7 @@
 .iss-landing-disclosure > summary h2 {
   display: inline;
   margin: 0;
-  font-size: clamp(1.3rem, 2.5vw, 2rem);
+  font-size: min(clamp(1.3rem, 2.5vw, 2rem), var(--iss-heading-fit-limit));
   line-height: 1.2;
 }
 
@@ -170,9 +171,9 @@
 }
 
 .iss-landing-map-image__intro .iss-landing-section__title {
-  max-width: 19ch;
+  max-width: min(100%, var(--iss-heading-measure));
   font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
-  font-size: clamp(2.4rem, 3vw, 3.65rem);
+  font-size: min(clamp(2.4rem, 3vw, 3.65rem), var(--iss-heading-fit-limit));
   font-weight: 700;
   line-height: 1.02;
 }
@@ -381,7 +382,7 @@
 
 .iss-landing-section--treatment-statement-lead .iss-landing-section__title {
   max-width: 30ch;
-  font-size: clamp(2rem, 4.2vw, 3.5rem);
+  font-size: min(clamp(2rem, 4.2vw, 3.5rem), var(--iss-heading-fit-limit));
   line-height: 1;
 }
 
@@ -406,11 +407,11 @@
 .iss-landing-section--treatment-statement-leitfrage .iss-landing-section__title {
   max-width: 30ch;
   font-family: var(--iss-landing-serif);
-  font-size: clamp(1.75rem, 2.6vw, 2.55rem);
+  font-size: min(clamp(1.75rem, 2.6vw, 2.55rem), var(--iss-heading-fit-limit));
   font-style: italic;
   font-weight: 500;
   line-height: 1.42;
-  hyphens: auto;
+  hyphens: manual;
 }
 
 .iss-landing-section--treatment-statement-leitfrage .iss-landing-section__body {
@@ -474,8 +475,8 @@
 }
 
 .iss-landing-text .iss-landing-section__title {
-  max-width: 18ch;
-  font-size: clamp(1.85rem, 2.7vw, 3.1rem);
+  max-width: min(100%, var(--iss-heading-measure));
+  font-size: min(clamp(1.85rem, 2.7vw, 3.1rem), var(--iss-heading-fit-limit));
   line-height: 1.05;
 }
 
@@ -620,7 +621,7 @@
 
 .iss-landing-section--treatment-gateway-pathways .iss-landing-section__title {
   max-width: 24ch;
-  font-size: 2.5rem;
+  font-size: min(2.5rem, var(--iss-heading-fit-limit));
   line-height: 1.05;
 }
 
@@ -823,7 +824,7 @@
 
 .iss-landing-gallery .iss-landing-section__title {
   max-width: 24ch;
-  font-size: 2.5rem;
+  font-size: min(2.5rem, var(--iss-heading-fit-limit));
   line-height: 1.05;
 }
 
@@ -1113,7 +1114,7 @@
 .iss-landing-material .iss-landing-section__title,
 .iss-landing-section--gesture-facts .iss-landing-section__title {
   max-width: 24ch;
-  font-size: clamp(1.85rem, 2.7vw, 3.1rem);
+  font-size: min(clamp(1.85rem, 2.7vw, 3.1rem), var(--iss-heading-fit-limit));
   line-height: 1.05;
 }
 
@@ -1204,6 +1205,7 @@
 }
 
 .iss-landing-origin-story__heading {
+  container-type: inline-size;
   display: grid;
   gap: 0.7rem;
 }
@@ -1212,7 +1214,7 @@
   max-width: 28ch;
   margin: 0;
   font-family: var(--iss-landing-serif);
-  font-size: 3.75rem;
+  font-size: min(3.75rem, var(--iss-heading-fit-limit));
   line-height: 1.02;
 }
 
@@ -1302,9 +1304,9 @@
   margin: 0;
   color: var(--iss-landing-ink);
   font-family: var(--iss-landing-serif);
-  font-size: clamp(2rem, 3.2vw, 3rem);
+  font-size: min(clamp(2rem, 3.2vw, 3rem), var(--iss-heading-fit-limit));
   line-height: 1;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .iss-landing-story-split__body {
@@ -1333,6 +1335,7 @@
 }
 
 .iss-landing-story-split__heading {
+  container-type: inline-size;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   min-width: 0;
@@ -1515,7 +1518,7 @@
 
   .iss-landing-story-split__title {
     max-width: none;
-    font-size: 2rem;
+    font-size: min(2rem, var(--iss-heading-fit-limit));
     line-height: 1.05;
   }
 
@@ -1534,7 +1537,7 @@
 
   .iss-landing-origin-story__title {
     max-width: none;
-    font-size: 2rem;
+    font-size: min(2rem, var(--iss-heading-fit-limit));
     line-height: 1.05;
   }
 
@@ -1576,11 +1579,11 @@
   }
 
   .iss-landing-section--treatment-gateway-pathways .iss-landing-section__title {
-    font-size: 2rem;
+    font-size: min(2rem, var(--iss-heading-fit-limit));
   }
 
   .iss-landing-gallery .iss-landing-section__title {
-    font-size: 2rem;
+    font-size: min(2rem, var(--iss-heading-fit-limit));
   }
 
   .iss-landing-section--treatment-galerie-sequence .iss-landing-gallery__track {

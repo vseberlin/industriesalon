@@ -110,7 +110,7 @@
         var branch = root;
         while (branch.parentElement && branch.id !== 'wpwrap') {
           Array.from(branch.parentElement.children).forEach(function (sibling) {
-            if (sibling !== branch && !sibling.matches('#wpadminbar, #wp-link-wrap, #wp-link-backdrop')) { background.push([sibling, sibling.inert]); sibling.inert = true; }
+            if (sibling !== branch && !sibling.matches('#wpadminbar, #wp-link-wrap, #wp-link-backdrop, #post-lock-dialog, #wp-auth-check-wrap')) { background.push([sibling, sibling.inert]); sibling.inert = true; }
           });
           branch = branch.parentElement;
         }
@@ -149,7 +149,9 @@
     navigation.append(position, previous, next, finish); inspector.append(navigation, heading, guidance, inspectorTabs, note, body, remove);
     sidebar.append(panelHead, outline, palette, inspector, settings, undo);
     var saveGuidance = node('p', 'iss-editorial-studio__save-guidance', help.saveNotice);
-    grid.append(preview, sidebar); root.append(head, saveGuidance, tabs, grid); mount.appendChild(root); setPanel('outline'); setView('preview'); setExpanded(true);
+    grid.append(preview, sidebar); root.appendChild(head);
+    if (options.failure) { root.appendChild(options.failure); }
+    root.append(saveGuidance, tabs, grid); mount.appendChild(root); setPanel('outline'); setView('preview'); setExpanded(true);
     var search = node('input'); search.type = 'search'; search.placeholder = 'Abschnitt suchen'; search.setAttribute('aria-label', 'Abschnitt suchen');
     var results = node('div', 'iss-editorial-palette__results');
     palette.append(search, results, button('Schließen', function () { setView('outline'); panelTabs.children[0].focus(); }));

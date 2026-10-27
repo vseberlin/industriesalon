@@ -743,8 +743,8 @@
 }
 
 .iss-front-hero__title {
-  max-width: 13ch;
-  font-size: clamp(2.9rem, 6vw, 5.5rem);
+  max-width: min(100%, var(--iss-heading-measure));
+  font-size: min(clamp(2.9rem, 6vw, 5.5rem), var(--iss-heading-fit-limit));
   line-height: 0.96;
   text-wrap: balance;
 }
@@ -802,7 +802,7 @@
 .iss-landing-rail .iss-heading__title {
   margin-top: 0;
   margin-bottom: 0.6rem;
-  font-size: clamp(2rem, 1.65rem + 1vw, 3rem);
+  font-size: min(clamp(2rem, 1.65rem + 1vw, 3rem), var(--iss-heading-fit-limit));
   line-height: 0.96;
 }
 
@@ -1068,7 +1068,7 @@
 }
 
 .iss-object-highlight .iss-heading__title {
-  max-width: 12ch;
+  max-width: min(100%, var(--iss-heading-measure));
 }
 
 .iss-object-highlight .iss-heading__text {
@@ -1235,10 +1235,10 @@
 .iss-front-banner-slot .wp-block-industriesalon-notice-banner.iss-notice-skin--front .iss-hero-note__title {
   margin: 0;
   color: var(--iss-white);
-  font-size: clamp(1.7rem, 1.2rem + 0.8vw, 2.25rem);
+  font-size: min(clamp(1.7rem, 1.2rem + 0.8vw, 2.25rem), var(--iss-heading-fit-limit));
   font-weight: 700;
   line-height: 1.02;
-  max-width: 11ch;
+  max-width: min(100%, var(--iss-heading-measure));
   text-wrap: balance;
 }
 
@@ -1397,8 +1397,8 @@
   }
 
   .iss-front-hero__title {
-    max-width: 11ch;
-    font-size: clamp(2.4rem, 10vw, 3.75rem);
+    max-width: min(100%, var(--iss-heading-measure));
+    font-size: min(clamp(2.4rem, 10vw, 3.75rem), var(--iss-heading-fit-limit));
   }
 
   .iss-front-hero__text {
@@ -1542,7 +1542,7 @@
 .iss-page-hero__title {
   margin: 0;
   color: var(--iss-white);
-  font-size: clamp(2.5rem, 5vw, 4.75rem);
+  font-size: min(clamp(2.5rem, 5vw, 4.75rem), var(--iss-heading-fit-limit));
   line-height: 0.98;
   text-wrap: balance;
 }
@@ -1719,7 +1719,7 @@ ol.wp-block-list.is-style-iss-list-plain {
 .iss-hero-note__title {
   margin: 0;
   color: var(--iss-white);
-  font-size: clamp(1.4rem, 1rem + 1vw, 2rem);
+  font-size: min(clamp(1.4rem, 1rem + 1vw, 2rem), var(--iss-heading-fit-limit));
   line-height: 1.04;
 }
 
@@ -1759,7 +1759,7 @@ ol.wp-block-list.is-style-iss-list-plain {
 
 /* .iss-page-hero__title: Element class for `iss-page-hero`; apply on `title` element. */
   .iss-page-hero__title {
-    font-size: clamp(2rem, 9vw, 3.2rem);
+    font-size: min(clamp(2rem, 9vw, 3.2rem), var(--iss-heading-fit-limit));
   }
 
 /* .iss-page-hero__text: Element class for `iss-page-hero`; apply on `text` element. */
@@ -2495,12 +2495,12 @@ iss-info-panel--brown
 .iss-info-panel__title-col > .iss-heading > .iss-heading__title,
 .iss-info-panel__title {
   margin: 0;
-  font-size: var(--iss-info-panel-title-size);
+  font-size: min(var(--iss-info-panel-title-size), var(--iss-heading-fit-limit));
   line-height: 0.96;
   letter-spacing: -0.03em;
   text-wrap: balance;
-  hyphens: auto;
-  overflow-wrap: anywhere;
+  hyphens: manual;
+  overflow-wrap: break-word;
 }
 
 /* .iss-info-panel__intro: Element class for `iss-info-panel`; apply on `intro` element. */
@@ -2957,7 +2957,7 @@ iss-info-panel--brown
 @media (max-width: 1080px) {
 /* .iss-info-panel__title: Element class for `iss-info-panel`; apply on `title` element. */
   .iss-info-panel__title {
-    font-size: clamp(1.9rem, 3.6vw, 2.8rem);
+    font-size: min(clamp(1.9rem, 3.6vw, 2.8rem), var(--iss-heading-fit-limit));
   }
 
 /* .iss-info-row: Base class for iss info row; apply on primary wrapper/scope. */
@@ -3086,9 +3086,9 @@ iss-info-panel--brown
 /* .iss-feature-stack__title: Element class for `iss-feature-stack`; apply on `title` element. */
 .iss-feature-stack__title {
   margin: 0;
-  font-size: clamp(1.55rem, 1.2rem + 1vw, 2.15rem);
+  font-size: min(clamp(1.55rem, 1.2rem + 1vw, 2.15rem), var(--iss-heading-fit-limit));
   line-height: 1.12;
-  max-width: 12ch;
+  max-width: min(100%, var(--iss-heading-measure));
 }
 
 /* .iss-feature-stack__text: Element class for `iss-feature-stack`; apply on `text` element. */
@@ -3836,8 +3836,8 @@ iss-info-panel--brown
 /* .iss-asymmetric-feature__title: Element class for `iss-asymmetric-feature`; apply on `title` element. */
 .iss-asymmetric-feature .iss-asymmetric-feature__title {
   margin: 0;
-  max-width: 12ch;
-  font-size: clamp(2.4rem, 5vw, 4.4rem);
+  max-width: min(100%, var(--iss-heading-measure));
+  font-size: min(clamp(2.4rem, 5vw, 4.4rem), var(--iss-heading-fit-limit));
   line-height: 1.02;
   letter-spacing: -0.03em;
   text-wrap: balance;
@@ -4090,7 +4090,7 @@ iss-info-panel--brown
 /* .iss-newsletter-band__heading: Element class for `iss-newsletter-band`; apply on `heading` element. */
 /* .iss-heading__title: Element class for `iss-heading`; apply on `title` element. */
 .iss-newsletter-band__heading .iss-heading__title {
-  font-size: clamp(2.1rem, 3vw, 3.35rem);
+  font-size: min(clamp(2.1rem, 3vw, 3.35rem), var(--iss-heading-fit-limit));
   line-height: 1.05;
   letter-spacing: -0.02em;
 }
@@ -4399,7 +4399,7 @@ iss-info-panel--brown
 
 /* .iss-mission-support__title: Element class for `iss-mission-support`; apply on `title` element. */
 .iss-mission-support__title {
-  max-width: 14ch;
+  max-width: min(100%, var(--iss-heading-measure));
   margin: 0;
 }
 
@@ -4519,7 +4519,7 @@ iss-info-panel--brown
 
 /* .iss-mission-support__title: Element class for `iss-mission-support`; apply on `title` element. */
   .iss-mission-support__title {
-    max-width: 16ch;
+    max-width: min(100%, var(--iss-heading-measure));
   }
 }
 
@@ -5140,7 +5140,7 @@ iss-info-panel--brown
 .iss-pathway-strip__title {
   margin: 0;
   padding-right: 0.5rem;
-  font-size: clamp(1.12rem, 1rem + 0.7vw, 2rem);
+  font-size: min(clamp(1.12rem, 1rem + 0.7vw, 2rem), var(--iss-heading-fit-limit));
   line-height: 0.96;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -5867,11 +5867,11 @@ iss-info-panel--brown
 
 .iss-register-place__title {
   margin: 1rem 0 0;
-  font-size: clamp(2.6rem, 6vw, 4.5rem);
+  font-size: min(clamp(2.6rem, 6vw, 4.5rem), var(--iss-heading-fit-limit));
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.025em;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .iss-register-place__subtitle {
@@ -5974,7 +5974,7 @@ iss-info-panel--brown
 .iss-register-place__section-title {
   margin: 0;
   color: var(--iss-surface-fg);
-  font-size: clamp(1.6rem, 2.5vw, 2.15rem);
+  font-size: min(clamp(1.6rem, 2.5vw, 2.15rem), var(--iss-heading-fit-limit));
   line-height: 1.15;
   letter-spacing: -0.01em;
   text-wrap: balance;
@@ -6600,7 +6600,7 @@ iss-info-panel--brown
 
 .iss-register-place-present__title {
   margin: 0;
-  font-size: clamp(1.6rem, 2.5vw, 2.15rem);
+  font-size: min(clamp(1.6rem, 2.5vw, 2.15rem), var(--iss-heading-fit-limit));
   line-height: 1.15;
 }
 
@@ -6647,7 +6647,7 @@ iss-info-panel--brown
   max-width: 22ch;
   margin: 0;
   color: var(--iss-surface-fg);
-  font-size: clamp(1.6rem, 2.5vw, 2.1rem);
+  font-size: min(clamp(1.6rem, 2.5vw, 2.1rem), var(--iss-heading-fit-limit));
   line-height: 1.1;
   text-wrap: balance;
 }
@@ -7687,9 +7687,9 @@ iss-info-panel--brown
 }
 
 .iss-flex-split__title {
-  max-width: 18ch;
+  max-width: min(100%, var(--iss-heading-measure));
   margin: 0;
-  font-size: clamp(1.45rem, 1rem + 1.1vw, 2.35rem);
+  font-size: min(clamp(1.45rem, 1rem + 1.1vw, 2.35rem), var(--iss-heading-fit-limit));
   line-height: 1.08;
   letter-spacing: -0.02em;
 }

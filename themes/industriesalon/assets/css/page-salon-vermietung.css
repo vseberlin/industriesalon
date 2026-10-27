@@ -38,7 +38,7 @@
 }
 
 .iss-rental-hero__title {
-  max-width: 16ch;
+  max-width: min(100%, var(--iss-heading-measure));
 }
 
 .iss-rental-hero__text {
@@ -345,7 +345,7 @@
   }
 
   .iss-rental-hero__title {
-    max-width: 18ch;
+    max-width: min(100%, var(--iss-heading-measure));
   }
 
   .iss-rental-story__image img {

@@ -136,8 +136,8 @@
 }
 
 .iss-publications-masthead__title {
-  max-width: 13ch;
-  font-size: 2.65rem;
+  max-width: min(100%, var(--iss-heading-measure));
+  font-size: min(2.65rem, var(--iss-heading-fit-limit));
   line-height: 1;
 }
 
@@ -743,7 +743,7 @@ body.iss-publication-kind-brochure .iss-publication-single__cover img {
 .iss-publication-brochure-single__intro .iss-heading__title {
   max-width: 52rem;
   margin: 0;
-  font-size: clamp(1.7rem, 3vw, 2.65rem);
+  font-size: min(clamp(1.7rem, 3vw, 2.65rem), var(--iss-heading-fit-limit));
   line-height: 1.06;
 }
 
@@ -956,7 +956,7 @@ body.iss-publication-kind-brochure .iss-publication-single__cover img {
   }
 
   .iss-publication-brochure-single__intro .iss-heading__title {
-    font-size: clamp(1.7rem, 9vw, 2.55rem);
+    font-size: min(clamp(1.7rem, 9vw, 2.55rem), var(--iss-heading-fit-limit));
   }
 }
 
@@ -1284,6 +1284,7 @@ body.iss-publication-editorial-skin-bildmatrix.iss-publication-layout-photoalbum
 }
 
 .iss-publication-photoalbum-blueprint__title-block {
+  container-type: inline-size;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 1rem;
@@ -1310,10 +1311,10 @@ body.iss-publication-editorial-skin-bildmatrix.iss-publication-layout-photoalbum
 }
 
 .iss-publication-photoalbum-blueprint__title-main {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   color: var(--iss-blueprint-ink);
   font-family: var(--wp--preset--font-family--system, system-ui, sans-serif);
-  font-size: 2.45rem;
+  font-size: min(2.45rem, var(--iss-heading-fit-limit));
   font-weight: 800;
   line-height: 1.02;
   letter-spacing: 0;
@@ -1481,7 +1482,7 @@ body.iss-publication-editorial-skin-bildmatrix.iss-publication-layout-photoalbum
   font-size: 0.78rem;
   font-weight: 500;
   line-height: 1.35;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .iss-publication-photoalbum-blueprint__details {
@@ -1802,7 +1803,7 @@ body.iss-publication-editorial-skin-bildmatrix.iss-publication-layout-photoalbum
 
 .iss-publication-chapter__title {
   margin: 0;
-  font-size: clamp(1.5rem, 1.24rem + 0.7vw, 2.2rem);
+  font-size: min(clamp(1.5rem, 1.24rem + 0.7vw, 2.2rem), var(--iss-heading-fit-limit));
   line-height: 1.08;
   letter-spacing: -0.03em;
 }
@@ -2064,7 +2065,7 @@ body.iss-publication-editorial-skin-bildmatrix.iss-publication-layout-photoalbum
 .iss-publication-longread__chapter-title {
   margin: 0;
   color: var(--iss-surface-fg);
-  font-size: clamp(1.5rem, 1.24rem + 0.7vw, 2.2rem);
+  font-size: min(clamp(1.5rem, 1.24rem + 0.7vw, 2.2rem), var(--iss-heading-fit-limit));
   line-height: 1.08;
   letter-spacing: -0.03em;
 }
@@ -2114,10 +2115,10 @@ body.iss-publication-editorial-skin-longread-poster.iss-publication-layout-longr
 }
 
 body.iss-publication-editorial-skin-longread-poster.iss-publication-layout-longread .iss-publication-single__intro .iss-heading__title {
-  max-width: 16ch;
+  max-width: min(100%, var(--iss-heading-measure));
   color: var(--iss-longread-poster-ink);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 4rem;
+  font-size: min(4rem, var(--iss-heading-fit-limit));
   font-weight: 600;
   line-height: 1;
 }
@@ -2166,7 +2167,7 @@ body.iss-publication-editorial-skin-longread-poster.iss-publication-layout-longr
   max-width: 12ch;
   color: var(--iss-longread-poster-ink);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: 2.25rem;
+  font-size: min(2.25rem, var(--iss-heading-fit-limit));
   font-weight: 600;
   line-height: 1.05;
   letter-spacing: 0;
@@ -2628,7 +2629,7 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
 
 .iss-publication-chronicle__title {
   margin: 0;
-  font-size: clamp(1.3rem, 1.08rem + 0.7vw, 2rem);
+  font-size: min(clamp(1.3rem, 1.08rem + 0.7vw, 2rem), var(--iss-heading-fit-limit));
   line-height: 1.1;
   letter-spacing: -0.03em;
 }
@@ -2722,7 +2723,7 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
 
 .iss-publication-corpus__chapter-title {
   margin: 0.25rem 0 1rem;
-  font-size: clamp(1.45rem, 1.16rem + 0.62vw, 2rem);
+  font-size: min(clamp(1.45rem, 1.16rem + 0.62vw, 2rem), var(--iss-heading-fit-limit));
   line-height: 1.12;
 }
 
@@ -3282,7 +3283,7 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
   }
 
   .iss-publications-masthead__title {
-    font-size: 2.25rem;
+    font-size: min(2.25rem, var(--iss-heading-fit-limit));
   }
 
   .iss-publications-feature {
@@ -3364,7 +3365,7 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
   }
 
   body.iss-publication-editorial-skin-longread-poster.iss-publication-layout-longread .iss-publication-single__intro .iss-heading__title {
-    font-size: 2.65rem;
+    font-size: min(2.65rem, var(--iss-heading-fit-limit));
   }
 
   body.iss-publication-editorial-skin-longread-poster.iss-publication-layout-longread .iss-publication-longread__chapter {
@@ -3453,7 +3454,7 @@ body.iss-publication-layout-timeline .iss-publication-order-panel {
   }
 
   .iss-publication-photoalbum-blueprint__title-main {
-    font-size: 2rem;
+    font-size: min(2rem, var(--iss-heading-fit-limit));
   }
 
   body.iss-publication-layout-timeline .iss-publication-single__layout {

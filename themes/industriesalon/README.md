@@ -38,6 +38,29 @@ Section surface and page accent are separate.
 - `iss-heading--light` is a readability helper for headings on dark surfaces or dark media.
 - `iss-kicker--light` changes kicker readability only. It does not define a page accent.
 
+## Responsive Headings
+
+Heading sizes keep their component/skin design ceiling and use
+`min(<existing size>, var(--iss-heading-fit-limit))`. The shared token in
+`assets/css/tokens.css` limits display type against the nearest copy column's
+inline size, with a rem floor for text enlargement and a non-container fallback.
+`.iss-heading` and the renderer-owned copy wrappers establish inline-size
+containers. Do not put size containment on individual headings or shrink-to-fit
+layout tracks. Both public pages and the block editor load the same tokens.
+
+Headings balance lines and use manual hyphenation; prose retains its own rules.
+`overflow-wrap: break-word` remains an emergency fallback for an exceptionally
+long unbreakable string at the readable minimum. Do not use automatic heading
+hyphenation or `overflow-wrap: anywhere` to compensate for oversized type.
+Narrow 10–18ch title boxes can split German words even when the column has room;
+use `min(100%, var(--iss-heading-measure))` for those display measures. Existing
+wider measures and component font families, weights and line heights stay owned
+by their current layers. No JavaScript text-fitting or content rewriting is used.
+
+Verify actual word fragments and horizontal overflow at 320, 390, 768, 1024,
+1366 and 1920 CSS pixels, including a tour, a long title, a landing and a split
+column. Inspect the composed page as well as computed font sizes.
+
 ## Markup Rules
 
 - On scheme-led pages, use neutral shared markup first.

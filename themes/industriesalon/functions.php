@@ -69,6 +69,7 @@ add_action('after_setup_theme', function () {
     add_post_type_support('page', 'excerpt');
     add_editor_style(
         array(
+            'assets/css/tokens.css',
             'style.css',
             'assets/css/front-page.css',
             'assets/css/cards.css',

@@ -65,11 +65,11 @@
   margin: 0;
   max-width: none;
   color: var(--iss-white, #f9f9fa);
-  font-size: 4.2rem;
+  font-size: min(4.2rem, var(--iss-heading-fit-limit));
   line-height: 0.96;
   letter-spacing: 0;
-  overflow-wrap: anywhere;
-  hyphens: auto;
+  overflow-wrap: break-word;
+  hyphens: manual;
   word-break: normal;
 }
 
@@ -657,7 +657,7 @@
 
 .iss-tour-section__title {
   max-width: 24ch;
-  font-size: 2.25rem;
+  font-size: min(2.25rem, var(--iss-heading-fit-limit));
   line-height: 1.08;
   letter-spacing: 0;
 }
@@ -1214,7 +1214,7 @@
 
   .iss-tour-hero__title {
     max-width: none;
-    font-size: clamp(1.75rem, 8.8vw, 2.75rem);
+    font-size: min(clamp(1.75rem, 8.8vw, 2.75rem), var(--iss-heading-fit-limit));
     line-height: 1.02;
   }
 

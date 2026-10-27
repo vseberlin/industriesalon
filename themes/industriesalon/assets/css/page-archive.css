@@ -73,7 +73,7 @@
 .iss-archive-topband__title {
   margin: 0;
   max-width: none;
-  font-size: clamp(2rem, 1.7rem + 1vw, 2.65rem);
+  font-size: min(clamp(2rem, 1.7rem + 1vw, 2.65rem), var(--iss-heading-fit-limit));
   line-height: 1;
 }
 
@@ -441,7 +441,7 @@
 /* .iss-archive-callout__title: Element class for `iss-archive-callout`; apply on `title` element. */
 .iss-archive-callout__title {
   margin: 0;
-  font-size: clamp(1.4rem, 1rem + 1vw, 2rem);
+  font-size: min(clamp(1.4rem, 1rem + 1vw, 2rem), var(--iss-heading-fit-limit));
   line-height: 1.1;
 }
 
@@ -824,7 +824,7 @@
 /* .iss-archive-research-cta__title: Element class for `iss-archive-research-cta`; apply on `title` element. */
 .iss-archive-research-cta__title {
   margin: 0 0 0.65rem;
-  font-size: clamp(1.5rem, 1.1rem + 1vw, 2.2rem);
+  font-size: min(clamp(1.5rem, 1.1rem + 1vw, 2.2rem), var(--iss-heading-fit-limit));
   line-height: 1.08;
 }
 
@@ -947,12 +947,12 @@
 }
 
 .iss-archive-browser__heading .iss-heading__title {
-  max-width: 12ch;
+  max-width: min(100%, var(--iss-heading-measure));
 }
 
 .iss-archive-landing--compact .iss-archive-browser__heading .iss-heading__title {
-  max-width: 13ch;
-  font-size: clamp(2rem, 1.65rem + 1.55vw, 3rem);
+  max-width: min(100%, var(--iss-heading-measure));
+  font-size: min(clamp(2rem, 1.65rem + 1.55vw, 3rem), var(--iss-heading-fit-limit));
   line-height: 0.98;
 }
 
@@ -976,12 +976,12 @@
 
 .iss-archive-browser__stat h2 {
   margin: 0;
-  font-size: clamp(2rem, 1.2rem + 1.2vw, 3rem);
+  font-size: min(clamp(2rem, 1.2rem + 1.2vw, 3rem), var(--iss-heading-fit-limit));
   line-height: 1;
 }
 
 .iss-archive-landing--compact .iss-archive-browser__stat h2 {
-  font-size: clamp(1.65rem, 1.2rem + 1vw, 2.4rem);
+  font-size: min(clamp(1.65rem, 1.2rem + 1vw, 2.4rem), var(--iss-heading-fit-limit));
 }
 
 .iss-archive-browser__stat p:last-child {

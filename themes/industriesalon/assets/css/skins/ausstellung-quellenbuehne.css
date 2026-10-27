@@ -26,8 +26,8 @@
 }
 
 .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section h2 {
-  max-width: 16ch;
-  font-size: clamp(2.45rem, 5vw, 5.75rem);
+  max-width: min(100%, var(--iss-heading-measure));
+  font-size: min(clamp(2.45rem, 5vw, 5.75rem), var(--iss-heading-fit-limit));
   line-height: 0.95;
 }
 
@@ -50,7 +50,7 @@
 .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section__title {
   max-width: min(100%, 16ch);
   margin-bottom: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-section__body > :last-child {
@@ -206,7 +206,7 @@
 
 .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-viewport-image h2 {
   max-width: 24ch;
-  font-size: clamp(1.35rem, 2.1vw, 2.35rem);
+  font-size: min(clamp(1.35rem, 2.1vw, 2.35rem), var(--iss-heading-fit-limit));
   line-height: 1.08;
 }
 
@@ -238,7 +238,7 @@
 }
 
 .iss-ausstellung-editorial__section--layout-conclusion h2 {
-  max-width: 18ch;
+  max-width: min(100%, var(--iss-heading-measure));
 }
 
 .iss-ausstellung-editorial__section--layout-chapter > .iss-container,
@@ -274,9 +274,9 @@
 }
 
 .iss-ausstellung-editorial__section--layout-chapter h2 {
-  max-width: 18ch;
+  max-width: min(100%, var(--iss-heading-measure));
   color: var(--iss-ausstellung-dark);
-  font-size: clamp(1.85rem, 4vw, 2.6rem);
+  font-size: min(clamp(1.85rem, 4vw, 2.6rem), var(--iss-heading-fit-limit));
   line-height: 1.06;
 }
 
@@ -335,8 +335,8 @@
 }
 
 .iss-ausstellung-editorial--skin-quellenbuehne .iss-ausstellung-editorial__section--layout-album h2 {
-  max-width: 18ch;
-  font-size: clamp(1.45rem, 2.5vw, 2.4rem);
+  max-width: min(100%, var(--iss-heading-measure));
+  font-size: min(clamp(1.45rem, 2.5vw, 2.4rem), var(--iss-heading-fit-limit));
   line-height: 1.08;
 }
 

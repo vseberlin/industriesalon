@@ -22,7 +22,7 @@
 }
 
 .search .iss-search-hero__copy .iss-heading__title {
-  font-size: clamp(2.15rem, 1.9rem + 1.1vw, 3.75rem);
+  font-size: min(clamp(2.15rem, 1.9rem + 1.1vw, 3.75rem), var(--iss-heading-fit-limit));
   line-height: 0.98;
   letter-spacing: -0.045em;
 }

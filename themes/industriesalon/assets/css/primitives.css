@@ -173,7 +173,7 @@
 .iss-plate__title.wp-block-post-title {
   margin: 0;
   color: var(--iss-black);
-  font-size: var(--iss-plate-title-size);
+  font-size: min(var(--iss-plate-title-size), var(--iss-heading-fit-limit));
   font-weight: 620;
   line-height: 1.12;
   letter-spacing: -0.02em;
@@ -548,7 +548,7 @@
 .iss-full-bleed-zone__title {
   margin: 0;
   color: var(--iss-white);
-  font-size: clamp(1.5rem, 1.3rem + 0.7vw, 2.05rem);
+  font-size: min(clamp(1.5rem, 1.3rem + 0.7vw, 2.05rem), var(--iss-heading-fit-limit));
   line-height: 1.02;
   letter-spacing: -0.04em;
 }

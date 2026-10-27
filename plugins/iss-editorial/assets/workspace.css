@@ -19,6 +19,21 @@
   border-radius: 0;
 }
 
+/* Failures stay visible in every workspace view, including the full-screen canvas. */
+.iss-editorial-failure {
+  flex: 0 1 auto;
+  max-height: 45vh;
+  overflow: auto;
+  padding: 12px;
+  margin: 0;
+  border-left: 4px solid var(--iss-editor-accent);
+  background: var(--iss-editor-accent-soft);
+}
+
+.iss-editorial-failure .button {
+  margin: 0 6px 6px 0;
+}
+
 body.iss-editorial-studio-open {
   overflow: hidden;
 }

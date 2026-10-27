@@ -4,6 +4,10 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Complete staging acceptance of the editor recovery and responsive heading release.
+  Local private landing autosave `33794` (page `13301`) needs explicit correction
+  of its incomplete section-6 link; do not delete or rebase private drafts automatically.
+
 - Before using historical newsletter draft 28 on staging, review/rebuild its
   stored recipient query through the Newsletter owner: it references the former
   `eNY4952vQ_newsletter` table, while the current `wp_newsletter` table exists.

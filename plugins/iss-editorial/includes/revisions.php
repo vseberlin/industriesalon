@@ -283,12 +283,40 @@ function iss_editorial_check_heartbeat_session(): void {
         return;
     }
     $nonce_valid = wp_verify_nonce(sanitize_text_field(wp_unslash((string) ($_POST['_nonce'] ?? ''))), 'heartbeat-nonce');
-    if ($editor_user !== get_current_user_id() || !$nonce_valid) {
+    if ($editor_user !== get_current_user_id()) {
         wp_send_json(['iss-editorial-session-changed' => true]);
     }
+    if (!$nonce_valid) { wp_send_json(['iss-editorial-session-expired' => true]); }
     iss_editorial_release_inactive_lock(absint($_POST['data']['wp-refresh-post-lock']['post_id'] ?? 0));
 }
 add_action('wp_ajax_heartbeat', 'iss_editorial_check_heartbeat_session', 0);
+
+add_filter('heartbeat_received', static function (array $response, array $data): array {
+    $post_id = absint($data['wp-refresh-post-lock']['post_id'] ?? 0);
+    if (absint($data['iss-editorial-user'] ?? 0) === get_current_user_id() && $post_id && current_user_can('edit_post', $post_id)) {
+        $response['iss-editorial-nonces'] = [
+            'preview' => wp_create_nonce('iss_editorial_preview_document'),
+            'save' => wp_create_nonce('iss_editorial_save_document'),
+            'rest' => wp_create_nonce('wp_rest'),
+            'choices' => wp_create_nonce('iss_relations_station_objects'),
+            'previewUrl' => iss_editorial_get_preview_url($post_id, (string) (iss_editorial_get_format_for_post($post_id)['slug'] ?? '')),
+        ];
+    }
+    return $response;
+}, 12, 2);
+
+/** Recovery preserves unfinished fields and opaque trash; canonical validation is separate. */
+function iss_editorial_recovery_document(array $document): array
+{
+    $document = iss_editorial_strip_document_preview_cache($document);
+    foreach ($document as $key => $value) {
+        if ($key === 'deleted_sections') { continue; }
+        $document[$key] = map_deep($value, static function ($field) {
+            return is_string($field) ? wp_kses_post($field) : $field;
+        });
+    }
+    return $document;
+}
 
 /**
  * @return array|WP_Error
@@ -304,15 +332,7 @@ function iss_editorial_save_draft(int $post_id, string $format_slug, array $docu
     }
     $trash_permission = iss_editorial_check_trash_removal($post_id, $format_slug, $document);
     if (is_wp_error($trash_permission)) { return $trash_permission; }
-    $document = iss_editorial_strip_document_preview_cache($document);
-    // Recovery must preserve unfinished form entries. Canonical saves validate separately.
-    foreach ($document as $key => $value) {
-        // Trash is escaped when displayed, not live markup; preserve its values and key order.
-        if ($key === 'deleted_sections') { continue; }
-        $document[$key] = map_deep($value, static function ($field) {
-            return is_string($field) ? wp_kses_post($field) : $field;
-        });
-    }
+    $document = iss_editorial_recovery_document($document);
     $meta = [iss_editorial_get_document_meta_key($format_slug) => iss_editorial_encode_document($document)];
     $format = iss_editorial_get_format($format_slug);
     if (empty($format['always_enabled'])) {
@@ -347,7 +367,13 @@ function iss_editorial_save_draft(int $post_id, string $format_slug, array $docu
         update_metadata('post', $revision_id, $key, wp_slash($value));
     }
     // update_metadata is intentional: update_post_meta redirects revisions to their parent.
-    update_metadata('post', $revision_id, '_iss_editorial_draft_base', iss_editorial_saved_token($post_id, $format_slug));
+    $base = iss_editorial_saved_token($post_id, $format_slug);
+    update_metadata('post', $revision_id, '_iss_editorial_draft_base', $base);
+    $saved_post = get_post($revision_id);
+    if (!$saved_post || $saved_post->post_title !== $post_data['post_title'] || $saved_post->post_excerpt !== $post_data['post_excerpt']
+        || get_metadata_raw('post', $revision_id, '_iss_editorial_draft_base', true) !== $base) {
+        return new WP_Error('editorial_autosave_failed', __('Titel, Zusammenfassung oder Entwurfsstand konnten nicht vollständig gespeichert werden. Bitte erneut prüfen.', 'iss-editorial'));
+    }
     foreach ($meta as $key => $value) {
         if (get_metadata_raw('post', $revision_id, $key, true) !== $value) {
             return new WP_Error('editorial_autosave_failed', __('Der Entwurf konnte nicht vollständig gespeichert werden. Bitte erneut versuchen.', 'iss-editorial'));
@@ -362,7 +388,7 @@ function iss_editorial_save_draft(int $post_id, string $format_slug, array $docu
 function iss_editorial_check_edit_version(int $post_id, string $format_slug, string $base, ?string $draft_token = null)
 {
     if (!hash_equals(iss_editorial_saved_token($post_id, $format_slug), $base)) {
-        return new WP_Error('editorial_conflict', __('Inzwischen wurde eine neue Fassung gespeichert. Bitte diese Seite neu öffnen und Ihren Entwurf wiederherstellen.', 'iss-editorial'));
+        return new WP_Error('editorial_conflict', __('Inzwischen wurde eine neue Fassung gespeichert. Bitte die Fassungen vergleichen. Laden Sie Ihre Änderungen vor einem erneuten Öffnen herunter.', 'iss-editorial'));
     }
     if (!function_exists('wp_check_post_lock')) {
         require_once ABSPATH . 'wp-admin/includes/post.php';
@@ -374,7 +400,7 @@ function iss_editorial_check_edit_version(int $post_id, string $format_slug, str
     if ($draft_token !== null) {
         $draft = iss_editorial_get_draft($post_id, $format_slug);
         if (!hash_equals((string) ($draft['token'] ?? ''), $draft_token)) {
-            return new WP_Error('editorial_draft_conflict', __('Der Entwurf wurde in einem anderen Fenster geändert. Bitte diese Seite neu öffnen.', 'iss-editorial'));
+            return new WP_Error('editorial_draft_conflict', __('Der Entwurf wurde in einem anderen Fenster geändert. Bitte die Fassungen vergleichen. Ihre Eingaben bleiben in diesem Fenster erhalten.', 'iss-editorial'));
         }
     }
     return true;
@@ -395,6 +421,9 @@ function iss_editorial_validate_post_update(array $data, array $postarr): array
     if (!$format || !isset($_POST['iss_editorial'][$format['slug']])) {
         return $data;
     }
+    if (!iss_core_acquire_post_write_lock($post_id)) {
+        wp_die(esc_html__('Eine Speicherung läuft noch. Ihre bisherige Fassung bleibt erhalten. Bitte kurz warten und erneut versuchen.', 'iss-editorial'), '', ['response' => 409, 'back_link' => true]);
+    }
     $payload = wp_unslash($_POST['iss_editorial'][$format['slug']]);
     $result = current_user_can('edit_post', $post_id)
         ? iss_editorial_check_edit_version($post_id, $format['slug'], (string) ($payload['base'] ?? ''), (string) ($payload['draft_token'] ?? ''))
@@ -406,15 +435,25 @@ function iss_editorial_validate_post_update(array $data, array $postarr): array
         $result = iss_editorial_check_trash_removal($post_id, $format['slug'], iss_editorial_decode_document($payload['document'] ?? ''));
     }
     if (is_wp_error($result)) {
+        iss_core_release_post_write_locks($post_id);
         wp_die(esc_html($result->get_error_message()), esc_html__('Inhalt nicht gespeichert', 'iss-editorial'), ['response' => 409, 'back_link' => true]);
     }
     // Capture the pre-update document too, including the first edit after installing this support.
     if (!iss_editorial_capture_revision($post_id)) {
+        iss_core_release_post_write_locks($post_id);
         wp_die(esc_html__('Die bisherige Fassung konnte nicht gesichert werden. Bitte erneut versuchen.', 'iss-editorial'), esc_html__('Inhalt nicht gespeichert', 'iss-editorial'), ['response' => 500, 'back_link' => true]);
     }
     $GLOBALS['iss_editorial_revision_before_update'][$post_id] = true;
+    $GLOBALS['iss_editorial_native_write_lock'][$post_id] = true;
     return $data;
 }
+
+add_action('wp_after_insert_post', static function (int $post_id): void {
+    if (!doing_action('save_post') && !empty($GLOBALS['iss_editorial_native_write_lock'][$post_id])) {
+        iss_core_release_post_write_locks($post_id);
+        unset($GLOBALS['iss_editorial_native_write_lock'][$post_id]);
+    }
+}, PHP_INT_MAX);
 add_filter('wp_insert_post_data', 'iss_editorial_validate_post_update', 99, 2);
 
 // The form's pre-update snapshot covers only this native update, not a later API write.

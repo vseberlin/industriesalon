@@ -27,6 +27,9 @@ async function editor(format = 'landing', extra = {}) {
   window.fetch = async (_url, request) => {
     requests.push(new URLSearchParams(request.body));
     if (extra.beforeResponse) { await extra.beforeResponse(requests.at(-1)); }
+    if (requests.at(-1).get('intent') === 'inspect') {
+      return {ok:true,json:async()=>({success:true,data:{baseToken:'base',canonical:{document,title:'Page title',excerpt:'Summary'},draft:{...extra.recovery,token:'server-draft'}}})};
+    }
     if (requests.at(-1).get('intent') === 'validate') {
       const candidate = JSON.parse(requests.at(-1).get('document'));
       return { ok: !fail && !validationMessage, json: async () => fail || validationMessage ? { success: false, data: { message: validationMessage || 'Draft conflict: reload required' } } : { success: true, data: { valid: true, document: extra.validateDocument ? extra.validateDocument(candidate) : candidate } } };
@@ -48,6 +51,7 @@ async function editor(format = 'landing', extra = {}) {
   window.HTMLElement.prototype.showPopover = function () { this.dataset.popoverOpen = 'true'; };
   window.HTMLElement.prototype.hidePopover = function () { delete this.dataset.popoverOpen; };
   window.ResizeObserver = class { observe() {} disconnect() {} };
+  window.eval(fs.readFileSync('plugins/iss-core/assets/admin-request.js', 'utf8'));
   for (const asset of ['ui.js', 'dnd.js', 'rich-text.js', 'live-preview.js', 'help.js', 'workspace.js', 'pickers.js', 'admin.js']) {
     window.eval(fs.readFileSync('plugins/iss-editorial/assets/' + asset, 'utf8'));
   }
@@ -79,6 +83,136 @@ function controlledClock() {
     }
   };
 }
+
+test('An unresponsive save times out loudly, releases the queue and preserves newer edits', async () => {
+  const clock=controlledClock(); const e=await editor('landing',{clock});
+  try {
+    let calls=0;
+    e.window.fetch=()=>{calls++;return new Promise(()=>{});};
+    e.input(e.window.document.getElementById('title'),'Pending work'); await clock.tick(1200);
+    await clock.tick(15000);
+    assert.equal(calls,1);
+    assert.equal(e.button('Erneut sichern').hidden,false);
+    assert.match(e.container.querySelector('.iss-editorial-failure').textContent,/Speicherstand ist unklar/);
+    assert.ok(e.root.querySelector('.iss-editorial-studio > .iss-editorial-failure'),'Alert is inside the expanded workspace');
+    assert.notEqual(e.container.querySelector('.iss-editorial-failure').inert,true,'Recovery actions must remain interactive in the expanded workspace');
+    e.input(e.window.document.getElementById('title'),'Newer local work');
+    const sent=[];
+    e.window.fetch=async(_url,request)=>{sent.push(new URLSearchParams(request.body));return {ok:true,json:async()=>({success:true,data:{draftToken:'reconciled',previewUrl:'/?preview=true'}})};};
+    e.button('Erneut sichern').click(); await clock.tick(0);
+    assert.equal(sent[0].get('title'),'Pending work','Reconcile the exact uncertain request first');
+    assert.equal(sent[1].get('title'),'Newer local work');
+    assert.equal(sent[1].get('draft_token'),'reconciled');
+    assert.equal(e.button('Erneut sichern').hidden,true);
+  } finally {e.dom.window.close();}
+});
+
+test('Lost response retries reconcile the prior snapshot before saving subsequent changes', async()=>{
+  const e=await editor('landing',{draftToken:'old'});
+  try {
+    const sent=[];
+    e.window.fetch=async(_url,request)=>{
+      const params=new URLSearchParams(request.body);sent.push(params);
+      if(sent.length===1){throw new TypeError('Connection lost after commit');}
+      return {ok:true,json:async()=>({success:true,data:{draftToken:'server-'+sent.length,previewUrl:'/?preview=true'}})};
+    };
+    e.input(e.window.document.getElementById('title'),'Committed but not acknowledged');await e.settle();
+    assert.match(e.container.querySelector('.iss-editorial-failure').textContent,/unterbrochen/);
+    e.input(e.window.document.getElementById('title'),'Additional local edit');
+    e.button('Erneut sichern').click();await e.settle();
+    assert.equal(sent[1].get('title'),sent[0].get('title'));
+    assert.equal(sent[2].get('title'),'Additional local edit');
+    assert.equal(sent[2].get('draft_token'),'server-2');
+  } finally {e.dom.window.close();}
+});
+
+test('Missing preview finish acknowledgement unlocks the form without replaying publication',async()=>{
+  const clock=controlledClock();const e=await editor('landing',{...workspaceOptions(),clock});
+  try {
+    await clock.tick(0);const frame=readyFrame(e);
+    previewMessage(e,frame,{type:'iss-preview-field-start',section:0,field:'title',session:'lost',sequence:0});
+    previewMessage(e,frame,{type:'iss-preview-field-change',section:0,field:'title',session:'lost',sequence:1,value:'Acknowledged text'});
+    let submitted=false;e.window.document.getElementById('post').requestSubmit=()=>{submitted=true;};
+    e.button('Update').click();await clock.tick(5000);
+    assert.equal(submitted,false);assert.equal(frame.isConnected,false);
+    assert.equal(e.root.querySelector('.iss-editorial-studio__fields').inert,false);
+    assert.equal(e.value().sections[0].title,'Acknowledged text');
+    assert.match(e.root.querySelector('.iss-editorial-failure').textContent,/antwortet nicht/);
+    e.button('Update').click();await clock.tick(0);assert.equal(submitted,true);
+  }finally{e.dom.window.close();}
+});
+
+test('Invalid canonical content offers validated repair and does not block recovery discard',async()=>{
+  const raw=JSON.stringify({schema_version:1,sections:[{type:'retired',unknown:'Keep until explicitly repaired'}]});
+  const e=await editor('landing',{validationError:'Unsupported section',rawDocument:raw,recovery:{base:'base',modified:'Today',document:{schema_version:1,sections:[]},title:'Draft',excerpt:''}});
+  try{
+    e.button('Entwurf verwerfen').click();await e.settle();
+    assert.equal(e.requests[0].get('intent'),'discard');
+    e.button('Inhalt prüfen').click();
+    const repair=e.container.querySelector('.iss-editorial-repair textarea');assert.equal(repair.value,raw);
+    repair.value='{broken';e.button('Reparatur prüfen').click();await e.settle();
+    assert.match(e.container.querySelector('.iss-editorial-failure').textContent,/kein gültiges JSON/);
+    repair.value=JSON.stringify({schema_version:1,sections:[{type:'kapitel',title:'Repaired deliberately'}]});
+    e.button('Reparatur prüfen').click();await e.settle();
+    assert.equal(e.value().sections[0].title,'Repaired deliberately');
+    assert.equal(e.root.inert,false);assert.equal(e.root.hidden,false);
+    assert.ok(e.requests.some(p=>p.get('intent')==='validate'));
+  }finally{e.dom.window.close();}
+});
+
+test('Heartbeat renews custom save credentials and distinguishes expired sessions',async()=>{
+  const e=await editor();
+  try{
+    e.window.wp.hooks.doAction('heartbeat.tick',{'iss-editorial-nonces':{preview:'fresh',save:'fresh-save',rest:'fresh-rest'}});
+    e.input(e.window.document.getElementById('title'),'Fresh credentials');await e.settle();
+    assert.equal(e.requests.at(-1).get('nonce'),'fresh');
+    e.window.wp.hooks.doAction('heartbeat.tick',{'iss-editorial-session-expired':true});
+    assert.match(e.container.querySelector('.iss-editorial-failure').textContent,/Sitzung ist abgelaufen/);
+    assert.doesNotMatch(e.container.querySelector('.iss-editorial-failure').textContent,/Anmeldung hat sich geändert/);
+  }finally{e.dom.window.close();}
+});
+
+test('Recovery copies restore only the same page after validation',async()=>{
+  const e=await editor();
+  try{
+    e.button('Sicherung wiederherstellen').click();
+    const input=e.container.querySelector('.iss-editorial-repair textarea');
+    const copy={postId:100,title:'Recovered identity',excerpt:'Recovered summary',document:{schema_version:1,sections:[{type:'kapitel',title:'Recovered section'}]}};
+    input.value=JSON.stringify(copy);e.button('Reparatur prüfen').click();await e.settle();
+    assert.equal(e.requests.length,0,'Another page cannot overwrite this page');
+    assert.match(e.container.querySelector('[role="alert"]').textContent,/anderen Seite/);
+    copy.postId=99;input.value=JSON.stringify(copy);e.button('Reparatur prüfen').click();await e.settle();
+    assert.equal(e.requests[0].get('intent'),'validate');
+    assert.equal(e.value().sections[0].title,'Recovered section');
+    assert.equal(e.window.document.getElementById('title').value,'Recovered identity');
+    assert.equal(e.requests.at(-1).get('title'),'Recovered identity');
+  }finally{e.dom.window.close();}
+});
+
+test('A non-JSON server failure is visible and retains the working document',async()=>{
+  const e=await editor();
+  try{
+    e.window.fetch=async()=>({ok:false,status:502,json:async()=>{throw new SyntaxError('HTML error page');}});
+    e.input(e.window.document.getElementById('title'),'Retain this');await e.settle();
+    assert.equal(e.window.document.getElementById('title').value,'Retain this');
+    assert.equal(e.container.querySelector('.iss-editorial-failure').dataset.code,'invalid_response');
+    assert.equal(e.button('Erneut sichern').hidden,false);
+  }finally{e.dom.window.close();}
+});
+
+test('A stale recovery draft is compared before explicit rebasing or any write',async()=>{
+  const e=await editor('landing',{recovery:{base:'older',modified:'Yesterday',title:'Old draft title',document:{schema_version:1,sections:[{type:'kapitel',title:'Old private section'}]}}});
+  try{
+    e.button('Entwurf weiterbearbeiten').click();await e.settle();
+    assert.deepEqual(e.requests.map(p=>p.get('intent')),['inspect'],'Comparison is read-only');
+    assert.equal(e.value().sections[0].title,'Old private section');
+    assert.ok(e.button('Meine Fassung weiterbearbeiten'));
+    e.button('Meine Fassung weiterbearbeiten').click();await e.settle();
+    assert.equal(e.requests.at(-1).get('intent'),'autosave');
+    assert.equal(e.requests.at(-1).get('draft_token'),'server-draft');
+    assert.equal(e.requests.at(-1).get('title'),'Old draft title');
+  }finally{e.dom.window.close();}
+});
 
 for (const [format, type] of [['place', 'epoche'], ['renamed_history', 'renamed_phase']]) {
   test(`${format}.${type}: vocabulary labels and ordered choices follow the registry without rewriting rejected input`, async () => {
@@ -289,7 +423,7 @@ test('Account changes retain unsaved fields and stop old-tab autosaves and publi
 });
 
 test('Recovery is explicit and restores title, summary and event structure with the document', async () => {
-  const e = await editor('veranstaltung', { recovery: { base: 'older', modified: 'Today', title: 'Recovered title', excerpt: 'Recovered summary', document: { schema_version: 1, skin: 'standard', entity_key: 'event.festival', sections: [{ type: 'kapitel', title: 'Recovered section' }] } }, documentBindings: { entity_key: '#entity' } });
+  const e = await editor('veranstaltung', { recovery: { base: 'base', modified: 'Today', title: 'Recovered title', excerpt: 'Recovered summary', document: { schema_version: 1, skin: 'standard', entity_key: 'event.festival', sections: [{ type: 'kapitel', title: 'Recovered section' }] } }, documentBindings: { entity_key: '#entity' } });
   try {
     assert.equal(e.root.inert, true);
     assert.equal(e.root.hidden, true, 'Do not show a canvas whose controls cannot be used');
@@ -330,7 +464,7 @@ test('Failed draft discard keeps the choice visible; retry opens the saved canva
 });
 
 test('Publish exposes unresolved recovery without saving either version, then resumes after the choice', async () => {
-  const e = await editor('projekt', { recovery: { base: 'older', modified: 'Earlier today', document: { schema_version: 1, sections: [{ type: 'kapitel', title: 'Older private draft' }] } } });
+  const e = await editor('projekt', { recovery: { base: 'base', modified: 'Earlier today', document: { schema_version: 1, sections: [{ type: 'kapitel', title: 'Older private draft' }] } } });
   try {
     const form = e.window.document.getElementById('post');
     const recovery = e.container.querySelector('.iss-editorial-recovery');
@@ -1101,6 +1235,23 @@ test('Native link dialog remains interactive when WordPress moves it out of the 
   } finally { e.dom.window.close(); }
 });
 
+test('Native authentication and competing-editor dialogs remain interactive in the expanded workspace', async () => {
+  const e=await editor();
+  try{
+    for(const id of ['wp-auth-check-wrap','post-lock-dialog']){
+      const modal=e.window.document.createElement('div');modal.id=id;
+      e.window.document.getElementById('wpwrap').appendChild(modal);
+    }
+    e.root.querySelector('[aria-label="Arbeitsfläche verkleinern"]').click();
+    e.root.querySelector('[aria-label="Arbeitsfläche vergrößern"]').click();
+    for(const id of ['wp-auth-check-wrap','post-lock-dialog']){
+      let modal=e.window.document.getElementById(id);
+      while(modal){assert.notEqual(modal.inert,true,id+' must not have an inert ancestor');modal=modal.parentElement;}
+    }
+    assert.equal(e.button('Update').inert,true);
+  }finally{e.dom.window.close();}
+});
+
 test('Minimizing the workspace uncovers native controls without submitting or changing the draft', async () => {
   const e = await editor('landing', workspaceOptions());
   try {
@@ -1561,7 +1712,7 @@ test('Rail toggle updates dependent controls and retains choices when switched o
 
 test('Recovered rail values hydrate the owner controls and reach native submit unchanged', async () => {
   const recovered = {schema_version:3,skin:'standard',features:{rail:{enabled:true,placement:'left',mode:'anchor-nav',treatment:'sticky'}},sections:[{type:'kapitel',title:'Recovered chapter',body:'<p>Recovered prose.</p>',links:[]}],deleted_sections:[{type:'retired',opaque:{keep:'Exact'}}]};
-  const e = await editor('renamed_owner', {railControl:true, recovery:{base:'older',modified:'Today',document:recovered}});
+  const e = await editor('renamed_owner', {railControl:true, recovery:{base:'base',modified:'Today',document:recovered}});
   try {
     assert.equal(e.root.querySelector('.iss-editorial-rail-feature-control'), null, 'Unresolved recovery does not expose stale controls');
     e.button('Entwurf weiterbearbeiten').click(); await e.settle();
@@ -1611,7 +1762,7 @@ for (const [type, treatment, fields, kind = 'text_image'] of [
 test('Row extras survive treatment switching, private recovery and native submit', async () => {
   const document = {schema_version:3,skin:'standard',sections:[{type:'rows',treatment:'rows.agenda',items:[{label:'Row',text:'Prose',eyebrow:'2026',group:'Group',detail:'Exact detail',media_refs:[]}]}],deleted_sections:[{type:'retired',opaque:'Exact'}]};
   const sections = {rows:{label:'Rows',supports:['items','treatment'],items_kind:'text_image',default_treatment:'rows.visual',treatments:[{slug:'rows.visual',label:'Visual',item_fields:[]},{slug:'rows.editorial',label:'Editorial',item_fields:['eyebrow']},{slug:'rows.agenda',label:'Agenda',item_fields:['eyebrow','group','detail']}]}};
-  const e = await editor('renamed_owner', {sections, recovery:{base:'older',modified:'Today',document}});
+  const e = await editor('renamed_owner', {sections, recovery:{base:'base',modified:'Today',document}});
   try {
     e.button('Entwurf weiterbearbeiten').click(); await e.settle();
     const controls = () => e.root.querySelectorAll('.iss-editorial-gateway-item-row__fields details input,.iss-editorial-gateway-item-row__fields details textarea');

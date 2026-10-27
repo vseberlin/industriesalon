@@ -40,7 +40,7 @@
 .iss-projects-hero__title {
   margin: 0;
   color: var(--iss-white);
-  font-size: clamp(2.15rem, 3.6vw, 4.25rem);
+  font-size: min(clamp(2.15rem, 3.6vw, 4.25rem), var(--iss-heading-fit-limit));
   line-height: 0.98;
   letter-spacing: 0;
   text-wrap: balance;
@@ -248,7 +248,7 @@
 
 .iss-project-index-card__title {
   margin: 0;
-  font-size: clamp(1.35rem, 1.16rem + 0.62vw, 2rem);
+  font-size: min(clamp(1.35rem, 1.16rem + 0.62vw, 2rem), var(--iss-heading-fit-limit));
   font-weight: 850;
   line-height: 1.08;
   letter-spacing: 0;
@@ -256,7 +256,7 @@
 }
 
 .iss-featured-projects__items .iss-project-index-card__title {
-  font-size: clamp(2rem, 1.55rem + 1.45vw, 3.4rem);
+  font-size: min(clamp(2rem, 1.55rem + 1.45vw, 3.4rem), var(--iss-heading-fit-limit));
 }
 
 .iss-project-index-card__title a {
@@ -370,7 +370,7 @@
   }
 
   .iss-projects-hero__title {
-    font-size: clamp(2.15rem, 10vw, 3.45rem);
+    font-size: min(clamp(2.15rem, 10vw, 3.45rem), var(--iss-heading-fit-limit));
   }
 
   .iss-projects-hero__rail {

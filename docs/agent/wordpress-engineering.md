@@ -50,6 +50,12 @@ Use this for code, design, Gutenberg, CSS, PHP, JavaScript, template, theme, and
 
 ## PHP And JavaScript
 
+- Fail loudly: every failed user operation or background save must produce a
+  visible, accessible, actionable error. Preserve the user's input, distinguish
+  failed/uncertain writes from confirmed saves, and keep recovery controls usable.
+  Never convert transport, validation, permission or persistence failures into an
+  empty success or discard them in an unreported catch. Expected cancellation of
+  superseded work is distinct from failure. Test the error and recovery paths.
 - Trace root cause before changing behavior.
 - Prefer stable WordPress APIs and existing repo helpers over custom glue.
 - Keep code lean, readable, explicit, and traceable.

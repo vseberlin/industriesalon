@@ -479,6 +479,70 @@ pre-existing Sets/items/links are unchanged. It must not run against production.
 
 ## Shared editing and recovery
 
+### Failure and recovery contract
+
+Every failed editorial operation must fail visibly, retain input and explain the
+next action. The persistent alert belongs inside the workspace before full-screen
+focus isolation runs; it is not a WordPress `.notice` that core can move outside
+the canvas. Validation, conflicts, expired credentials, unavailable dependencies,
+timeouts, malformed responses and editor exceptions must not become silent no-ops.
+The server preserves error codes and available field paths. Confirmed private
+saves with validation problems are labelled as secured but not publishable.
+
+ISS Core owns the small shared bounded-request helper used by editorial and route
+controls. Native fetch and the existing owner endpoints remain the transport;
+there is no second queue or storage registry. Requests time out after 15 seconds,
+including body decoding. A timed-out write is uncertain, not failed with certainty:
+the editor retries the exact prior snapshot first. A changed draft token can be
+acknowledged only when that snapshot matches the stored author draft exactly and
+the canonical version and permissions still match. Newer local edits then use the
+returned token. Genuine conflicts require explicit comparison and selection.
+
+Comparison reads canonical content and the current author's private autosave
+through the existing authenticated AJAX endpoint. Selecting a copy explicitly
+adopts the inspected version tokens; a later competing write still conflicts.
+Recovery drafts with a different base require comparison before another save.
+Downloadable JSON copies preserve document, title, excerpt and integrated route
+work. The existing repair surface can load same-post copies, validate them and
+return them to private editing; it never publishes. Invalid canonical JSON offers
+validated repair and, for recognized shapes, correction through ordinary controls.
+Discarding an own draft does not require valid canonical content. Unsupported
+data is never automatically removed or migrated to make the editor open.
+
+Valid same-account heartbeat responses refresh custom AJAX, native-save and REST
+credentials. Expiry and account switching have different messages; an old tab
+cannot silently resume under a different account. Native WordPress login and
+takeover dialogs stay outside the workspace's inert background. A missing preview
+finish acknowledgement times out after five seconds, retains acknowledged input,
+unlocks the inspector and drops queued publication/navigation actions. The user
+must explicitly repeat the action after reviewing the form.
+
+Core's connection-scoped post write mutex serializes version checks and writes
+for JSON AJAX/native editing and route REST mutations. Canonical document writers
+also use it. It supplements native heartbeat locking; it does not replace it or
+introduce a persistent lock record. Native completion releases its lock; shutdown
+releases remaining request locks. This is serialization, not a transaction across
+all WordPress post fields and plugin projections. A partial persistence failure
+must remain an explicit error, not a reported complete save.
+
+Route stations retain their `iss-relations` owner and separate publication action.
+Mutations check both canonical hash and draft token, native edit locks and actor
+permissions. Slow responses update acknowledged tokens without replacing newer
+local edits; those edits are flushed next. Incomplete stations block with an error
+instead of disappearing during normalization. History, stored routes and cleanup
+are verified before publication is reported. Conflicts offer owner-local comparison
+and download. Shared Update/Preview/Finish flush route work without publishing it.
+
+Release gate: `wp iss-editorial validate-all --include-drafts --editor-view`.
+This extends the existing read-only, batched canonical sweep to private autosaves
+and editor-hydrated copies. Invalid documents fail the command; stale or absent
+base tokens are counted for comparison and never automatically deleted. Ordinary
+historical revisions remain excluded. Tests: `editorial-recovery.php`,
+`editorial-locks.php`, `editorial-storage.php`, `editorial-version-token.php`,
+`editorial-validation.php`, `editorial-ui.cjs` and `route-recovery.cjs`.
+
+### Editing lifecycle
+
 Eligible landing pages, exhibitions, projects, tours, publications, retrospectives,
 Places and events share `iss-editorial`'s section canvas, WordPress text editor,
 media/link controls, keyboard reordering, trash, preview and recovery controls.

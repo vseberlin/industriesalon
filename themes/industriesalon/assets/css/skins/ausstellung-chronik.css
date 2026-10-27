@@ -46,9 +46,9 @@
   max-width: 22ch;
   margin: 0;
   color: var(--iss-ausstellung-chronik-ink);
-  font-size: clamp(1.8rem, 3.6vw, 3.35rem);
+  font-size: min(clamp(1.8rem, 3.6vw, 3.35rem), var(--iss-heading-fit-limit));
   line-height: 1.04;
-  hyphens: auto;
+  hyphens: manual;
   overflow-wrap: break-word;
 }
 

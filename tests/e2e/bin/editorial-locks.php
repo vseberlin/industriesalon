@@ -100,9 +100,10 @@ try {
     $assert(!empty($changed['iss-editorial-session-changed']) && !isset($changed['wp-refresh-post-lock']), 'An old tab detects account switching before native lock renewal');
     $assert(get_post_meta($id, '_edit_lock', true) === $lock, 'Old-tab heartbeat leaves the current lock unchanged');
     $expired = $heartbeat($b, $second, $a_nonce);
-    $assert(!empty($expired['iss-editorial-session-changed']), 'An expired session also requires fresh page nonces');
+    $assert(!empty($expired['iss-editorial-session-expired']) && empty($expired['iss-editorial-session-changed']), 'Expiry is distinct from an account change');
     $tick = $heartbeat($b, $second, wp_create_nonce('heartbeat-nonce'));
     $assert(!empty($tick['wp-refresh-post-lock']['new_lock']), 'Current-account heartbeat keeps native lock renewal');
+    $assert(!empty($tick['iss-editorial-nonces']['preview']) && !empty($tick['iss-editorial-nonces']['save']) && !empty($tick['iss-editorial-nonces']['rest']), 'Current-account heartbeat renews custom editor nonces');
 
     // Repeat with the restricted editor while another unrelated login remains.
     $b_other = $session($second);

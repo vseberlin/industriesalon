@@ -389,17 +389,7 @@
     }
 
     function fetchJson(url) {
-      return window.fetch(url, {
-        credentials: 'same-origin',
-        headers: {
-          'X-WP-Nonce': config.nonce || ''
-        }
-      }).then(function (response) {
-        if (!response.ok) {
-          throw new Error('request failed');
-        }
-        return response.json();
-      });
+      return window.issAdminRequest(url, { credentials: 'same-origin', headers: { 'X-WP-Nonce': config.nonce || '' } });
     }
 
     function fetchAllSetItems(url) {
@@ -452,7 +442,8 @@
           render();
           scheduleAutosave();
           status.textContent = String(sheets.length) + ' Blatt/Blätter importiert.';
-        }).catch(function () {
+        }).catch(function (error) {
+          if (options.reportFailure) { options.reportFailure(error); }
           status.textContent = 'Archivset konnte nicht geladen werden.';
         });
         return;
@@ -475,7 +466,8 @@
           render();
           scheduleAutosave();
           status.textContent = String(sheets.length) + ' Bild(er) importiert.';
-        }).catch(function () {
+        }).catch(function (error) {
+          if (options.reportFailure) { options.reportFailure(error); }
           status.textContent = 'Set konnte nicht geladen werden.';
         });
       }

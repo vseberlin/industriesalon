@@ -58,7 +58,12 @@ artifact. Do not bulk-prune existing records as part of deployment.
 
 Verify locally with `tests/e2e/bin/editorial-retention.php` and the revision/storage
 suites using disposable records. Run `wp iss-editorial validate-all` on the release
-target as the read-only canonical-content gate. Keep local fixtures off production.
+target as the read-only canonical-content gate. For editor/registry/validation
+changes use `wp iss-editorial validate-all --include-drafts --editor-view` as well:
+it checks private recovery and editor-copy compatibility. Invalid drafts require
+explicit repair review; stale bases require comparison, not automatic cleanup.
+Verify conflict, timeout and authentication errors remain visible in the expanded
+workspace and that their recovery buttons work. Keep local fixtures off production.
 
 ## What To Document
 

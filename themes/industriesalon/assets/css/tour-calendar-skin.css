@@ -12,7 +12,7 @@
 }
 
 .is-tour-calendar__heading {
-  font-size: clamp(1.4rem, 2.3vw, 2rem);
+  font-size: min(clamp(1.4rem, 2.3vw, 2rem), var(--iss-heading-fit-limit));
 }
 
 .is-tour-calendar__status,

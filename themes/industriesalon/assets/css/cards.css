@@ -1905,7 +1905,7 @@
   display: block;
   min-height: 0;
   overflow: visible;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .iss-card__date {

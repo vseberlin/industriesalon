@@ -108,9 +108,139 @@
     retry.hidden = true;
     status.insertAdjacentElement('afterend', retry);
     retry.addEventListener('click', function () { queueSave('retry').catch(function () {}); });
+    var uncertainSave = null;
+    var problem = createElement('div', 'iss-editorial-failure');
+    problem.setAttribute('role', 'alert');
+    problem.hidden = true;
+    var problemText = createElement('p');
+    problem.appendChild(problemText);
+    var download = createElement('button', 'button', 'Änderungen herunterladen');
+    download.type = 'button';
+    download.addEventListener('click', function () {
+      updateField();
+      var copy = { postId: postId, title: identityFields.title ? identityFields.title.value : '', excerpt: identityFields.excerpt ? identityFields.excerpt.value : '', document: documentState, baseToken: config.baseToken, draftToken: draftToken, rawDocument: config.validationError ? config.rawDocument : undefined };
+      if (routeStationEditor && routeStationEditor.recoveryCopy) { copy.route = routeStationEditor.recoveryCopy(); }
+      var url = window.URL.createObjectURL(new window.Blob([JSON.stringify(copy, null, 2)], { type: 'application/json' }));
+      var link = createElement('a'); link.href = url; link.download = 'inhalt-' + postId + '-wiederherstellung.json';
+      link.click(); window.setTimeout(function () { window.URL.revokeObjectURL(url); }, 1000);
+    });
+    problem.appendChild(download);
+    var compare = createElement('button', 'button', 'Fassungen vergleichen');
+    compare.type = 'button';
+    compare.addEventListener('click', compareVersions);
+    problem.appendChild(compare);
+    var repair = createElement('button', 'button', 'Inhalt prüfen');
+    repair.type = 'button'; repair.addEventListener('click', openRepair);
+    problem.appendChild(repair);
+    var locate = createElement('button', 'button', 'Betroffene Stelle anzeigen'); locate.type = 'button'; locate.hidden = true;
+    locate.addEventListener('click', function () {
+      var match = /sections\[(\d+)\](?:\.(\w+))?/.exec(problem.dataset.path || '');
+      if (!match || !studio) { return; }
+      selectWorkspace(Number(match[1]), false);
+      if (match[2]) { var input = studio.body.querySelector('.iss-editorial-field--' + match[2] + ' input, .iss-editorial-field--' + match[2] + ' textarea, .iss-editorial-field--' + match[2] + ' select'); if (input) { input.focus(); } }
+    }); problem.appendChild(locate);
+    container.insertBefore(problem, container.firstChild);
+    function reportFailure(error, saved) {
+      problem.hidden = false;
+      problemText.textContent = (saved ? 'Entwurf gesichert, aber noch nicht veröffentlichbar: ' : 'Aktion fehlgeschlagen: ') + (error.message || String(error));
+      problem.dataset.code = error.code || 'editorial_error';
+      problem.dataset.scope = error.scope || 'save';
+      var details = error.details || error.data && error.data.details || {};
+      problem.dataset.path = details.path || '';
+      locate.hidden = !studio || !/^sections\[\d+\]/.test(problem.dataset.path);
+      setStatus(problemText.textContent);
+      if (studio) { studio.message(problemText.textContent); }
+    }
+    function clearFailure(scope) { if (problem.dataset.scope === (scope || 'save')) { problem.hidden = true; } }
+    function replaceWorkingCopy(copy) {
+      documentState = JSON.parse(JSON.stringify(copy.document));
+      Object.keys(identityFields).forEach(function (key) { if (identityFields[key]) { identityFields[key].value = copy[key] || ''; } });
+      Object.keys(config.documentBindings || {}).forEach(function (key) { var input = document.querySelector(config.documentBindings[key]); if (input) { input.value = documentState[key] || ''; } });
+      config.validationError = '';
+      recoveryPending = false;
+      clear(container.querySelector('.iss-editorial-recovery'));
+      root.inert = false; root.hidden = false; previewButton.disabled = false;
+      render(); updateField();
+    }
+    function requestState() {
+      var params = new window.URLSearchParams({ action: 'iss_editorial_save_preview_document', nonce: config.previewNonce, post_id: postId, format: format, intent: 'inspect' });
+      return window.issAdminRequest(config.ajaxUrl || window.ajaxurl, { method: 'POST', credentials: 'same-origin', body: params });
+    }
+    function compareVersions() {
+      compare.disabled = true;
+      requestState().then(function (payload) {
+        var state = payload.data;
+        var panel = createElement('section', 'iss-editorial-comparison');
+        panel.appendChild(createElement('p', '', 'Vergleichen Sie Ihre Änderungen mit dem Server. „Meine Fassung weiterbearbeiten“ ersetzt den dortigen privaten Entwurf. Die öffentliche Fassung ändert sich erst beim Aktualisieren.'));
+        [['Meine Änderungen', { title: identityFields.title && identityFields.title.value, excerpt: identityFields.excerpt && identityFields.excerpt.value, document: documentState }], ['Gespeicherte Fassung', state.canonical], ['Privater Entwurf auf dem Server', state.draft && state.draft.document ? state.draft : null]].forEach(function (item) {
+          if (!item[1]) { return; }
+          var details = createElement('details'); details.appendChild(createElement('summary', '', item[0]));
+          var text = createElement('textarea', 'widefat'); text.readOnly = true; text.rows = 10;
+          text.setAttribute('aria-label', item[0]); text.value = JSON.stringify({ title: item[1].title, excerpt: item[1].excerpt, document: item[1].document }, null, 2);
+          details.appendChild(text); panel.appendChild(details);
+        });
+        [['Meine Fassung weiterbearbeiten', null], ['Gespeicherte Fassung übernehmen', state.canonical], ['Server-Entwurf übernehmen', state.draft && state.draft.document ? state.draft : null]].forEach(function (choice, index) {
+          if (index === 2 && !choice[1]) { return; }
+          var button = createElement('button', 'button', choice[0]); button.type = 'button';
+          button.addEventListener('click', function () {
+            config.baseToken = state.baseToken;
+            var baseField = container.querySelector('.iss-editorial-base-field'); if (baseField) { baseField.value = state.baseToken; }
+            draftToken = state.draft && state.draft.token || ''; if (draftTokenField) { draftTokenField.value = draftToken; }
+            uncertainSave = null;
+            replaceWorkingCopy(choice[1] || {document:documentState,title:identityFields.title && identityFields.title.value,excerpt:identityFields.excerpt && identityFields.excerpt.value});
+            panel.remove(); clearFailure(); scheduleAutosave();
+          }); panel.appendChild(button);
+        });
+        var cancel = createElement('button', 'button', 'Abbrechen'); cancel.type = 'button'; cancel.addEventListener('click', function () { panel.remove(); }); panel.appendChild(cancel);
+        problem.appendChild(panel);
+      }).catch(reportFailure).finally(function () { compare.disabled = false; });
+    }
+    function openRepair() {
+      problem.hidden = false;
+      if (problem.querySelector('.iss-editorial-repair')) { return; }
+      var panel = createElement('section', 'iss-editorial-repair');
+      panel.appendChild(createElement('p', '', 'Die gespeicherten Daten bleiben erhalten. Prüfen Sie die betroffene Stelle. Die Korrektur wird vor der Übernahme geprüft; nichts wird automatisch veröffentlicht.'));
+      var input = createElement('textarea', 'widefat'); input.rows = 16; input.setAttribute('aria-label', 'Inhalt zur Reparatur');
+      input.value = config.validationError && config.rawDocument ? config.rawDocument : JSON.stringify(documentState, null, 2);
+      panel.appendChild(input);
+      var upload = createElement('input'); upload.type = 'file'; upload.accept = '.json,application/json'; upload.setAttribute('aria-label', 'Wiederherstellungskopie laden');
+      upload.addEventListener('change', function () {
+        if (!upload.files[0]) { return; }
+        upload.files[0].text().then(function (text) { input.value = text; }).catch(function () { reportFailure(new Error('Die Wiederherstellungskopie konnte nicht gelesen werden.')); });
+      }); panel.appendChild(upload);
+      if (documentState && Array.isArray(documentState.sections) && documentState.sections.every(function (section) { return section && sections[section.type]; }) && (!config.supportedVersions || config.supportedVersions.indexOf(documentState.schema_version) !== -1)) {
+        var useForm = createElement('button', 'button', 'Im Formular korrigieren'); useForm.type = 'button';
+        useForm.addEventListener('click', function () {
+          config.validationError = ''; root.inert = false; root.hidden = false; panel.remove(); render();
+        }); panel.appendChild(useForm);
+      }
+      var apply = createElement('button', 'button', 'Reparatur prüfen'); apply.type = 'button';
+      apply.addEventListener('click', function () {
+        var candidate;
+        var restoredCopy = null;
+        try {
+          candidate = JSON.parse(input.value);
+          if (candidate && candidate.document) {
+            if (Number(candidate.postId) !== postId) { throw new Error('wrong post'); }
+            if (candidate.route && (!routeStationEditor || !routeStationEditor.restoreCopy)) { throw new Error('route owner unavailable'); }
+            restoredCopy = candidate; candidate = candidate.rawDocument ? JSON.parse(candidate.rawDocument) : candidate.document;
+          }
+        } catch (_error) { reportFailure(new Error('Der Inhalt ist kein gültiges JSON oder gehört zu einer anderen Seite. Bitte die Eingabe korrigieren.')); return; }
+        apply.disabled = true;
+        queueSave('validate', candidate).then(function (validated) {
+          if (restoredCopy && restoredCopy.route) { routeStationEditor.restoreCopy(restoredCopy.route); }
+          replaceWorkingCopy({ document: validated, title: restoredCopy ? restoredCopy.title : identityFields.title && identityFields.title.value, excerpt: restoredCopy ? restoredCopy.excerpt : identityFields.excerpt && identityFields.excerpt.value });
+          panel.remove(); clearFailure(); scheduleAutosave();
+        }).catch(reportFailure).finally(function () { apply.disabled = false; });
+      });
+      panel.appendChild(apply);
+      var cancel = createElement('button', 'button', 'Abbrechen'); cancel.type = 'button'; cancel.addEventListener('click', function () { panel.remove(); }); panel.appendChild(cancel);
+      problem.appendChild(panel);
+      input.focus();
+    }
     var livePreview = null;
     var studio = null;
-    var pickers = window.issEditorialPickers.create({config: config, postId: postId, sections: sections, sectionEditor: sectionEditor, presentationValue: presentationValue, render: render, scheduleAutosave: scheduleAutosave, collectionCount: collectionCount, createElement: createElement, clear: clear, getStudio: function () { return studio; }});
+    var pickers = window.issEditorialPickers.create({config: config, reportFailure: reportFailure, postId: postId, sections: sections, sectionEditor: sectionEditor, presentationValue: presentationValue, render: render, scheduleAutosave: scheduleAutosave, collectionCount: collectionCount, createElement: createElement, clear: clear, getStudio: function () { return studio; }});
     var renderObjectPicker = pickers.renderObjectPicker;
     var renderMediaPicker = pickers.renderMediaPicker;
     var renderAlbumEditor = pickers.renderAlbumEditor;
@@ -186,7 +316,7 @@
       if (!studio) {
         clear(root);
         studio = window.issEditorialWorkspace(root, {
-          sections: sections, hidden: isSectionHidden, status: status, retry: retry, label: config.formatLabel,
+          sections: sections, hidden: isSectionHidden, status: status, retry: retry, failure: problem, label: config.formatLabel,
           orderNotice: config.orderNotice, format: format, publishing: config.publishing,
           select: function (index) { afterCanvasEdit(function () { selectWorkspace(index); }); },
           remove: function (index) { afterCanvasEdit(function () { removeSection(index); }); },
@@ -197,6 +327,7 @@
           sketch: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === resolvedTreatment(section); }); return treatmentSketch(choice || sectionConfig(section.type)); },
           treatmentLabel: function (section) { var choice = treatmentChoices(section.type).find(function (item) { return item.slug === resolvedTreatment(section); }); return choice ? choice.label : ''; }
         });
+        var restoreCopy = createElement('button', 'button', 'Sicherung wiederherstellen'); restoreCopy.type = 'button'; restoreCopy.addEventListener('click', openRepair); studio.menu.appendChild(restoreCopy);
         if (skins.length > 1) { studio.ownerBody.appendChild(renderSkinControl()); }
         if (config.railControl) { studio.ownerBody.appendChild(renderRailFeatureControl()); }
         if (Object.keys(config.identityPalettes || {}).length) { studio.ownerBody.appendChild(renderIdentityControl()); }
@@ -207,6 +338,12 @@
           var current = documentState.sections.indexOf(section);
           if (current >= 0) { afterCanvasEdit(function () { selectWorkspace(current, true); }); }
         }, {
+          failure: function (error) { error.scope='preview'; reportFailure(error); },
+          ready: function () { clearFailure('preview'); },
+          cancelEditing: function () {
+            canvasEdit = null; studio.editing(false);
+            if (studioSection) { selectWorkspace(documentState.sections.indexOf(studioSection), false); }
+          },
           field: receiveCanvasField,
           form: function (index, snapshot, message) {
             var current = snapshot ? documentState.sections.indexOf(snapshot.refs[index]) : -1;
@@ -672,7 +809,9 @@
           config: routeConfig,
           postId: postId,
           fields: routeFields,
-          setStatus: setStatus
+          setStatus: setStatus,
+          onFailure: function (error) { error.scope='route'; reportFailure(error); },
+          onRecovered: function () { clearFailure('route'); }
         });
       }
 
@@ -1740,17 +1879,19 @@
     }
 
     function render() {
+      if (config.validationError) { root.hidden = true; reportFailure(config.validation || new Error(config.validationError)); return; }
       documentState.sections = Array.isArray(documentState.sections) ? documentState.sections : [];
       documentState.deleted_sections = deletedSections();
       if (recoveryPending) { updateField(); return; }
       if (!window.issEditorialWorkspace || !window.issEditorialLivePreview) {
-        setStatus('Die Arbeitsfläche konnte nicht geladen werden. Bitte die Seite neu laden.');
+        reportFailure(new Error('Die Arbeitsfläche konnte nicht geladen werden. Bitte Änderungen herunterladen und die Seite neu laden.'));
         return;
       }
       renderWorkspace();
     }
 
     function saveRouteStationsIfDirty() {
+      if (sessionChanged) { var error = new Error(sessionMessage); reportFailure(error); return Promise.reject(error); }
       if (!routeStationEditor || !routeStationEditor.saveIfDirty) {
         return Promise.resolve();
       }
@@ -1803,27 +1944,18 @@
         if (identityFields[key]) { params.append(key, identityFields[key].value); }
       });
 
-      return window.fetch(saveUrl, {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        },
-        body: params.toString()
-      }).then(function (response) {
-        return response.json().then(function (payload) {
-          if (!response.ok || !payload || !payload.success) {
-            throw new Error(payload && payload.data && payload.data.message ? payload.data.message : 'preview failed');
-          }
+      return sendSave(params).then(function (payload) {
           if (intent === 'validate') { return payload.data.document; }
 
           draftToken = payload.data.draftToken || '';
           if (draftTokenField) { draftTokenField.value = draftToken; }
           lastSavedValue = snapshot;
           retry.hidden = true;
+          clearFailure();
           if (payload.data.validationMessage) {
             previewData = null;
             lastSavedStatus = 'Entwurf gesichert. Vor dem Veröffentlichen prüfen: ' + payload.data.validationMessage;
+            reportFailure(payload.data.validation || new Error(payload.data.validationMessage), true);
             setStatus(lastSavedStatus);
             if (studio) { studio.message('Entwurf gesichert. Bitte prüfen: ' + payload.data.validationMessage); }
             if (livePreview) { livePreview.fallback(config.previewUrl, 'saved:' + config.baseToken, 'Bitte prüfen: ' + payload.data.validationMessage); livePreview.reportSave('Entwurf gesichert. Bitte prüfen: ' + payload.data.validationMessage); }
@@ -1842,18 +1974,39 @@
           lastSavedStatus = intent === 'discard' ? 'Gespeicherte Fassung geladen.' : 'Entwurf gesichert · unveröffentlicht';
           setStatus(currentSaveValue() === snapshot ? lastSavedStatus : 'Weitere Änderungen werden gesichert …');
           return payload.data && payload.data.previewUrl ? payload.data.previewUrl : config.previewUrl;
-        });
+      });
+    }
+
+    function sendSave(params) {
+      params.set('nonce', config.previewNonce);
+      return window.issAdminRequest(config.ajaxUrl || window.ajaxurl, {
+        method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' }, body: params.toString()
+      }).then(function (payload) {
+        if (!payload.success || !payload.data) { throw Object.assign(new Error('Die Speicherbestätigung fehlt. Bitte erneut prüfen.'), {code:'invalid_response'}); }
+        uncertainSave = null;
+        return payload;
+      }).catch(function (error) {
+        if (['request_timeout', 'network_error', 'invalid_response'].indexOf(error.code) !== -1 && params.get('intent') !== 'validate') {
+          uncertainSave = new window.URLSearchParams(params.toString());
+        }
+        throw error;
       });
     }
 
     function queueSave(intent, candidate) {
-      if (sessionChanged) { return Promise.reject(new Error(sessionMessage)); }
       if (intent !== 'validate') { window.clearTimeout(autosaveTimer); }
-      if (recoveryPending || config.validationError) {
-        return Promise.reject(new Error(config.validationError || 'Bitte zuerst den vorhandenen Entwurf prüfen.'));
-      }
       saveChain = saveChain.catch(function () {}).then(function () {
         if (sessionChanged) { throw new Error(sessionMessage); }
+        if ((recoveryPending || config.validationError) && ['validate', 'discard'].indexOf(intent) === -1) {
+          throw new Error(config.validationError || 'Bitte zuerst den vorhandenen Entwurf prüfen.');
+        }
+        // Reconcile the exact uncertain request before sending newer local edits.
+        return uncertainSave ? sendSave(uncertainSave).then(function (payload) {
+          draftToken = payload.data.draftToken || '';
+          if (draftTokenField) { draftTokenField.value = draftToken; }
+        }) : null;
+      }).then(function () {
         updateField();
         if ((!intent || intent === 'autosave') && currentSaveValue() === lastSavedValue) {
           if (retry.hidden) { setStatus(lastSavedStatus); }
@@ -1863,10 +2016,10 @@
         return savePreviewDocument(intent, candidate);
       });
       return saveChain.catch(function (error) {
+        reportFailure(error, error.draftSaved);
         if (intent === 'validate' || error.draftSaved) { throw error; }
-        setStatus(error.message || 'Nicht gesichert. Bitte erneut versuchen.');
-        if (studio) { studio.message('Nicht gesichert: ' + error.message); }
         retry.hidden = false;
+        if (studio) { studio.message('Nicht gesichert: ' + error.message); }
         if (livePreview) { livePreview.stale('Vorschau nicht aktualisiert: ' + error.message); livePreview.reportSave('Nicht gesichert: ' + error.message); }
         throw error;
       });
@@ -1902,7 +2055,7 @@
         var fallbackUrl = previewUrlFromButton(button);
         event.preventDefault();
         if (recoveryPending || config.validationError) {
-          setStatus(config.validationError || 'Bitte zuerst den vorhandenen Entwurf prüfen.');
+          reportFailure(new Error(config.validationError || 'Bitte zuerst den vorhandenen Entwurf prüfen.'));
           return;
         }
         var previewWindow = window.open('', '_blank');
@@ -1922,6 +2075,7 @@
             status.appendChild(link);
           }
         }).catch(function (error) {
+          reportFailure(error);
           if (previewWindow) { previewWindow.close(); }
           setStatus(error && error.message ? error.message : ((config.strings && config.strings.previewError) || 'Die Vorschau konnte nicht vorbereitet werden.'));
         }).finally(function () {
@@ -1950,23 +2104,27 @@
         data['iss-editorial-user'] = config.userId;
       });
       window.wp.hooks.addAction('heartbeat.tick', 'iss-editorial/session', function (data) {
-        if (data['iss-editorial-session-changed']) {
+        var nonces = data['iss-editorial-nonces'];
+        if (nonces && !sessionChanged) {
+          config.previewNonce = nonces.preview; config.nonce = nonces.rest;
+          if (nonces.previewUrl) { config.previewUrl = nonces.previewUrl; }
+          if (window.issEditorialSetMediaPicker) { window.issEditorialSetMediaPicker.nonce = nonces.rest; }
+          var saveNonce = document.querySelector('[name="iss_editorial_nonce"]'); if (saveNonce) { saveNonce.value = nonces.save; }
+          if (routeStationEditor && routeStationEditor.refreshNonces) { routeStationEditor.refreshNonces(nonces); }
+        }
+        if (data['iss-editorial-session-changed'] || data['iss-editorial-session-expired']) {
           if (sessionChanged) { return; }
           sessionChanged = true;
+          if (data['iss-editorial-session-expired']) { sessionMessage = 'Die Sitzung ist abgelaufen. Bitte Änderungen herunterladen und die Anmeldung in einem neuen Fenster prüfen.'; }
+          reportFailure(new Error(sessionMessage));
           window.clearTimeout(autosaveTimer);
           window.clearTimeout(previewTimer);
           var oldDialog = document.getElementById('post-lock-dialog');
           if (oldDialog) { window.jQuery(oldDialog).hide(); }
-          var notice = createElement('p', 'notice notice-warning', sessionMessage + ' ');
-          notice.setAttribute('role', 'alert');
           var reopen = createElement('a', '', 'Seite neu öffnen');
           reopen.href = window.location.href;
-          notice.appendChild(reopen);
-          container.insertBefore(notice, container.firstChild);
-          setStatus(sessionMessage);
-          notice.tabIndex = -1;
-          notice.focus();
-          notice.scrollIntoView({ block: 'center' });
+          problem.appendChild(reopen);
+          problem.tabIndex = -1; problem.focus(); problem.scrollIntoView({block:'center'});
           return;
         }
         var lock = data['wp-refresh-post-lock'];
@@ -2033,6 +2191,12 @@
         render();
         var firstEdit = root.querySelector('.iss-editorial-outline__select');
         if (firstEdit) { firstEdit.focus(); }
+        if (stale) {
+          recoveryPending = true;
+          reportFailure(new Error('Der Entwurf basiert auf einer anderen gespeicherten Fassung. Bitte vor dem Sichern die Fassungen vergleichen.'));
+          compareVersions();
+          return;
+        }
         scheduleAutosave();
       });
       discard.addEventListener('click', function () {
@@ -2050,6 +2214,16 @@
       recovery.appendChild(discard);
     }
 
+    window.addEventListener('error', function (event) {
+      var file = event.filename || event.target && event.target.src || '';
+      if (/iss-editorial|iss-relations|iss-core|tinymce/.test(file)) {
+        reportFailure({scope:'runtime', code:'editorial_script_error', message:'Ein Editorfehler ist aufgetreten. Bitte Änderungen herunterladen und die Seite neu öffnen. ' + (event.message || 'Eine benötigte Datei konnte nicht geladen werden.')});
+      }
+    }, true);
+    window.addEventListener('unhandledrejection', function () {
+      reportFailure({scope:'runtime', code:'editorial_async_error', message:'Ein Hintergrundvorgang im Editor ist fehlgeschlagen. Bitte Änderungen herunterladen und die Seite neu öffnen. Der Fehler muss vor dem Weiterarbeiten geprüft werden.'});
+    });
+    var startup = container.querySelector('.iss-editorial-startup'); if (startup) { startup.hidden = true; }
     var form = container.closest('form');
     if (form) {
       form.addEventListener('submit', function (event) {
@@ -2057,11 +2231,11 @@
         event.preventDefault();
         event.stopImmediatePropagation();
         var submitter = event.submitter;
-        afterCanvasEdit(function () { queueSave('submit').then(function () {
+        afterCanvasEdit(function () { saveRouteStationsIfDirty().then(function () { return queueSave('submit'); }).then(function () {
           submitting = true;
           form.requestSubmit(submitter || undefined);
         }).catch(function (error) {
-          setStatus(error.message || 'Speichern nicht möglich. Bitte die Angaben prüfen.');
+          reportFailure(error);
           var target = recoveryPending ? container.querySelector('.iss-editorial-recovery') : status;
           target.tabIndex = -1;
           target.focus();
@@ -2070,7 +2244,7 @@
       }, true);
     }
     window.addEventListener('beforeunload', function (event) {
-      if (!submitting && currentSaveValue() !== lastSavedValue) {
+      if (!submitting && (currentSaveValue() !== lastSavedValue || uncertainSave || (routeStationEditor && routeStationEditor.isDirty && routeStationEditor.isDirty()))) {
         event.preventDefault();
         event.returnValue = '';
       }
@@ -2078,6 +2252,13 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    Array.prototype.forEach.call(document.querySelectorAll('.iss-editorial-admin'), initEditor);
+    Array.prototype.forEach.call(document.querySelectorAll('.iss-editorial-admin'), function (container) {
+      try { initEditor(container); } catch (error) {
+        var notice = createElement('div', 'iss-editorial-failure', 'Der Editor konnte nicht gestartet werden. Bitte diese Seite geöffnet lassen und den Fehler melden: ' + error.message);
+        notice.setAttribute('role', 'alert'); container.prepend(notice);
+        var raw = container.querySelector('.iss-editorial-document-field');
+        var copy = createElement('textarea', 'widefat'); copy.readOnly=true; copy.rows=10; copy.value=raw ? raw.value : config.rawDocument || ''; copy.setAttribute('aria-label','Gesicherter Inhalt zum Kopieren'); notice.appendChild(copy);
+      }
+    });
   });
 }());

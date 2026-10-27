@@ -88,6 +88,7 @@ function iss_editorial_render_main_canvas(WP_Post $post): void
 
     echo '<div class="iss-editorial-shell">';
     echo '<div class="iss-editorial-admin iss-editorial-admin--canvas" data-format="' . esc_attr($format_slug) . '" data-post-id="' . esc_attr((string) $post->ID) . '">';
+    echo '<p class="iss-editorial-startup notice notice-error" role="alert">' . esc_html__('Der Editor ist noch nicht bereit. Falls diese Meldung stehen bleibt, wurden benötigte Dateien nicht geladen. Bitte nicht speichern, sondern die Seite neu öffnen oder den Fehler melden. Die gespeicherten Inhalte bleiben erhalten.', 'iss-editorial') . '</p>';
     // Existing canvases stay enabled; this also opts a new auto-draft into the engine.
     echo '<input type="hidden" class="iss-editorial-enabled-field" name="iss_editorial[' . esc_attr($format_slug) . '][enabled]" value="1">';
     echo '<input type="hidden" class="iss-editorial-document-field" name="iss_editorial[' . esc_attr($format_slug) . '][document]" value="' . esc_attr($document_attribute) . '">';
@@ -327,6 +328,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'editor',
                 'heartbeat',
                 'wp-hooks',
+                'iss-admin-request',
                 'iss-editorial-rich-text',
                 'iss-editorial-live-preview',
                 'iss-editorial-workspace',
@@ -370,6 +372,8 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'draftToken' => (string) ($draft['token'] ?? ''),
                 'recovery' => $has_recovery ? $draft : null,
                 'validationError' => is_wp_error($validation) ? $validation->get_error_message() : '',
+                'validation' => is_wp_error($validation) ? ['code' => $validation->get_error_code(), 'message' => $validation->get_error_message(), 'details' => $validation->get_error_data()] : null,
+                'rawDocument' => (string) get_metadata_raw('post', $post_id, iss_editorial_get_document_meta_key($format['slug']), true),
                 'previewUrl' => iss_editorial_get_preview_url($post_id, (string) $format['slug']),
                 'canPurgeDeletedSections' => current_user_can('edit_post', $post_id) && current_user_can('delete_post', $post_id),
                 'pageChoices' => iss_editorial_get_page_link_choices(),
@@ -390,21 +394,41 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
 }
 add_action('admin_enqueue_scripts', 'iss_editorial_enqueue_admin_assets', 25);
 
+/** Keep the machine-readable cause and field path across the transport boundary. */
+function iss_editorial_send_error(WP_Error $error, int $status): void
+{
+    wp_send_json_error(['code' => $error->get_error_code(), 'message' => $error->get_error_message(), 'details' => $error->get_error_data()], $status);
+}
+
 function iss_editorial_ajax_save_preview_document(): void
 {
-    check_ajax_referer('iss_editorial_preview_document', 'nonce');
+    if (!check_ajax_referer('iss_editorial_preview_document', 'nonce', false)) {
+        iss_editorial_send_error(new WP_Error('editorial_session_expired', __('Die Sitzung ist abgelaufen. Bitte Ihre Änderungen herunterladen und die Anmeldung in einem neuen Fenster prüfen.', 'iss-editorial')), 403);
+    }
 
     $post_id = absint($_POST['post_id'] ?? 0);
     $format_slug = sanitize_key((string) ($_POST['format'] ?? ''));
     $document = isset($_POST['document']) ? wp_unslash((string) $_POST['document']) : '';
 
     if ($post_id <= 0 || $format_slug === '' || !current_user_can('edit_post', $post_id)) {
-        wp_send_json_error(['message' => __('Keine Berechtigung.', 'iss-editorial')], 403);
+        iss_editorial_send_error(new WP_Error('editorial_permission', __('Keine Berechtigung zum Bearbeiten dieses Inhalts.', 'iss-editorial')), 403);
     }
 
     $format = iss_editorial_get_format_for_post($post_id);
     if (!$format || (string) ($format['slug'] ?? '') !== $format_slug) {
-        wp_send_json_error(['message' => __('Ungültiges Format.', 'iss-editorial')], 400);
+        iss_editorial_send_error(new WP_Error('editorial_format', __('Das Inhaltsformat ist nicht mehr verfügbar. Bitte Änderungen herunterladen und die Seite neu öffnen.', 'iss-editorial')), 400);
+    }
+
+    if (($_POST['intent'] ?? '') === 'inspect') {
+        $post = get_post($post_id);
+        wp_send_json_success([
+            'baseToken' => iss_editorial_saved_token($post_id, $format_slug),
+            'canonical' => ['document' => iss_editorial_get_editor_document($post_id, $format_slug), 'title' => $post->post_title, 'excerpt' => $post->post_excerpt],
+            'draft' => iss_editorial_get_draft($post_id, $format_slug),
+        ]);
+    }
+    if (!iss_core_acquire_post_write_lock($post_id)) {
+        iss_editorial_send_error(new WP_Error('editorial_write_busy', __('Eine Speicherung läuft noch. Bitte kurz warten und erneut sichern.', 'iss-editorial')), 409);
     }
 
     $version = iss_editorial_check_edit_version(
@@ -414,18 +438,36 @@ function iss_editorial_ajax_save_preview_document(): void
         sanitize_text_field(wp_unslash((string) ($_POST['draft_token'] ?? '')))
     );
     if (is_wp_error($version)) {
-        wp_send_json_error(['message' => $version->get_error_message()], 409);
+        // A response can be lost after the autosave committed. A retry may only
+        // acknowledge that exact content, never adopt a different tab's work.
+        $draft = iss_editorial_get_draft($post_id, $format_slug);
+        if ($version->get_error_code() === 'editorial_draft_conflict' && ($_POST['intent'] ?? '') === 'discard' && !$draft) {
+            wp_send_json_success(['draftToken' => '']);
+        }
+        $decoded = json_decode($document, true);
+        $same = $version->get_error_code() === 'editorial_draft_conflict'
+            && !in_array($_POST['intent'] ?? '', ['discard', 'validate'], true)
+            && is_array($decoded) && $draft
+            && iss_editorial_recovery_document($decoded) === $draft['document']
+            && sanitize_text_field(wp_unslash((string) ($_POST['title'] ?? ''))) === $draft['title']
+            && wp_kses_post(wp_unslash((string) ($_POST['excerpt'] ?? ''))) === $draft['excerpt']
+            && (!empty($_POST['enabled']) || !empty($format['always_enabled'])) === $draft['enabled'];
+        if (!$same) { iss_editorial_send_error($version, 409); }
+        $validated = iss_editorial_validate_document($document, $format_slug);
+        wp_send_json_success(iss_editorial_draft_response($post_id, $format_slug, $draft, $validated));
     }
     if (($_POST['intent'] ?? '') === 'discard') {
         $draft = iss_editorial_get_draft($post_id, $format_slug);
         if ($draft) {
-            wp_delete_post_revision($draft['id']);
+            if (!wp_delete_post_revision($draft['id'])) {
+                iss_editorial_send_error(new WP_Error('editorial_discard_failed', __('Der Entwurf konnte nicht verworfen werden. Er bleibt erhalten.', 'iss-editorial')), 500);
+            }
         }
         wp_send_json_success(['draftToken' => '']);
     }
     $validated = iss_editorial_validate_document($document, $format_slug);
     if (($_POST['intent'] ?? '') === 'validate') {
-        if (is_wp_error($validated)) { wp_send_json_error(['message' => $validated->get_error_message()], 422); }
+        if (is_wp_error($validated)) { iss_editorial_send_error($validated, 422); }
         $stored = iss_editorial_decode_document(get_metadata_raw('post', $post_id, iss_editorial_get_document_meta_key($format_slug), true));
         $draft = iss_editorial_get_draft($post_id, $format_slug);
         // A validated restore may be edited immediately, before the next autosave.
@@ -443,7 +485,7 @@ function iss_editorial_ajax_save_preview_document(): void
     }
     $decoded = json_decode($document, true);
     if (!is_array($decoded) || !iss_editorial_supports_version($format, $decoded['schema_version'] ?? null) || !isset($decoded['sections']) || !is_array($decoded['sections']) || !array_is_list($decoded['sections'])) {
-        wp_send_json_error(['message' => is_wp_error($validated) ? $validated->get_error_message() : __('Der Entwurf konnte nicht gelesen werden.', 'iss-editorial')], 422);
+        iss_editorial_send_error(is_wp_error($validated) ? $validated : new WP_Error('editorial_invalid_schema', __('Der Entwurf konnte nicht gelesen werden.', 'iss-editorial')), 422);
     }
     $post_fields = [];
     foreach (['title', 'excerpt'] as $key) {
@@ -453,15 +495,20 @@ function iss_editorial_ajax_save_preview_document(): void
     }
     $draft = iss_editorial_save_draft($post_id, $format_slug, $decoded, !empty($_POST['enabled']), $post_fields);
     if (is_wp_error($draft)) {
-        wp_send_json_error(['message' => $draft->get_error_message()], 500);
+        iss_editorial_send_error($draft, 500);
     }
+    wp_send_json_success(iss_editorial_draft_response($post_id, $format_slug, $draft, $validated));
+}
 
-    wp_send_json_success([
+function iss_editorial_draft_response(int $post_id, string $format_slug, array $draft, $validated): array
+{
+    return [
         'previewUrl' => iss_editorial_get_preview_url($post_id, $format_slug),
         'draftToken' => $draft['token'],
         'savedAt' => $draft['modified'],
         'validationMessage' => is_wp_error($validated) ? $validated->get_error_message() : '',
-    ]);
+        'validation' => is_wp_error($validated) ? ['code' => $validated->get_error_code(), 'message' => $validated->get_error_message(), 'details' => $validated->get_error_data()] : null,
+    ];
 }
 add_action('wp_ajax_iss_editorial_save_preview_document', 'iss_editorial_ajax_save_preview_document');
 
@@ -501,7 +548,9 @@ function iss_editorial_save_meta_box(int $post_id): void
     }
     $draft = iss_editorial_get_draft($post_id, $format_slug);
     if ($draft) {
-        wp_delete_post_revision($draft['id']);
+        if (!wp_delete_post_revision($draft['id'])) {
+            wp_die(esc_html__('Der Inhalt wurde gespeichert, aber der private Entwurf konnte nicht aufgeräumt werden. Bitte die Fassungen beim nächsten Öffnen vergleichen.', 'iss-editorial'), '', ['response' => 500, 'back_link' => true]);
+        }
     }
 }
 add_action('save_post', 'iss_editorial_save_meta_box', 35, 1);

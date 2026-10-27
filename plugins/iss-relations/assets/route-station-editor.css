@@ -155,3 +155,14 @@
     justify-content: flex-start;
   }
 }
+
+.iss-relations-route-failure {
+  padding: 12px;
+  margin-block: 8px;
+  border-left: 4px solid #b32d2e;
+  background: #fcf0f1;
+}
+
+.iss-relations-route-failure[hidden] {
+  display: none;
+}

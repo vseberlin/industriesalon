@@ -41,10 +41,22 @@
     var destroyed = false;
     var editing = false;
     var waitingActions = [];
+    var finishTimer = null;
     function tell(data) { if (shown) { shown.contentWindow.postMessage(Object.assign({ token: shown.dataset.token }, data), window.location.origin); } }
     function afterEditing(action) {
       if (!editing) { action(); return; }
       waitingActions.push(action); tell({ type: 'iss-preview-field-finish' });
+      if (finishTimer) { return; }
+      finishTimer = window.setTimeout(function () {
+        finishTimer = null;
+        // Keep the last acknowledged text, never replay a pending publish action.
+        waitingActions = []; editing = false;
+        if (options.cancelEditing) { options.cancelEditing(); }
+        var message = 'Die Texteingabe in der Vorschau antwortet nicht. Die zuletzt übertragenen Änderungen bleiben erhalten. Bitte im Formular prüfen und die Aktion erneut ausführen.';
+        stale(message);
+        if (shown) { shown.remove(); shown = null; }
+        if (options.failure) { options.failure(new Error(message)); }
+      }, 5000);
     }
     function position() {
       if (shown && !editing && !(shown.issSnapshot && shown.issSnapshot.readOnly)) {
@@ -74,6 +86,7 @@
         if (event.data.type === 'iss-preview-field-start' && response.accepted) { editing = true; cancelPending(); }
         tell(Object.assign({ type: 'iss-preview-field-ack', session: event.data.session, sequence: event.data.sequence || 0 }, response));
         if (event.data.type === 'iss-preview-field-end' && response.accepted) {
+          window.clearTimeout(finishTimer); finishTimer = null;
           editing = false;
           var actions = waitingActions.splice(0); actions.forEach(function (action) { action(); });
         }
@@ -86,6 +99,7 @@
       if (shown) { shown.remove(); }
       shown = pending; pending = null; shown.hidden = false;
       position();
+      if (options.ready && !(shown.issSnapshot && shown.issSnapshot.notice)) { options.ready(); }
       previewStatus(shown.issSnapshot && shown.issSnapshot.notice || 'Vorschau aktuell', shown.issSnapshot && shown.issSnapshot.notice ? 'stale' : 'ready');
     }
     var sizing = document.createElement('style');
@@ -135,9 +149,12 @@
         pending.setAttribute('sandbox', 'allow-scripts allow-same-origin');
         pending.src = address.href; viewport.appendChild(pending);
         previewStatus('Vorschau wird geladen …', 'loading');
-        timer = window.setTimeout(function () { stale('Vorschau konnte nicht geladen werden. Erneut sichern.'); }, 12000);
+        timer = window.setTimeout(function () {
+          var message = 'Vorschau konnte nicht geladen werden. Ihre Formulareingaben bleiben erhalten. Bitte Vorschau aktualisieren.';
+          stale(message); if (options.failure) { options.failure(new Error(message)); }
+        }, 12000);
       },
-      destroy: function () { destroyed = true; cancelPending(); observer.disconnect(); window.removeEventListener('message', receive); }
+      destroy: function () { destroyed = true; window.clearTimeout(finishTimer); cancelPending(); observer.disconnect(); window.removeEventListener('message', receive); }
     };
   };
 })();

@@ -70,6 +70,10 @@
   --iss-kicker-accent: var(--iss-accent);
   --iss-kicker-color: var(--iss-surface-fg);
 
+  /* Upper bound for display headings; components retain their own smaller sizes. */
+  --iss-heading-fit-limit: 7rem;
+  --iss-heading-measure: 24ch;
+
   /* Effects. */
   --iss-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.24);
   --iss-transition: 0.2s ease;
@@ -116,4 +120,11 @@
   --iss-site-header-pad-bottom: 1rem;
   --iss-site-logo-size: 120px;
   --iss-site-logo-bottom: calc(var(--iss-site-header-pad-top) + var(--iss-site-logo-size));
+}
+
+@supports (font-size: 1cqi) {
+  :root {
+    /* A rem floor preserves text enlargement; cqi follows the actual copy column. */
+    --iss-heading-fit-limit: clamp(1.5rem, 11cqi, 7rem);
+  }
 }

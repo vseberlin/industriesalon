@@ -53,6 +53,7 @@
 }
 
 .iss-event-hero__copy {
+  container-type: inline-size;
   display: grid;
   gap: var(--iss-space-md);
   min-width: 0;
@@ -62,12 +63,12 @@
   margin: 0;
   color: var(--iss-heading-title-color);
   font-family: var(--wp--preset--font-family--plex, sans-serif);
-  font-size: var(--iss-event-title-size);
+  font-size: min(var(--iss-event-title-size), var(--iss-heading-fit-limit));
   font-weight: 650;
   line-height: 1.08;
   letter-spacing: -0.025em;
   text-wrap: balance;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .iss-event-hero__lede,
@@ -220,7 +221,7 @@
 .iss-event-next__heading h2 {
   margin: 0;
   color: var(--iss-surface-fg);
-  font-size: var(--iss-event-h2-size);
+  font-size: min(var(--iss-event-h2-size), var(--iss-heading-fit-limit));
 }
 
 .iss-event-main {
@@ -229,6 +230,7 @@
 }
 
 .iss-event-body__content {
+  container-type: inline-size;
   min-width: 0;
 }
 
@@ -263,7 +265,7 @@
 .iss-event-body__content :where(h2, .wp-block-heading) {
   margin-top: 1.3rem;
   color: var(--iss-heading-title-color);
-  font-size: var(--iss-event-h2-size);
+  font-size: min(var(--iss-event-h2-size), var(--iss-heading-fit-limit));
   line-height: 1.08;
   letter-spacing: 0;
   text-wrap: balance;
@@ -363,8 +365,8 @@
 }
 
 .iss-event-structured__title {
-  max-width: 18ch;
-  font-size: var(--iss-event-h2-size);
+  max-width: min(100%, var(--iss-heading-measure));
+  font-size: min(var(--iss-event-h2-size), var(--iss-heading-fit-limit));
   line-height: 1.04;
   letter-spacing: 0;
   text-wrap: balance;
@@ -773,7 +775,7 @@
 
 .iss-event-skin-typografisch .iss-event-structured__title {
   font-family: "IBM Plex Sans Condensed", "Arial Narrow", var(--wp--preset--font-family--plex, sans-serif);
-  font-size: var(--iss-event-h2-size);
+  font-size: min(var(--iss-event-h2-size), var(--iss-heading-fit-limit));
   font-weight: 900;
   line-height: 1;
   letter-spacing: 0;

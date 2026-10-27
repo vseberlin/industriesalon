@@ -130,6 +130,7 @@
 }
 
 .iss-ausstellung-hero__copy {
+  container-type: inline-size;
   display: grid;
   gap: 1rem;
 }
@@ -144,7 +145,7 @@
 .iss-ausstellung-hero__title {
   max-width: 20ch;
   color: var(--iss-ausstellung-light);
-  font-size: var(--iss-ausstellung-title);
+  font-size: min(var(--iss-ausstellung-title), var(--iss-heading-fit-limit));
   line-height: 0.9;
 }
 
@@ -265,9 +266,9 @@
 }
 
 .iss-ausstellung-editorial__section h2 {
-  max-width: 18ch;
+  max-width: min(100%, var(--iss-heading-measure));
   color: var(--iss-ausstellung-dark);
-  font-size: clamp(2rem, 3vw, 3.75rem);
+  font-size: min(clamp(2rem, 3vw, 3.75rem), var(--iss-heading-fit-limit));
   line-height: 1;
 }
 
@@ -476,9 +477,9 @@
 }
 
 .iss-ausstellung-intro__title {
-  max-width: 15ch;
+  max-width: min(100%, var(--iss-heading-measure));
   margin: 0;
-  font-size: clamp(2.6rem, 6vw, 6.5rem);
+  font-size: min(clamp(2.6rem, 6vw, 6.5rem), var(--iss-heading-fit-limit));
   line-height: 0.95;
 }
 
@@ -499,7 +500,7 @@
 
 .iss-ausstellung-station-nav h2 {
   margin-bottom: 1rem;
-  font-size: clamp(1.55rem, 2vw, 2.2rem);
+  font-size: min(clamp(1.55rem, 2vw, 2.2rem), var(--iss-heading-fit-limit));
 }
 
 .iss-ausstellung-station-nav ol {
@@ -539,7 +540,7 @@
 .iss-ausstellung-station h2,
 .iss-ausstellung-station h3 {
   max-width: 20ch;
-  font-size: var(--iss-ausstellung-h2);
+  font-size: min(var(--iss-ausstellung-h2), var(--iss-heading-fit-limit));
   line-height: 1.03;
 }
 
@@ -601,6 +602,7 @@
 }
 
 .iss-ausstellung-station__copy {
+  container-type: inline-size;
   box-sizing: border-box;
   align-self: center;
   display: grid;
@@ -812,7 +814,7 @@
 
 .iss-ausstellung-station--object .iss-archive-featured-object__title {
   color: var(--iss-ausstellung-light);
-  font-size: clamp(1.8rem, 2.4vw, 2.45rem);
+  font-size: min(clamp(1.8rem, 2.4vw, 2.45rem), var(--iss-heading-fit-limit));
 }
 
 .iss-ausstellung-station--object .iss-archive-featured-object__text,
@@ -894,7 +896,7 @@
 }
 
 .iss-ausstellung-conclusion h2 {
-  font-size: var(--iss-ausstellung-h2);
+  font-size: min(var(--iss-ausstellung-h2), var(--iss-heading-fit-limit));
   line-height: 1.03;
 }
 
@@ -946,7 +948,7 @@
 }
 
 .iss-ausstellung-more .iss-heading__title {
-  font-size: var(--iss-ausstellung-title);
+  font-size: min(var(--iss-ausstellung-title), var(--iss-heading-fit-limit));
   line-height: 1.03;
 }
 
@@ -1219,7 +1221,7 @@
 }
 
 .iss-ausstellung-care-album__note h2 {
-  font-size: var(--iss-ausstellung-h2);
+  font-size: min(var(--iss-ausstellung-h2), var(--iss-heading-fit-limit));
 }
 
 .iss-ausstellung-care-album__photo {

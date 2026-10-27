@@ -248,6 +248,8 @@ function iss_relations_get_route_station_editor_config(int $post_id): array
         'locked' => !$draft,
         'relations' => $draft ? (array) ($draft['relations'] ?? []) : $canonical,
         'canonical' => $canonical,
+        'canonicalHash' => iss_relations_route_relation_hash($canonical),
+        'draftToken' => iss_relations_route_draft_token($post_id),
         'draft' => $draft,
         'trash' => $draft ? (array) ($draft['trash'] ?? []) : [],
         'previewArgs' => function_exists('iss_relations_get_route_draft_preview_args')
@@ -594,7 +596,7 @@ function iss_relations_enqueue_admin_assets(string $hook_suffix): void
             wp_register_script(
                 'iss-relations-route-stations',
                 ISS_RELATIONS_URL . 'assets/route-station-editor.js',
-                [],
+                ['iss-admin-request'],
                 (string) filemtime($route_script_path),
                 true
             );
