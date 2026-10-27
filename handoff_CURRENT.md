@@ -12,8 +12,9 @@ PHP lint, PHPCS and PHPStan. Staging passed 278 read-only account checks and
 74 dashboard checks. Chrome as Anja verified notice Trash/edit controls, enabled
 Set review/promotion, JSON restore/purge/Update, newsletter Send now/Schedule,
 and direct Users denial. Homepages return 200 and services are healthy.
-Newsletter Sending exposed a separate missing subscriber table on staging;
-delivery is not verified. No subscriber data or table was created/imported.
+The historical newsletter draft 28 retains a recipient query for the former
+`eNY4952vQ_newsletter` table, causing a count error. The current `wp_newsletter`
+table exists. Delivery is not tested; no subscriber data or draft was changed.
 Owner-setup version `2026-10-27-editorial-operator-3` applied and verified with
 private before-images in the target backup directory `anja-access-20261027`.
 Accounts, passwords, sessions, assignments and other roles were preserved. No
@@ -21,7 +22,7 @@ content/media transfer or uploads artifact is required. Local main remains at
 `1861aa2` with pre-existing dirty work plus this release's source changes; release
 commits were isolated in `fix/anja-access-20261027` atop GitHub main. Do not reset
 or overwrite local work to synchronize it. The account fix is complete; the
-separate newsletter storage/delivery prerequisite is recorded in TODO.md.
+historical newsletter query issue is recorded in TODO.md.
 
 ## Anja's editorial dashboard — deployed 25 October 2026
 

@@ -22,8 +22,9 @@ be recovered from Git history.
 - Deployed on staging; 278 account and 74 dashboard checks plus Anja's Chrome
   session verified the controls. Passwords, sessions, assignments and other roles
   are unchanged; no existing content was deleted and no newsletter sent.
-  The Sending screen revealed a separate missing staging subscriber table;
-  actual delivery is unverified and tracked in TODO.md.
+  Historical draft 28 retains a recipient query using a former table prefix;
+  the current subscriber table exists. Its count error and untested delivery
+  are recorded in TODO.md; no newsletter data was changed.
 
 ## 2026-10-25 — Bestandskatalog and AI drafting template
 

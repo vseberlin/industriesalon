@@ -4,11 +4,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
-- Before testing newsletter delivery on staging, resolve the missing Newsletter
-  subscriber table through its owning setup/migration and the approved target
-  data policy. The Sending screen logs a missing-table error. Anja's permissions
-  and Send now/Schedule controls are verified; no message was sent, and no
-  subscriber data was copied or reconstructed during the account fix.
+- Before using historical newsletter draft 28 on staging, review/rebuild its
+  stored recipient query through the Newsletter owner: it references the former
+  `eNY4952vQ_newsletter` table, while the current `wp_newsletter` table exists.
+  The Sending screen therefore logs a recipient-count error. Anja's delivery
+  permissions and controls are verified; no draft/subscriber data was changed
+  and no message was sent during the account fix.
 
 - Before production, confirm the newsletter delivery supplier, processing and
   retention details, and complete authenticated consent admin/editor review.
