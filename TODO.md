@@ -4,6 +4,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
 
 ## Next
 
+- Before testing newsletter delivery on staging, resolve the missing Newsletter
+  subscriber table through its owning setup/migration and the approved target
+  data policy. The Sending screen logs a missing-table error. Anja's permissions
+  and Send now/Schedule controls are verified; no message was sent, and no
+  subscriber data was copied or reconstructed during the account fix.
+
 - Before production, confirm the newsletter delivery supplier, processing and
   retention details, and complete authenticated consent admin/editor review.
   Consent code/settings and local video previews are deployed to staging;

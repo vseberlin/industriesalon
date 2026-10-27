@@ -19,6 +19,11 @@ be recovered from Git history.
 - Capability version `2026-10-27-editorial-operator-3` uses existing owner-setup
   check/apply/verify with a private target before-image. No content, SQL export,
   uploads or template artifact is required; target accounts are preserved.
+- Deployed on staging; 278 account and 74 dashboard checks plus Anja's Chrome
+  session verified the controls. Passwords, sessions, assignments and other roles
+  are unchanged; no existing content was deleted and no newsletter sent.
+  The Sending screen revealed a separate missing staging subscriber table;
+  actual delivery is unverified and tracked in TODO.md.
 
 ## 2026-10-25 — Bestandskatalog and AI drafting template
 
