@@ -24,7 +24,7 @@ try {
     wp_set_current_user($user_id);
     foreach (iss_core_editorial_operator_grants() as $cap) { $assert(current_user_can($cap), 'Grant ' . $cap); }
     foreach (['manage_options', 'edit_posts', 'edit_users', 'list_users', 'activate_plugins',
-        'install_plugins', 'edit_theme_options', 'iss_send_newsletter', 'iss_delete_sets', 'iss_cleanup_data'] as $cap) {
+        'install_plugins', 'edit_theme_options', 'iss_cleanup_sets', 'iss_cleanup_data'] as $cap) {
         $assert(!current_user_can($cap), 'Deny ' . $cap);
     }
     foreach (iss_core_editorial_operator_revoked_capabilities() as $cap) {
@@ -40,8 +40,8 @@ try {
     foreach (iss_core_editorial_operator_post_types() as $type) {
         $object = get_post_type_object($type);
         $assert($object && current_user_can($object->cap->create_posts), 'Create ' . $type);
-        $assert(!current_user_can($object->cap->publish_posts), 'No publication ' . $type);
-        $assert(!current_user_can($object->cap->delete_posts), 'No deletion ' . $type);
+        $assert(current_user_can($object->cap->publish_posts), 'Publication ' . $type);
+        $assert(current_user_can($object->cap->delete_posts), 'Deletion ' . $type);
         wp_set_current_user($admin->ID);
         $id = wp_insert_post(['post_type' => $type, 'post_title' => 'Temporary operator fixture ' . wp_generate_password(8, false),
             'post_password' => wp_generate_password(), 'post_status' => $type === 'attachment' ? 'inherit' : 'publish', 'post_author' => $admin->ID], true);
@@ -49,7 +49,9 @@ try {
         $fixtures[] = $id;
         wp_set_current_user($user_id);
         $assert(current_user_can('edit_post', $id), 'Edit another author ' . $type);
-        $assert(!current_user_can('delete_post', $id), 'Deny object deletion ' . $type);
+        $assert(current_user_can('delete_post', $id), 'Delete another author published object ' . $type);
+        wp_update_post(['ID' => $id, 'post_status' => 'private']);
+        $assert(current_user_can('edit_post', $id) && current_user_can('delete_post', $id), 'Edit/delete another author private object ' . $type);
         $base = '/wp/v2/' . ($object->rest_base ?: $type);
         if (!$object->show_in_rest) { continue; }
         $response = $request('POST', $base . '/' . $id, ['title' => 'Edited temporary operator fixture']);
@@ -59,13 +61,36 @@ try {
         $assert($response->get_status() === 201, 'REST draft ' . $type . ': ' . wp_json_encode($response->get_data()));
         $created = $response->get_data()['id'];
         $fixtures[] = $created;
-        $assert($request('POST', $base . '/' . $created, ['status' => 'publish'])->get_status() === 403, 'REST publish denied ' . $type);
-        $assert($request('DELETE', $base . '/' . $created)->get_status() === 403, 'REST delete denied ' . $type);
+        $assert($request('POST', $base . '/' . $created, ['status' => 'publish'])->get_status() === 200, 'REST publish ' . $type);
         foreach (get_registered_meta_keys('post', $type) as $key => $meta) {
             if (!empty($meta['show_in_rest']) && !empty($meta['auth_callback'])) {
                 $assert(current_user_can('edit_post_meta', $created, $key), 'Metadata access ' . $type . '/' . $key);
             }
         }
+        $format = iss_editorial_get_format_for_post($created);
+        if ($format) {
+            $slug = $format['slug'];
+            $document = iss_editorial_get_empty_document($slug);
+            $document['deleted_sections'] = [['type' => 'retired_kind', 'title' => 'Permission fixture']];
+            $assert(iss_editorial_save_document($created, $slug, $document), 'JSON canonical save ' . $type);
+            $document['deleted_sections'] = [];
+            $assert(!is_wp_error(iss_editorial_save_draft($created, $slug, $document, true)), 'JSON purge autosave ' . $type);
+            $assert(iss_editorial_save_document($created, $slug, $document), 'JSON purge canonical save ' . $type);
+        }
+        $assert($request('DELETE', $base . '/' . $created)->get_status() === 200, 'REST trash ' . $type);
+        $assert($request('POST', $base . '/' . $created, ['status' => 'draft'])->get_status() === 200, 'REST restore ' . $type);
+    }
+    $set_request = new WP_REST_Request('POST', '/iss-content/v1/editorial-sets');
+    foreach (['create', 'edit', 'review', 'promote'] as $action) {
+        $assert(call_user_func('iss_content_editorial_sets_can_' . $action, $set_request), 'Sets permission ' . $action);
+    }
+    wp_set_current_user($admin->ID);
+    $outside = wp_insert_post(['post_type' => 'post', 'post_title' => 'Outside operator responsibilities', 'post_status' => 'draft']);
+    $fixtures[] = $outside;
+    wp_set_current_user($user_id);
+    $set_request->set_param('contextId', $outside);
+    foreach (['create', 'edit', 'review', 'promote'] as $action) {
+        $assert(!call_user_func('iss_content_editorial_sets_can_' . $action, $set_request), 'Sets deny out-of-scope context ' . $action);
     }
     foreach (['posts', 'video', 'blocks', 'templates', 'navigation'] as $route) {
         $assert($request('POST', '/wp/v2/' . $route, ['title' => 'Must not exist', 'status' => 'draft', 'slug' => 'operator-denied'])->get_status() === 403, 'Unlisted REST denied ' . $route);
@@ -73,12 +98,21 @@ try {
     foreach (['save', 'preview', 'create'] as $act) {
         $assert(iss_newsletter_editorial_request_allowed(['page' => 'newsletter_emails_composer', 'act' => $act]), 'Newsletter draft ' . $act);
     }
+    foreach (['send', 'schedule', 'test', 'continue', 'pause', 'abort', 'delete', 'delete_selected', 'template', 'html', 'change-private'] as $act) {
+        $assert(iss_newsletter_editorial_request_allowed(['page' => 'newsletter_emails_edit', 'act' => $act]), 'Newsletter allowed ' . $act);
+    }
+    foreach (['tnpc_test', 'tnpc_test_raw_html', 'tnpc_regenerate_email'] as $action) {
+        $assert(iss_newsletter_editorial_request_allowed(['action' => $action]), 'Newsletter AJAX allowed ' . $action);
+    }
+    $assert(!iss_newsletter_editorial_request_allowed(['action' => 'tnp']), 'Generic Newsletter AJAX denied');
+    foreach (['newsletter_main_main', 'newsletter_users_index', 'newsletter_subscription_options'] as $page) {
+        $assert(!iss_newsletter_editorial_request_allowed(['page' => $page, 'act' => 'save']), 'Newsletter administration denied ' . $page);
+    }
+    wp_get_current_user()->add_cap('iss_send_newsletter', false);
     foreach (['send', 'schedule', 'test', 'continue', 'delete', 'delete_selected'] as $act) {
-        $assert(!iss_newsletter_editorial_request_allowed(['page' => 'newsletter_emails_edit', 'act' => $act]), 'Newsletter denied ' . $act);
+        $assert(!iss_newsletter_editorial_request_allowed(['page' => 'newsletter_emails_edit', 'act' => $act]), 'Draft-only fallback denies ' . $act);
     }
-    foreach (['tnpc_test', 'tnpc_test_raw_html', 'tnp', 'tnpc_regenerate_email'] as $action) {
-        $assert(!iss_newsletter_editorial_request_allowed(['action' => $action]), 'Newsletter AJAX denied ' . $action);
-    }
+    $assert(!iss_newsletter_editorial_request_allowed(['action' => 'tnpc_test']), 'Draft-only fallback denies test mail');
     $assert($mail_attempts === 0, 'No mail attempted');
 } finally {
     wp_set_current_user($admin->ID);

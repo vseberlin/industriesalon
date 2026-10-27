@@ -12,7 +12,7 @@ if (!defined('ABSPATH')) {
 define('ISS_CORE_VERSION', '0.1.0');
 define('ISS_CORE_FILE', __FILE__);
 define('ISS_CORE_PATH', plugin_dir_path(__FILE__));
-define('ISS_CORE_CAPS_VERSION', '2026-10-23-editorial-operator-2');
+define('ISS_CORE_CAPS_VERSION', '2026-10-27-editorial-operator-3');
 define('ISS_CORE_CAPS_OPTION', 'iss_caps_version');
 define('ISS_CORE_OPERATIONS_MENU_SLUG', 'iss-operations');
 
@@ -129,7 +129,8 @@ function iss_core_default_capability_definitions(): array
             $definitions[$capability] = ['label' => $capability, 'owner' => 'iss-core'];
         }
     }
-    foreach (['edit_pages', 'edit_others_pages', 'edit_private_pages', 'edit_published_pages', 'read_private_pages'] as $capability) {
+    foreach (['edit_pages', 'edit_others_pages', 'edit_private_pages', 'edit_published_pages', 'read_private_pages',
+        'publish_pages', 'delete_pages', 'delete_others_pages', 'delete_private_pages', 'delete_published_pages'] as $capability) {
         $definitions[$capability] = ['label' => $capability, 'owner' => 'wordpress'];
     }
     return $definitions;

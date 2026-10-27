@@ -30,13 +30,15 @@ function iss_core_editorial_operator_grants(): array
         'read', 'upload_files', 'iss_assign_editorial_terms', 'iss_access_operations', 'iss_manage_hinweise',
         'iss_manage_publications', 'iss_manage_steuerung',
         'iss_manage_requests', 'iss_read_sets', 'iss_create_sets', 'iss_edit_sets',
+        'iss_review_sets', 'iss_promote_media', 'iss_delete_sets',
         'iss_sync_external_sources',
-        'iss_manage_newsletter_content',
+        'iss_manage_newsletter_content', 'iss_send_newsletter',
     ];
     $plurals = ['pages', 'projekte', 'iss_notices', 'register_places', 'publications', 'rueckblicke'];
     foreach (iss_core_editorial_capability_types() as $types) { $plurals[] = $types[1]; }
     foreach ($plurals as $plural) {
-        foreach (['edit_', 'edit_others_', 'edit_private_', 'edit_published_', 'read_private_'] as $prefix) {
+        foreach (['edit_', 'edit_others_', 'edit_private_', 'edit_published_', 'read_private_',
+            'publish_', 'delete_', 'delete_others_', 'delete_private_', 'delete_published_'] as $prefix) {
             $caps[] = $prefix . $plural;
         }
         if ($plural !== 'pages') { $caps[] = 'create_' . $plural; }
@@ -132,7 +134,7 @@ function iss_core_editorial_dashboard_cards(): array
         ISS_CORE_OPERATIONS_MENU_SLUG => __('Hinweise, Orte, Buchungen, Bilder-Sets und weitere Betriebsbereiche öffnen.', 'iss-core'),
         'edit.php?post_type=entity_profile' => __('Personen und Organisationen vorstellen und ihre Profile pflegen.', 'iss-core'),
         'edit.php?post_type=publication' => __('Publikationen anlegen und ihre Beschreibungen bearbeiten.', 'iss-core'),
-        'newsletter_main_index' => __('Newsletter-Entwürfe erstellen und bearbeiten.', 'iss-core'),
+        'newsletter_main_index' => __('Newsletter erstellen, bearbeiten und versenden.', 'iss-core'),
     ];
     $cards = [];
     foreach ($menu as $item) {

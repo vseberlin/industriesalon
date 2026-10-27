@@ -953,7 +953,7 @@ function iss_editorial_write_document_meta(int $post_id, array $values): bool
 /** Editors can restore trash, while permanent removal requires the same capability as the UI. */
 function iss_editorial_check_trash_removal(int $post_id, string $format_slug, array $document)
 {
-    if (current_user_can('manage_options')) { return true; }
+    if (current_user_can('edit_post', $post_id) && current_user_can('delete_post', $post_id)) { return true; }
     $stored = iss_editorial_decode_document(get_metadata_raw('post', $post_id, iss_editorial_get_document_meta_key($format_slug), true));
     $draft = iss_editorial_get_draft($post_id, $format_slug);
     foreach ([$stored, $draft['document'] ?? []] as $before) {
@@ -979,7 +979,7 @@ function iss_editorial_check_trash_removal(int $post_id, string $format_slug, ar
                     }
                 }
             }
-            return new WP_Error('editorial_trash_permission', __('Gelöschte Abschnitte dürfen nur von Administrator:innen endgültig entfernt werden. Bitte wiederherstellen oder im Papierkorb behalten.', 'iss-editorial'));
+            return new WP_Error('editorial_trash_permission', __('Zum endgültigen Entfernen gelöschter Abschnitte ist die Berechtigung zum Bearbeiten und Löschen dieses Inhalts erforderlich. Bitte wiederherstellen oder im Papierkorb behalten.', 'iss-editorial'));
         }
     }
     return true;

@@ -71,7 +71,8 @@ try {
         $assert(str_contains($html, esc_url($card['url'])), 'Rendered destination for ' . $card['title']);
         $assert(str_contains($html, esc_html($card['description'])), 'Rendered description for ' . $card['title']);
     }
-    foreach (['manage_options', 'list_users', 'activate_plugins', 'update_core', 'iss_send_newsletter'] as $cap) {
+    $assert(current_user_can('iss_send_newsletter'), 'Newsletter delivery belongs to editorial responsibilities');
+    foreach (['manage_options', 'list_users', 'activate_plugins', 'update_core'] as $cap) {
         $assert(!current_user_can($cap), 'Privilege stays denied: ' . $cap);
     }
     foreach (['administrator', 'iss_project_uat'] as $role) {

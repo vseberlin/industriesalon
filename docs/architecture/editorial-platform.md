@@ -603,7 +603,8 @@ saves still use normal strict validation and revision capture. The validation
 response attaches a transient `restored_from` fingerprint for the original trash
 record, allowing an ordinary editor to edit it immediately before saving. Private
 recovery retains this proof; canonical sanitation removes it. Canonical, autosave
-and native preflight paths reject permanent trash removal without `manage_options`
+and native preflight paths require both `edit_post` and `delete_post` for the parent
+content before permanent trash removal,
 unless the corresponding section is restored. Native preflight and metadata saves
 also require the submitted `post_ID` to match, isolating cascaded post updates.
 

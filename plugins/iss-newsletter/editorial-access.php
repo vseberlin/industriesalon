@@ -1,5 +1,5 @@
 <?php
-/** Adapt the upstream role switch to draft-only editorial access. */
+/** Bound upstream access to editorial pages and explicit delivery capabilities. */
 if (!defined('ABSPATH')) { exit; }
 
 function iss_newsletter_is_editorial_operator(): bool
@@ -29,7 +29,9 @@ function iss_newsletter_editorial_request_allowed(array $request): bool
     $action = (string) ($request['action'] ?? '');
     $na = (string) ($request['na'] ?? '');
     $act = (string) ($request['act'] ?? '');
+    $can_send = current_user_can('iss_send_newsletter');
     if (str_starts_with($action, 'tnp') || str_starts_with($action, 'newsletter')) {
+        if ($can_send && in_array($action, ['tnpc_test', 'tnpc_test_raw_html', 'tnpc_regenerate_email'], true)) { return true; }
         return in_array($action, ['tnpc_options', 'tnpc_get_all_presets', 'tnpc_get_preset',
             'tnpc_render', 'tnpc_preview', 'tnpc_css', 'tnpc_block_form'], true);
     }
@@ -37,8 +39,13 @@ function iss_newsletter_editorial_request_allowed(array $request): bool
         'emails-version-preview', 'emails-preview-text', 'emails-create', 'v', 'view'], true)) { return false; }
     if (str_starts_with($page, 'newsletter_') && !in_array($page, iss_newsletter_editorial_pages(), true)) { return false; }
     if (!str_starts_with($page, 'newsletter_') && $na === '') { return true; }
-    if (!in_array($act, ['', 'save', 'next', 'preview', 'reset', 'create', 'refresh', 'copy', 'search'], true)) { return false; }
-    if ($act !== '' && !empty($request['id'])) {
+    $allowed = ['', 'save', 'next', 'preview', 'reset', 'create', 'refresh', 'copy', 'search'];
+    if ($can_send) {
+        $allowed = array_merge($allowed, ['send', 'schedule', 'test', 'continue', 'pause', 'abort',
+            'delete', 'delete_selected', 'template', 'html', 'change-private']);
+    }
+    if (!in_array($act, $allowed, true)) { return false; }
+    if (!$can_send && $act !== '' && !empty($request['id'])) {
         // @phpstan-ignore-next-line -- Optional upstream Newsletter plugin owns this API.
         $email = Newsletter::instance()->get_email(absint($request['id']));
         if (!$email || !in_array($email->status, ['new', 'draft'], true)) { return false; }
@@ -50,14 +57,14 @@ add_action('init', static function (): void {
     if (!iss_newsletter_is_editorial_operator()) { return; }
     // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Additional denial gate; upstream validates action nonces.
     if (!iss_newsletter_editorial_request_allowed(wp_unslash($_REQUEST))) {
-        wp_die(esc_html__('Dieses Konto darf Newsletter-Entwürfe bearbeiten, aber nicht versenden oder löschen.', 'iss-newsletter'), '', ['response' => 403]);
+        wp_die(esc_html__('Dieses Konto hat keine Berechtigung für diese Newsletter-Aktion.', 'iss-newsletter'), '', ['response' => 403]);
     }
 }, 0);
 
 add_action('admin_menu', static function (): void {
     if (!iss_newsletter_is_editorial_operator()) { return; }
     global $submenu;
-    // Upstream retains hidden editor routes; only expose the draft workflow.
+    // Upstream retains hidden editor routes; expose only the editorial workflow.
     $submenu['newsletter_main_index'] = [
         [__('Newsletter', 'iss-newsletter'), 'iss_manage_newsletter_content', 'newsletter_emails_index', __('Newsletter', 'iss-newsletter')],
         [__('Neu erstellen', 'iss-newsletter'), 'iss_manage_newsletter_content', 'admin.php?page=newsletter_emails_composer', __('Neuer Newsletter', 'iss-newsletter')],

@@ -4,6 +4,22 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-27 — Full editorial operator responsibilities
+
+- Expanded the existing role from draft editing to create/edit/publish/delete in
+  its established content areas, including other authors and private content.
+  Bilder-Sets now includes review, promotion and deletion capabilities.
+- JSON section purging follows parent edit/delete permissions in both the UI and
+  canonical/autosave paths, using native WordPress object capabilities.
+- Newsletter sending, scheduling, testing, pause/resume/cancel and deletion use
+  the existing delivery capability. Draft-only accounts and blocked subscriber,
+  configuration, archive and technical administration remain bounded.
+- Local checks: 517 operator, 43 editor recovery and 74 dashboard assertions;
+  PHP lint, PHPCS and PHPStan. Fixtures removed, no mail sent.
+- Capability version `2026-10-27-editorial-operator-3` uses existing owner-setup
+  check/apply/verify with a private target before-image. No content, SQL export,
+  uploads or template artifact is required; target accounts are preserved.
+
 ## 2026-10-25 — Bestandskatalog and AI drafting template
 
 - Added `docs/vorstand/bestand.md`, a German capability catalog derived from the

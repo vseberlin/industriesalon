@@ -1,5 +1,18 @@
 # Current handoff — 23 October 2026
 
+## Anja full editorial access — prepared 27 October 2026
+
+The existing editorial operator now supports publishing/deletion, Bilder-Sets
+review/promotion/deletion, JSON section purge through parent edit/delete rights,
+and newsletter delivery as requested. Existing administrative exclusions remain.
+Local checks passed: 517 operator, 43 recovery and 74 dashboard assertions,
+PHPCS/PHPStan and PHP lint. Target is staging account `anja.meyer` (340); no mail
+is sent by verification. Apply owner-setup version
+`2026-10-27-editorial-operator-3` using a private target before-image, then verify
+account/role preservation and authenticated controls. No content/media transfer.
+Release is isolated from unrelated dirty local files and starts at current
+GitHub main; the main local worktree remains dirty and has not been pulled.
+
 ## Anja's editorial dashboard — deployed 25 October 2026
 
 Code `e9d9f12` is deployed locally and through GitHub main to staging. Dashboard

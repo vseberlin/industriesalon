@@ -12,7 +12,7 @@ Work that depends on editor or user-acceptance feedback.
 The `iss_editorial_operator` role used by Anja opens the native Dashboard after
 login. Its standard widgets are replaced by menu cards with short German
 descriptions and links. Labels, order, available sections and destinations come
-from the current permitted WordPress menu, including the Newsletter draft
+from the current permitted WordPress menu, including the Newsletter
 submenu. Dashboard does not link to itself. Personal Profile stays outside the
 sidebar and remains available through the account toolbar.
 
@@ -26,6 +26,19 @@ Run `wp eval-file tests/e2e/bin/editorial-dashboard.php --use-include` for read-
 menu, widget, destination and role-preservation checks. The CLI may omit upstream
 Newsletter admin registration; verify its card and destination in Anja's existing
 browser session, along with dashboard navigation and desktop/mobile layout.
+
+The editorial operator has full create/edit/publish/delete access within its
+existing content areas, including other authors' published and private content.
+Bilder-Sets includes review, media promotion and deletion. JSON section trash
+uses the parent content's edit/delete permissions in both the UI and save paths.
+Newsletter authoring, deletion, test delivery, sending, scheduling and delivery
+pause/resume/cancel use `iss_send_newsletter`; accounts without it remain draft-only.
+Subscriber administration, technical settings, archive curation, register tools,
+fallback tools and bulk cleanup remain outside this role. Run the isolated
+`tests/e2e/bin/editorial-operator.php` harness locally; it never sends mail.
+Deploy capability version `2026-10-27-editorial-operator-3` through the existing
+owner-setup `check|apply|verify` migration with a private target before-image.
+No content/media transfer or uploads artifact is required.
 
 ## Project Dossier Authoring
 

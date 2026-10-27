@@ -371,7 +371,7 @@ function iss_editorial_enqueue_admin_assets(string $hook): void
                 'recovery' => $has_recovery ? $draft : null,
                 'validationError' => is_wp_error($validation) ? $validation->get_error_message() : '',
                 'previewUrl' => iss_editorial_get_preview_url($post_id, (string) $format['slug']),
-                'canPurgeDeletedSections' => current_user_can('manage_options'),
+                'canPurgeDeletedSections' => current_user_can('edit_post', $post_id) && current_user_can('delete_post', $post_id),
                 'pageChoices' => iss_editorial_get_page_link_choices(),
                 'sections' => (array) $format['sections'],
                 'skins' => iss_editorial_get_format_skins((string) $format['slug']),

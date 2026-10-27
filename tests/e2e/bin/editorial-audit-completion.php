@@ -64,7 +64,8 @@ try {
     $assert(!is_wp_error($editor), 'Disposable ordinary editor created');
     wp_set_current_user($editor);
     $user = wp_get_current_user(); foreach (['edit_posts', 'edit_others_posts', 'edit_published_posts'] as $cap) { $user->add_cap(get_post_type_object('projekt')->cap->$cap); }
-    $assert(current_user_can('edit_post', $id) && !current_user_can('manage_options'), 'Fixture editor can edit but cannot purge');
+    $user->add_cap(get_post_type_object('projekt')->cap->delete_others_posts, false);
+    $assert(current_user_can('edit_post', $id) && !current_user_can('delete_post', $id) && !current_user_can('manage_options'), 'Fixture editor can edit but cannot delete this post');
     $purged = $valid; $purged['deleted_sections'] = [];
     $assert(!iss_editorial_save_document($id, 'projekt', $purged) && is_wp_error(iss_editorial_save_draft($id, 'projekt', $purged, true)), 'Canonical and private purge both enforce server permission');
     $restored = $valid; $restored['deleted_sections'] = [$opaque]; $restored['sections'][] = $deleted;
