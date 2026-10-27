@@ -1,5 +1,15 @@
 # Current handoff — 23 October 2026
 
+## Elektropolis legacy draft repair — prepared 27 October 2026
+
+The tour's edit/delete permissions pass. Its private v1 draft contains unsupported
+old layout wrappers, so validation holds the preview on the saved version.
+Legacy basic text fields now expose the existing explicit simplification control
+and constrain pasted/edited text to their server contract. Local DOM and PHP
+checks pass; deploy and verify repair in Anja's existing session. Preserve all
+other draft edits and the canonical/public tour. Private before-image is in the
+staging backup directory `elektropolis-20261027`; no schema/role/uploads migration.
+
 ## Anja full editorial access — deployed 27 October 2026
 
 Code `bec7f49` is on GitHub main and staging. Anja's existing role now supports

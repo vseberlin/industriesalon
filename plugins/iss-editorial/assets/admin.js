@@ -292,6 +292,7 @@
     }
 
     function textProfile(type, fieldName) {
+      if (documentState.schema_version < 2 && fieldName === 'body' && sectionConfig(type).legacy_body_policy === 'basic') { return 'basic'; }
       return documentState.schema_version >= 2 ? (sectionConfig(type).rich_text || {})[fieldName] || '' : '';
     }
 

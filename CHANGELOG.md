@@ -4,6 +4,23 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-27 — Legacy tour text editing and repair
+
+- Elektropolis's private version-1 draft contained old column-layout wrappers.
+  Loss protection correctly rejected them, but the editor used unrestricted
+  legacy text controls and offered no explicit repair. The saved preview stayed
+  unchanged even after section insertion/removal.
+- The editor now follows each section's existing `legacy_body_policy=basic`:
+  it offers the existing formatting simplification control for retained invalid
+  markup and constrains new paste/edit output. Nested layout wrappers unwrap
+  without creating nested paragraphs. Text, safe links and document version stay
+  within the existing contract; server validation remains strict.
+- Validation: 110 DOM tests including legacy repair/paste/add/trash/undo,
+  275 PHP legacy-body checks, targeted ESLint and JavaScript syntax checks.
+- Code requires no schema, role or uploads migration. The current staging draft
+  has a private mode-0600 before-image; any repair stays private and never updates
+  the public tour. No private content artifact belongs on GitHub.
+
 ## 2026-10-27 — Full editorial operator responsibilities
 
 - Expanded the existing role from draft editing to create/edit/publish/delete in

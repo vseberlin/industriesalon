@@ -29,6 +29,8 @@
       if (['script', 'style', 'iframe', 'object'].indexOf(tag) !== -1) { return; }
       tag = ({ b: 'strong', i: 'em', div: 'p' })[tag] || tag;
       var keep = allowed.indexOf(tag) !== -1 && (tag !== 'a' || safeHref(node.getAttribute('href')));
+      // Legacy layout wrappers must not turn existing paragraphs into nested paragraphs.
+      if (profile === 'basic' && node.nodeName.toLowerCase() === 'div' && node.querySelector('p,div,ul,ol')) { keep = false; }
       var element = keep ? document.createElement(tag) : target;
       if (keep && tag === 'a') {
         element.setAttribute('href', node.getAttribute('href').trim());
@@ -47,7 +49,9 @@
   }
   function hasUnsupportedMarkup(value, profile) {
     var template = document.createElement('template'); template.innerHTML = value || '';
-    var allowed = ['strong', 'b', 'em', 'i', 'br', 'span'];
+    var allowed = ['strong', 'em', 'br'];
+    if (profile !== 'basic') { allowed.push('span', 'b', 'i'); }
+    if (profile === 'basic') { allowed.push('p', 'ul', 'ol', 'li'); }
     if (profile === 'block') { allowed.push('p', 'div', 'ul', 'ol', 'li'); }
     if (profile !== 'inline-card') { allowed.push('a'); }
     return Array.from(template.content.querySelectorAll('*')).some(function (node) {
@@ -56,8 +60,8 @@
       return Array.from(node.attributes).some(function (attr) {
         if (tag === 'span' && attr.name === 'class') { return Array.from(node.classList).some(function (name) { return !permittedMark(name); }); }
         if (tag === 'a' && attr.name === 'href') { return !safeHref(attr.value); }
-        if (tag === 'a' && attr.name === 'target') { return attr.value !== '_blank'; }
-        if (tag === 'a' && attr.name === 'rel') { return !/^(noopener|noreferrer)( (noopener|noreferrer))?$/.test(attr.value); }
+        if (tag === 'a' && attr.name === 'target') { return profile === 'basic' || attr.value !== '_blank'; }
+        if (tag === 'a' && attr.name === 'rel') { return profile === 'basic' || !/^(noopener|noreferrer)( (noopener|noreferrer))?$/.test(attr.value); }
         return true;
       });
     });
@@ -67,7 +71,7 @@
     node.addEventListener('click', action); return node;
   }
   function configure(options) {
-    if (options.profile === 'legacy') { return {
+    if (options.profile === 'legacy' || options.profile === 'basic') { var settings = {
             wpautop: true,
             menubar: false,
             statusbar: false,
@@ -82,7 +86,7 @@
                 { text: 'Link entfernen', icon: 'unlink', onclick: function () { editor.execCommand('unlink'); } },
                 { text: 'Formatierung entfernen', icon: 'removeformat', onclick: function () { editor.execCommand('RemoveFormat'); } }
               ] });
-              editor.on('input change undo redo', function () { options.onChange(editor.getContent()); });
+              editor.on('input change undo redo', function () { options.onChange(options.profile === 'basic' ? sanitize(editor.getContent(), 'basic') : editor.getContent()); });
               editor.on('blur', options.onBlur);
               editor.on('keydown', function (event) {
                 if (event.key === 'Escape') {
@@ -92,7 +96,15 @@
                 }
               });
             }
-          }; }
+          };
+      if (options.profile === 'basic') {
+        settings.valid_elements = 'p,br,strong/b,em/i,ul,ol,li,a[href]';
+        settings.paste_as_text = false;
+        settings.paste_remove_styles = true;
+        settings.paste_preprocess = function (_plugin, args) { args.content = sanitize(args.content, 'basic'); };
+      }
+      return settings;
+    }
     options.wrapper.classList.add('iss-editorial-text-controls');
     var profile = options.profile;
     var palette = options.palette || [];

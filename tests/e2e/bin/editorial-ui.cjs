@@ -498,6 +498,45 @@ test('Unsupported imported markup remains intact until the author explicitly sim
   } finally { e.dom.window.close(); }
 });
 
+for (const format of ['fuehrung', 'renamed_legacy_owner']) {
+  test(format + ': v1 basic bodies expose explicit repair and constrain new pasted markup', async () => {
+    const original = '<div id="old-column" class="col"><div class="col-inner"><p>Tour <strong>history</strong>.</p><p><a href="/group/">Group tour</a></p></div></div>';
+    const trash = [{type:'retired',body:'<div>Keep recovery exactly</div>'}];
+    const e = await editor(format, {sections:{kapitel:{label:'Text',supports:[],legacy_body_policy:'basic',rich_text:{body:'block'}}},document:{schema_version:1,sections:[{type:'kapitel',body:original}],deleted_sections:trash}});
+    try {
+      await e.settle();
+      assert.equal(e.rich.length, 0, 'Do not silently rewrite existing legacy markup');
+      assert.equal(e.value().sections[0].body, original);
+      assert.ok(e.root.querySelector('textarea[readonly]'));
+      e.button('Formatierung vereinfachen').click();
+      const clean = '<p>Tour <strong>history</strong>.</p><p><a href="/group/">Group tour</a></p>';
+      assert.equal(e.value().sections[0].body, clean, 'Drop obsolete layout wrappers without nested paragraphs or lost prose/links');
+      assert.equal(e.value().schema_version, 1);
+      assert.deepEqual(e.value().deleted_sections, trash);
+      const settings = e.rich[0].options.tinymce;
+      assert.equal(settings.valid_elements, 'p,br,strong/b,em/i,ul,ol,li,a[href]');
+      const pasted = {content:original}; settings.paste_preprocess(null,pasted);
+      assert.equal(pasted.content, clean);
+      const rich = e.window.issEditorialRichText;
+      assert.equal(rich.hasUnsupportedMarkup(clean,'basic'),false);
+      for (const bad of ['<div>Layout</div>','<b>Bold alias</b>','<span class="iss-ink-123abc">Colour</span>','<a href="/" target="_blank">Link</a>']) {
+        assert.equal(rich.hasUnsupportedMarkup(bad,'basic'),true);
+      }
+      await e.settle();
+      assert.equal(JSON.parse(e.requests.at(-1).get('document')).sections[0].body,clean);
+      e.button('Hinzufügen').click();
+      e.root.querySelector('.iss-editorial-gesture[data-section-type="kapitel"]').click();
+      assert.equal(e.value().sections.length,2,'Add a section after repairing the legacy body');
+      e.button('In Papierkorb',e.root.querySelector('.iss-editorial-studio__inspector')).click();
+      assert.equal(e.value().sections.length,1,'Delete the added section');
+      assert.equal(e.value().sections[0].body,clean);
+      e.button('Rückgängig').click();
+      await e.settle();
+      assert.equal(e.value().sections.length,2,'Undo remains available');
+    } finally { e.dom.window.close(); }
+  });
+}
+
 test('Live preview accepts only its current frame and token and retains valid output on failed refresh', async () => {
   const e = await editor();
   try {

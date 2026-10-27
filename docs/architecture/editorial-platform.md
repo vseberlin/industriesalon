@@ -568,6 +568,14 @@ shown with a blocking diagnostic. Existing hidden gesture types remain visible
 in stored documents even when they are unavailable in the insertion palette.
 Security sanitization remains in the storage layer.
 
+Version-1 bodies whose section owner declares `legacy_body_policy=basic` use the
+same basic HTML contract in the editor and on save. Existing unsupported layout
+markup stays unchanged until the author chooses **Formatierung vereinfachen**;
+the existing repair control removes layout wrappers while retaining prose,
+paragraphs, emphasis and safe links. New paste/edit output follows that policy.
+This neither upgrades the document version nor relaxes server loss checks.
+Other legacy body policies keep their existing editor behavior.
+
 The shared validator also compares submitted scalar values and nested lists with
 the final normalized document, including owner validation hooks. A dropped or
 changed value returns `editorial_lossy_normalization` with its field path in the
