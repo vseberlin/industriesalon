@@ -17,7 +17,7 @@ be recovered from Git history.
   content and ordinary paragraph hyphenation remain unchanged.
 - Local browser acceptance spans phone, tablet, laptop and desktop widths;
   lint, runtime/editor token checks and existing editorial CSS tests pass.
-  Code-only, with no template/content/DB/uploads artifact. Prepared for the staging release; see the current handoff for verification.
+  Code-only, with no template/content/DB/uploads artifact. Deployed in `9f045fa`; see the current handoff for staging verification.
 
 ## 2026-10-27 — Explicit editor failure and recovery
 
@@ -44,7 +44,7 @@ be recovered from Git history.
   and Chrome recovery/native-save acceptance pass. All 191 canonical documents
   pass the expanded audit; one existing private landing draft has an incomplete
   link and correctly keeps that audit nonzero. Content remains unchanged.
-  Prepared for the staging release; see the current handoff.
+  Deployed in `9f045fa`; staging canonical/private-draft audit and Anja browser checks pass.
 
 
 ## 2026-10-27 — Legacy tour text editing and repair

@@ -1,27 +1,43 @@
-# Current handoff — 23 October 2026
+# Current handoff — 27 October 2026
 
+## Editor recovery and responsive headings — deployed 27 October 2026
 
-## Editor recovery and responsive headings — release prepared 27 October 2026
-
-The release combines the explicit error/recovery contract with responsive heading
-sizing across the shared theme, renderers and skins. Requests have bounded waits,
-visible actionable errors, retained input, checked versions and explicit recovery.
-Headings adapt to available copy-column width with manual hyphenation and a shared
-measure; the editor loads the same tokens. See the editorial platform contract and
+Code `9f045fa` is on GitHub main and staging. JSON/route requests now have bounded
+waits, visible actionable errors, retained input, checked versions and explicit
+recovery. Responsive heading tokens cap type by available copy-column width;
+shared theme, renderer and skin rules use manual hyphenation and a shared measure.
+The block editor loads the same tokens. See the editorial platform contract and
 theme README.
 
-Local verification: 1,846 PHP/HTTP checks, 122 DOM tests, 3 editorial CSS tests and
-targeted static checks passed. Chrome verified editor recovery/conflict/native save
-and 13 public pages at six widths (78 layouts, 320–1920px), with no split heading
-words or horizontal overflow. Temporary local fixtures were removed.
-All 191 local canonical documents validate. One existing local private landing
-autosave (33794, page 13301) has an incomplete section-6 link; explicit owner repair
-remains pending. Differing draft bases require comparison, never automatic cleanup.
+Local verification: 1,846 PHP/HTTP checks, 122 DOM tests and 3 editorial CSS tests;
+targeted static checks and Chrome recovery/conflict/native-save acceptance passed.
+The isolated release repeated all 125 DOM/CSS tests and PHP syntax checks. Chrome
+checked 13 public pages at six widths (78 layouts, 320–1920px), with no split
+heading words or horizontal overflow. Temporary local fixtures were removed.
 
-Prepared in an isolated checkout based on shared main a2a0ccf; unrelated edits in
-the original main worktree remain preserved. This code-only release requires no
-schema/role/content migration, database import or uploads artifact. Private drafts
-and accounts remain target-owned. Push/deployment and staging acceptance pending.
+Staging acceptance: all 191 canonical documents and 32 private drafts validate
+including editor copies. The audit reports 28 differing draft bases and one
+missing base; all remain intact for explicit comparison. Chrome as Anja opened
+the current Elektropolis draft with a live preview and enabled section controls,
+without changing/publishing content. Its phone preview keeps the title intact;
+public Elektropolis and Verein headings use the deployed styles without overflow.
+Homepage, both checked tours and Verein return 200. Services are healthy, recent
+PHP logs are clean, and blog_public remains 0. Fault injection was tested locally,
+not against Anja's live draft.
+
+Fresh private pre-deploy database, code and configuration backups passed gzip and
+SHA-256 verification under staging `backups/editorial-heading-20261027T161714Z/`.
+No schema/role/content migration, database import or uploads transfer was required.
+No newsletter was sent. Code deployed by fast-forward without a service restart.
+Release checkout: `/tmp/iss-editorial-heading-release`, branch
+`release/editorial-heading-20261027`; it is clean and tracks GitHub main.
+Original local main remains at `1861aa2` with unrelated dirty edits preserved;
+do not pull into it blindly. Release source files match the working source.
+
+Remaining local content issue: private landing autosave `33794` (page `13301`)
+has an incomplete section-6 link. Owner correction remains explicit; do not
+remove or automatically rebase private drafts. Local evidence remains in
+`var/editorial-recovery-20261027/` and `var/heading-fit-20261027/`.
 
 ## Elektropolis legacy draft repair — deployed 27 October 2026
 
