@@ -1,14 +1,25 @@
 # Current handoff — 23 October 2026
 
-## Elektropolis legacy draft repair — prepared 27 October 2026
+## Elektropolis legacy draft repair — deployed 27 October 2026
 
-The tour's edit/delete permissions pass. Its private v1 draft contains unsupported
-old layout wrappers, so validation holds the preview on the saved version.
-Legacy basic text fields now expose the existing explicit simplification control
-and constrain pasted/edited text to their server contract. Local DOM and PHP
-checks pass; deploy and verify repair in Anja's existing session. Preserve all
-other draft edits and the canonical/public tour. Private before-image is in the
-staging backup directory `elektropolis-20261027`; no schema/role/uploads migration.
+Code `29a0f6c` is deployed on staging. The private v1 draft contained old column
+layout HTML that the server correctly rejected, while the legacy editor lacked
+an explicit repair control. Basic legacy fields now use their declared HTML
+contract and the existing formatting simplifier; new pasted text follows it.
+Anja's Elektropolis draft was repaired through that control. Its wording, links,
+other five-section/eight-trash draft state and canonical/public tour were
+verified unchanged; only obsolete wrappers were removed. Private before/after
+receipts are in the staging backup directory `elektropolis-20261027`.
+Chrome as Anja passed add/edit/autosave/trash/purge of a temporary test section,
+then reload/recovery with a live preview and no validation warning. The test
+section was removed; her existing work remains private and ready to continue.
+Read-only audit: all 16 tours and Anja's one tour draft pass permissions and
+validation. Local checks: 110 DOM tests, 275 PHP legacy-body assertions, targeted
+ESLint and JS syntax. Public tour/local homepage return 200; recent PHP logs pass.
+No role/schema/uploads migration or public publication occurred. The target-local
+private autosave repair used the existing owner API via the editor; no private
+content artifacts went to GitHub. Existing dirty main-worktree changes remain
+preserved; release commits are on `fix/anja-access-20261027` and GitHub main.
 
 ## Anja full editorial access — deployed 27 October 2026
 

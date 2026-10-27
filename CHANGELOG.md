@@ -20,6 +20,10 @@ be recovered from Git history.
 - Code requires no schema, role or uploads migration. The current staging draft
   has a private mode-0600 before-image; any repair stays private and never updates
   the public tour. No private content artifact belongs on GitHub.
+- Deployed and repaired Anja's private draft through the editor. Verified unchanged
+  wording, links, remaining draft content and public tour; browser add/edit/save/
+  delete and reload pass. All 16 tours and her one tour draft validate and permit
+  editing/deletion. The temporary test section was removed.
 
 ## 2026-10-27 — Full editorial operator responsibilities
 
