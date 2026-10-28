@@ -34,10 +34,20 @@ be recovered from Git history.
   private recovery, source switching, native draft save/reload, calendar navigation,
   video transcript controls and privacy-settings access. Automated contract,
   registry, storage and DOM checks pass. Existing video PHPCS findings are unchanged.
-- Committed locally on `release/landing-normalization-20261028`; not deployed.
-  Updated the board capability catalog with the shared page editor and sources.
-  Release requires the paired private content artifact and target media
-  verification; no new uploads or full SQL import.
+- Released code `7748e7c` through GitHub main to staging with the guarded 18-page
+  content migration. Preserved newer staging Führungen copy/order/deleted sections,
+  all private drafts, homepage content, accounts/roles/sessions and target settings.
+  Verified fresh database/uploads/intake/code/configuration backups and 70 matching
+  attachment hashes; no uploads transfer, full SQL import or restart was needed.
+- Staging checks pass: 19 routes with one H1, 14 desktop/phone layouts, calendar
+  month navigation, video transcript controls, 206 canonical documents, 32 private
+  drafts and 212 media references. Repeated 122 DOM, 65 opening and 96 normalization
+  checks. Authenticated staging editor UI was not rechecked because Chrome was
+  logged out. Updated the board capability catalog with the shared editor/sources.
+- All five staging consent browser scenarios passed; recorded the matching private
+  report through the consent owner and verified every native consent check passes.
+  Provider requests were intercepted by the suite; live playback/tile availability
+  was not retested.
 
 ## 2026-10-27 — Responsive heading sizing and word wrapping
 
