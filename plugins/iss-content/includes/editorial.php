@@ -23,18 +23,6 @@ function iss_content_model_editorial_material_section(): array
     ];
 }
 
-function iss_content_model_landing_page_allowed_slugs(): array
-{
-    return [
-        'about',
-        'verein',
-        'salon-vermietung',
-        'sammlungen',
-        'fuehrungen',
-        'schoneweide',
-    ];
-}
-
 function iss_content_model_landing_page_is_eligible($post): bool
 {
     if (is_numeric($post)) {
@@ -45,12 +33,7 @@ function iss_content_model_landing_page_is_eligible($post): bool
         return false;
     }
 
-    $front_page_id = absint(get_option('page_on_front'));
-    if ($front_page_id > 0 && (int) $post->ID === $front_page_id) {
-        return true;
-    }
-
-    return in_array((string) $post->post_name, iss_content_model_landing_page_allowed_slugs(), true);
+    return true;
 }
 
 function iss_content_model_place_media_reference(int $attachment_id): array
@@ -277,10 +260,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'base' => 'ordered',
         'post_types' => ['page'],
         'post_eligibility_callback' => 'iss_content_model_landing_page_is_eligible',
-        'opening_skin' => 'frontpage',
-        'opening_eligibility_callback' => static function (WP_Post $post): bool {
-            return (int) $post->ID === (int) get_option('page_on_front');
-        },
+        'opening_skins' => ['standard', 'typografisch'],
         'default_skin' => 'typografisch',
         'default_variant' => 'standard',
         'skin_meta_key' => '_iss_editorial_landing_skin',
@@ -330,6 +310,10 @@ function iss_content_model_register_editorial_formats(array $formats): array
     $formats['landing']['sections']['feature']['treatments']['feature.opening'] = [
         'label' => __('Seitenauftakt', 'iss-content-model'), 'role' => 'opening', 'min_version' => 3,
     ];
+    $formats['landing']['sections']['feature']['treatments']['feature.opening-text'] = [
+        'label' => __('Seitenauftakt ohne Bild', 'iss-content-model'), 'role' => 'opening', 'min_version' => 3,
+        'schematic' => 'heading', 'hint' => __('Erster Abschnitt mit Seitentitel, Einleitung und optionalen Links.', 'iss-content-model'),
+    ];
     $presentations = iss_content_model_landing_treatment_presentations();
     foreach ($formats['landing']['sections'] as $type => &$section) {
         foreach (($section['slots'] ?? []) as $slot) {
@@ -358,8 +342,9 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'default_skin' => 'typografisch',
         'sections' => array_intersect_key($formats['landing']['sections'], array_flip(['statement', 'fliesstext', 'gateway', 'text_bild_reihe', 'feature', 'galerie'])),
     ];
-    // The opening belongs to the front-page template, not ordinary articles.
+    // Ordinary articles do not opt into the landing opening contract.
     unset($formats['article']['sections']['feature']['treatments']['feature.opening']);
+    unset($formats['article']['sections']['feature']['treatments']['feature.opening-text']);
 
     $formats['fuehrung'] = [
         'label' => __('Führung', 'iss-content-model'),
@@ -435,7 +420,7 @@ function iss_content_model_register_editorial_formats(array $formats): array
         'base' => 'ordered',
         'post_types' => [ISS_CONTENT_MODEL_PROJEKT_POST_TYPE],
         'default_skin' => 'dossier',
-        'opening_skin' => 'buehne',
+        'opening_skins' => ['buehne'],
         'editor' => ['rail_control' => true, 'rail_placement_by_skin' => ['dossier' => 'horizontal']],
         'default_variant' => 'standard',
         'sections' => [
@@ -518,7 +503,7 @@ function iss_content_model_landing_treatment_presentations(): array
         'feature.media-text' => ['schematic' => 'split', 'hint' => 'Bild und Text nebeneinander.'],
         'feature.image-overlay' => ['schematic' => 'overlay', 'hint' => 'Text liegt über dem Bild. Hintergrundkontrast prüfen.'],
         'feature.origin-story' => ['schematic' => 'split-flip', 'hint' => 'Einleitung und Bilder erzählen die Herkunft.'],
-        'feature.opening' => ['schematic' => 'opening', 'hint' => 'Ersetzt den Vorlagenauftakt: erster Abschnitt, Startseiten-Stil, Titel und Bild erforderlich.'],
+        'feature.opening' => ['schematic' => 'opening', 'hint' => 'Erster Abschnitt mit Titel und Bild. Landing Pages werden vollständig aus ihren Abschnitten aufgebaut; Projekte benötigen den Stil Bühne.'],
         'atlas-map.place-locator' => ['schematic' => 'panel', 'hint' => 'Ein Ort auf der Karte.'],
         'atlas-map.map-only' => ['schematic' => 'overlay', 'hint' => 'Breites Kartenband.'],
         'atlas-map.editorial-split' => ['schematic' => 'split', 'hint' => 'Erklärung neben der Karte.'],
@@ -543,12 +528,13 @@ add_filter('iss_editorial_editor_document', 'iss_content_model_landing_editor_do
 /** Invalid opening edits remain recoverable drafts, but cannot replace a valid preview. */
 add_filter('iss_editorial_validated_document', static function ($validated, array $raw, array $format) {
     if (is_wp_error($validated) || !in_array($format['slug'], ['landing', 'projekt'], true)) { return $validated; }
-    $opening_skin = $format['slug'] === 'projekt' ? 'buehne' : 'frontpage';
+    $opening_skins = $format['opening_skins'];
     foreach ($raw['sections'] as $index => $section) {
-        if (($section['treatment'] ?? '') !== 'feature.opening') { continue; }
-        if ($raw['schema_version'] < 3 || $index !== 0 || ($raw['skin'] ?? '') !== $opening_skin
-            || trim((string) ($section['title'] ?? '')) === '' || !wp_attachment_is_image(absint($section['media_refs'][0]['id'] ?? 0))) {
-            return new WP_Error('editorial_invalid_opening', __('Seitenauftakt: Bitte an die erste Stelle setzen, den passenden Seitenstil (Startseite oder Bühne) wählen sowie Titel und Bild ergänzen.', 'iss-content-model'));
+        if (!in_array($section['treatment'] ?? '', ['feature.opening', 'feature.opening-text'], true)) { continue; }
+        if ($raw['schema_version'] < 3 || $index !== 0 || !in_array($raw['skin'] ?? '', $opening_skins, true)
+            || trim((string) ($section['title'] ?? '')) === ''
+            || (($section['treatment'] ?? '') === 'feature.opening' && !wp_attachment_is_image(absint($section['media_refs'][0]['id'] ?? 0)))) {
+            return new WP_Error('editorial_invalid_opening', __('Seitenauftakt: Bitte an die erste Stelle setzen, einen freigegebenen Seitenstil wählen und einen Titel ergänzen. Der Bildauftakt benötigt zusätzlich ein Bild.', 'iss-content-model'));
         }
     }
     return $validated;

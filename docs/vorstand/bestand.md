@@ -36,7 +36,7 @@ und wählbare Gestaltungsvarianten (Skins).
 | Team | `/team/…` | Teammitglied mit Rolle | — |
 | Archivobjekt | `/archivobjekte/…` | Objekt mit Metadaten, Bildern, Beziehungen | — |
 | Archivsammlung | `/archivsammlungen/…` | Sammlung mit Objekten | — |
-| Seite | frei | Einführung und Überblick, Text mit Bildern | Standard, Typografisch, Dossier |
+| Seite | frei | Seitenauftakt mit oder ohne Bild, frei geordnete Bausteine und automatische Inhalte | Standard, Typografisch, Startseite, Dossier, Territorial |
 
 **Veranstaltungen haben drei Zeitformen**, die den Seitenaufbau bestimmen:
 Einzeltermin, Programm/Fest (Zeitraum) und Serientermin. Die Veranstaltungsart
@@ -80,7 +80,7 @@ alle Bausteine einer Seite aussehen. Es wird nicht jede Seite einzeln gestaltet.
 | Baustein | Wofür | Darstellungen |
 | --- | --- | --- |
 | Bildergalerie | Bilder mit Beschreibungen | Raster, Strecke, Bilderwand, Vollbild |
-| Bild & Text | Thema mit Bild, Text, Kernfakten | Bild mit Infokasten, Bild neben Text, Titel auf Bild, Zweiteilige Herkunftserzählung, Seitenauftakt |
+| Bild & Text | Thema mit Bild, Text, Kernfakten | Bild mit Infokasten, Bild neben Text, Titel auf Bild, Zweiteilige Herkunftserzählung, Seitenauftakt mit oder ohne Bild |
 | Text-Bild-Reihe | Bilder und Texte als Reihe | Großformatig, Kompakt, Chronologisch, Themenspalten, Programm/Chronik |
 | Bildbühne | Großes Auftaktbild einer Führung | — |
 | Fotoalbum | Bildfolge aus Archiv- oder Redaktionsset, mit Seiten und Blättern | — |
@@ -92,7 +92,7 @@ alle Bausteine einer Seite aussehen. Es wird nicht jede Seite einzeln gestaltet.
 | Baustein | Wofür | Darstellungen |
 | --- | --- | --- |
 | Linkkarten | Einstiege zu weiteren Inhalten | Karten, Linkliste, Feature-Leiste, Themenpfade, Atlas-Ortskarten |
-| Automatische Inhalte | Inhalte aus Datenquellen (Termine, Verwandtes) | — |
+| Automatische Inhalte | Kalender, Programm, Projekte, Publikationen, Archiv, Videos, Hinweise, Kontakt- und Besuchsinfo, Newsletter | Quelle wählen; Umfang und angebotene Optionen einstellen |
 | Atlas-Karte | Orte und räumliche Zusammenhänge | — |
 | Karte & Bild | Karte mit Ortsbild und Erläuterung | — |
 | Lesenavigation, Lesekapitel | Navigation in langen Publikationen | — |
@@ -105,7 +105,16 @@ alle Bausteine einer Seite aussehen. Es wird nicht jede Seite einzeln gestaltet.
 | Epoche, Gegenwart | Geschichte und heutige Situation eines Ortes |
 | Material beitragen | Aufruf an Gäste, Fotos und Dokumente zur Prüfung einzureichen |
 
-Quelle: `plugins/iss-content/includes/editorial-vocabulary.php`
+Alle WordPress-Seiten verwenden denselben JSON-Editor. Ein Seitenauftakt steht
+an erster Stelle; Überschrift, Bild, Einleitung und Links sind darin bearbeitbar.
+Ein Hinweis unmittelbar nach einem Bildauftakt erscheint im Hero. Spätere
+Hinweise und Hinweise nach einem Auftakt ohne Bild bleiben eigene Abschnitte.
+Die Quelle behält ihre Einstellungen beim Wechsel; Termine, Kontaktdaten und
+Hinweistexte werden weiterhin in ihren zuständigen Fachbereichen gepflegt.
+
+Quelle: `plugins/iss-content/includes/editorial-vocabulary.php`,
+`plugins/iss-content/includes/editorial.php`,
+`themes/industriesalon/includes/landing-sources.php`
 
 ---
 
@@ -122,6 +131,8 @@ Bausteine festlegt: Satz, Bildbehandlung, Navigation am Rand.
 | Objektalbum | Objekte und Fotos wie in einem Album | keine | Ausstellung, Rückblick |
 | Chronik | Zeitliche Abfolge | Abschnittsindex rechts | Ausstellung, Rückblick |
 | Dossier | Arbeitsmappe mit Kapiteln | Sprungnavigation links bzw. oben | Projekt, Seite |
+| Startseite | Magazinartiger Überblick mit Auftakt und Einstiegen | — | Seite |
+| Territorial | Ortsbezogene Übersicht mit Karten und Einstiegen | — | Seite |
 | Bühne | Großformatiger Auftritt | keine | Projekt, Veranstaltung |
 | Bildmatrix | Bildraster | Abschnittsindex oben | Publikation |
 | Longread Poster | Langer Lesetext mit Plakatauftakt | — | Publikation |
@@ -165,11 +176,17 @@ Quelle: `docs/architecture/plugin-map.md`
 Führungen, Projekte, Publikationen, Sammlungen, Archiv, Videos, Schöneweide,
 Über uns, Verein, Repair Café, Salon-Vermietung, Suche.
 
+Vollständige JSON-Seiten mit gültigem Seitenauftakt nutzen die gemeinsame
+Vorlage `page-editorial-landing.html`. Die Startseite behält ihre eigene Vorlage;
+ihr JSON-Dokument übernimmt den Inhalt. Nicht umgestellte oder deaktivierte
+Dokumente verwenden weiterhin ihre bisherigen Vorlagen.
+
 **Wiederverwendbare Muster:** 3er- und 4er-Kartenreihe, 50/50 Bild-Text,
 asymmetrisches Feature, Flex-Split, Landing-Hero mit Notiz, Newsletter mit Förderern,
 Projektdossier-Kapitel, Ausstellungs-Arbeitsplatz, Objekt-Highlight,
 Themenpfad-Leiste, Anerkennung, Mission/Unterstützung, Team-Raster,
-Infopanels (Anmeldung, Besuch, Vermietung).
+Infopanels (Anmeldung, Besuch, Vermietung), Publikationsbrowser,
+hervorgehobene Projekte und weiterer Projektindex.
 
 Quelle: `themes/industriesalon/templates/`, `themes/industriesalon/patterns/`
 

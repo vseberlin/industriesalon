@@ -454,6 +454,29 @@ function iss_editorial_sanitize_body_html(string $body, array $format, string $t
     ]);
 }
 
+/** Source-specific options share the existing section registry and lossless validation. */
+function iss_editorial_sanitize_slot_settings(array $settings, array $slots): array
+{
+    $clean = [];
+    foreach ($settings as $source => $values) {
+        if (!isset($slots[$source]) || !is_array($values)) { continue; }
+        foreach ($values as $field => $value) {
+            $rule = $slots[$source]['settings'][$field] ?? [];
+            if (!$rule || !is_scalar($value)) { continue; }
+            if ($rule['type'] === 'boolean') {
+                if (is_bool($value)) { $clean[$source][$field] = $value; }
+            } elseif ($rule['type'] === 'integer') {
+                if (is_int($value) && $value >= $rule['min'] && $value <= $rule['max']) { $clean[$source][$field] = $value; }
+            } elseif (is_string($value) && mb_strlen($value) <= 2000
+                && (!isset($rule['choices']) || array_key_exists($value, $rule['choices']))) {
+                $clean[$source][$field] = sanitize_text_field($value);
+            }
+        }
+        if ($values === []) { $clean[$source] = []; }
+    }
+    return $clean;
+}
+
 function iss_editorial_sanitize_section(array $section, array $format, int $version): array
 {
     $section = iss_editorial_normalize_section_alias($section, $format);
@@ -515,6 +538,9 @@ function iss_editorial_sanitize_section(array $section, array $format, int $vers
         if ($slot_key !== '') {
             $sanitized['slot_key'] = $slot_key;
         }
+    }
+    if (iss_editorial_format_supports_section_field($format, $type, 'slot_settings') && isset($section['slot_settings'])) {
+        $sanitized['slot_settings'] = iss_editorial_sanitize_slot_settings((array) $section['slot_settings'], $format['sections'][$type]['slots']);
     }
 
     if (iss_editorial_format_supports_section_field($format, $type, 'treatment')
@@ -806,7 +832,7 @@ function iss_editorial_validate_document($value, string $format_slug)
                     return new WP_Error('editorial_unsupported_field', sprintf(__('Abschnitt %1$d: Das Feld „%2$s“ wird hier nicht unterstützt. Der Inhalt bleibt erhalten.', 'iss-editorial'), $index + 1, $key), ['path' => "sections[$index].$key"]);
                 }
             }
-            $collections = ['media_refs', 'object_refs', 'links', 'facts', 'items', 'sheets', 'source_refs', 'dynamic_refs', 'rail_options', 'album_source'];
+            $collections = ['media_refs', 'object_refs', 'links', 'facts', 'items', 'sheets', 'source_refs', 'dynamic_refs', 'rail_options', 'album_source', 'slot_settings'];
             foreach (array_diff($allowed, $collections) as $key) {
                 if (isset($section[$key]) && !is_scalar($section[$key])) {
                     return new WP_Error('editorial_invalid_field', sprintf(__('Abschnitt %1$d: Bitte „%2$s“ prüfen.', 'iss-editorial'), $index + 1, $key));

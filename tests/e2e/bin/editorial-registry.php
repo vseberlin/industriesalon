@@ -96,7 +96,7 @@ try {
         'landing' => ['map_img', 'dynamic_slot', 'atlas_map'], 'article' => [],
         'fuehrung' => ['bildbuehne', 'atlas_map', 'upload_intake'],
         'veranstaltung' => ['intro', 'programm', 'upload_intake'],
-        'ausstellung' => ['upload_intake'], 'projekt' => ['upload_intake'], 'rueckblick' => ['intro', 'upload_intake'],
+        'ausstellung' => ['upload_intake'], 'projekt' => ['upload_intake', 'dynamic_slot'], 'rueckblick' => ['intro', 'upload_intake'],
         'publication' => ['intro', 'source', 'publication_rail', 'longread_chapter', 'timeline_item', 'photoalbum'],
         'place' => ['intro', 'epoche', 'gegenwart', 'galerie', 'material', 'upload_intake', 'dynamic_slot'],
     ];
@@ -269,7 +269,7 @@ try {
     $types = ['landing' => 'fliesstext', 'article' => 'fliesstext', 'projekt' => 'kapitel', 'ausstellung' => 'kapitel', 'rueckblick' => 'fliesstext', 'veranstaltung' => 'kapitel', 'place' => 'epoche', 'fuehrung' => 'kapitel', 'publication' => 'longread_chapter'];
     foreach ($types as $slug => $type) {
         $format = iss_editorial_get_format($slug);
-        $id = wp_insert_post(['post_type' => $format['post_types'][0], 'post_status' => 'draft', 'post_title' => 'Disposable registry fixture', 'post_content' => '<p>Original block content</p>', 'post_author' => $admin->ID]);
+        $id = wp_insert_post(['post_type' => $slug === 'article' ? 'post' : $format['post_types'][0], 'post_status' => 'draft', 'post_title' => 'Disposable registry fixture', 'post_content' => '<p>Original block content</p>', 'post_author' => $admin->ID]);
         $assert(is_int($id) && $id > 0, "$slug: create fixture");
         $fixtures[] = $id;
         foreach (iss_content_editorial_sets_service()->get_links_for_context(get_post_type($id), $id) as $link) { $sets[] = (int) $link['set_id']; }

@@ -1110,18 +1110,18 @@ function industriesalon_enqueue_assets(): void
         array(
             'handle' => 'industriesalon-page-archive',
             'path' => '/assets/css/page-archive.css',
-            'condition' => is_page('archiv'),
+            'condition' => is_page('archiv') || industriesalon_landing_uses_source(['archive']),
         ),
         array(
             'handle' => 'industriesalon-page-kalender',
             'path' => '/assets/css/page-kalender.css',
             'condition' => $current_page_template === 'page-kalender'
-                || is_page('kalender'),
+                || is_page('kalender') || industriesalon_landing_uses_source(['calendar', 'past-events']),
         ),
         array(
             'handle' => 'industriesalon-page-projekte',
             'path' => '/assets/css/page-projekte.css',
-            'condition' => is_page('projekte'),
+            'condition' => is_page('projekte') || industriesalon_landing_uses_source(['project-featured', 'project-index']),
         ),
         array(
             'handle' => 'industriesalon-page-salon-vermietung',
@@ -1142,12 +1142,12 @@ function industriesalon_enqueue_assets(): void
         array(
             'handle' => 'industriesalon-page-videos',
             'path' => '/assets/css/page-videos.css',
-            'condition' => is_page('videos'),
+            'condition' => is_page('videos') || industriesalon_landing_uses_source(['videos']),
         ),
         array(
             'handle' => 'industriesalon-page-ausstellungen',
             'path' => '/assets/css/page-ausstellungen.css',
-            'condition' => is_page('ausstellungen'),
+            'condition' => is_page('ausstellungen') || industriesalon_landing_uses_source(['exhibitions']),
         ),
         array(
             'handle' => 'industriesalon-page-verein',
@@ -1167,7 +1167,7 @@ function industriesalon_enqueue_assets(): void
         array(
             'handle' => 'industriesalon-publications',
             'path' => '/assets/css/publications.css',
-            'condition' => is_page('publikationen') || is_singular('publication'),
+            'condition' => is_page('publikationen') || industriesalon_landing_uses_source(['publications', 'featured-publication']) || is_singular('publication'),
         ),
         array(
             'handle' => 'industriesalon-single-video',

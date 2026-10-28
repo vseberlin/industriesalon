@@ -3,6 +3,7 @@
 if (!defined('ABSPATH')) {
     exit;
 }
+require_once __DIR__ . '/landing-sources.php';
 
 add_filter('iss_editorial_formats', static function (array $formats): array {
     $skins = [
@@ -37,6 +38,9 @@ add_filter('iss_editorial_formats', static function (array $formats): array {
         $formats[$slug]['skins'] = array_intersect_key($labels, array_flip($choices));
         // Maintain each renderer's existing choice order.
         $formats[$slug]['skins'] = array_replace(array_fill_keys($choices, ''), $formats[$slug]['skins']);
+        if ($slug === 'landing') {
+            $formats[$slug]['opening_skins'] = $choices;
+        }
         if ($slug === 'projekt') {
             $formats[$slug]['sections']['dynamic_slot']['renderer'] = 'landing';
             $formats[$slug]['editor']['identity_palettes'] = [

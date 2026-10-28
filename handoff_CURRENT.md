@@ -1,4 +1,73 @@
-# Current handoff — 27 October 2026
+# Current handoff — 28 October 2026
+
+## Landing editor normalization — complete locally, 28 October 2026
+
+All 19 published local pages now use complete v3 JSON compositions with one H1;
+18 were migrated, while homepage 12257 keeps its ten-section reference document.
+All WordPress pages share the landing format, image/text-only openings, gestures,
+skin choices and automatic-source chooser. Source settings are typed, validated,
+autosaved and retained when switching. Existing calendar, search, video, booking,
+contact and newsletter owners remain authoritative. Complete non-home documents
+use `page-editorial-landing.html`; legacy slug templates remain fallback paths
+for disabled/unmigrated content and must stay until paired releases are applied.
+
+Notice placement follow-up: a `notice` source immediately after an image opening
+now uses the existing hero banner slot, preserving the previous right-hand
+desktop placement and mobile stacking. Its editor selection stays independent;
+inactive notices leave no empty slot. Later notices/text-only openings stay in
+normal flow. Verified 65 opening and 96 normalization checks, targeted PHP
+analysis, public Repair Café/Führungen layouts and Repair Café editor selection.
+This renderer correction needs no additional content migration or media artifact.
+
+Verified: 96 normalization, 65 opening, 14,681 registry/renderer and 583 storage
+checks; 122 DOM tests. All 19 public routes return 200 with one H1; 38 Chrome
+layouts at 1440/390px have no horizontal overflow. Chrome verified title editing,
+source options/switching, private recovery, preview, native draft save and reload;
+calendar month navigation, video transcript tabs and the privacy dialog work.
+The temporary editor page and its metadata were removed. Targeted PHPStan,
+JS/CSS lint and changed-code PHPCS pass; `videos.php` retains the same 24 existing
+PHPCS escaping findings as HEAD. Consent configuration checks are OK; its CLI
+still requests a fresh complete browser consent receipt (last recorded 23 October).
+This run checked the privacy link and transcript UI, not a new full consent cycle.
+
+Private artifacts: `var/landing-normalization-20261028/` contains exact before
+state, the final `candidates.json`, media fingerprints, comparison reports and
+initial/revised artifacts. `ops/migrations/2026-10-28-landing-normalization.php`
+provides dry-run/apply/revise/verify/rollback. The non-autoload backup receipt
+`iss_backup_20261028_landing_normalization` verifies all 18 canonical documents,
+post fields, unrelated metadata and private drafts after migration. An intermediate
+video revision generated during this task was backed up and removed after its
+scratch sources were consolidated; pre-existing revisions were not removed.
+All 173 non-revision canonical documents validate. The pre-existing incomplete
+private draft 33794 remains untouched and requires its owner's correction.
+
+Homepage recovery follow-up: the user chose the current “Schöneweide entdecken”
+version over the stale 17 October draft 30441. The native comparison workflow
+saved a valid private draft against the current base; reload and resume work
+without a version conflict. The published document is unchanged. Exact before
+and after evidence, including the old draft, stays private in
+`var/editorial-recovery-20261028/`; no release artifact or media transfer is needed
+for this local, user-specific recovery choice.
+
+No new media files, accounts, roles or messages. Source and private content must
+be released together after target before-state/media verification; no full SQL
+import. Local commit on `release/landing-normalization-20261028`, based on
+`origin/main` c1d4f7e, in `/tmp/iss-landing-normalization-release`. Nothing pushed
+or deployed. Original `/home/vladimir/wp-website` main remains at 1861aa2 with
+unrelated edits and the runtime source preserved; do not pull into it blindly.
+The isolated commit contains only this landing work and its documentation.
+The isolated checkout repeated all 122 editor DOM tests, 65 opening checks and
+96 normalization checks successfully. Its runtime source matches the tested local
+source; the unrelated archive documentation change stays outside this commit.
+
+The private final input is
+`/home/vladimir/wp-website/var/landing-normalization-20261028/candidates.json`
+(SHA-256 `73c1e727556cb3fb1fa036e8cd452e5d12d41e6fe269d435629735e24eb1a5ca`).
+It is local-target-specific: prepare staging before-images and URL/media mappings
+before applying there. The 70 attachment fingerprints are in the same artifact;
+all files already exist locally, so no new upload bundle is required for this
+commit. Target attachment records and files must be checked together at release.
+
 
 ## Editor recovery and responsive headings — deployed 27 October 2026
 

@@ -1153,14 +1153,14 @@ test('Workspace waits for an active canvas edit before reordering and exposes na
 });
 
 
-for (const [format, openingSkin, version, visible] of [
-  ['renamed_format', 'custom-skin', 3, true], ['projekt', '', 3, false],
-  ['landing', 'frontpage', 3, true], ['landing', '', 3, false],
-  ['renamed_format', 'custom-skin', 2, false], ['renamed_format', 'custom-skin', 1, false]
+for (const [format, openingSkins, version, visible] of [
+  ['renamed_format', ['custom-skin'], 3, true], ['projekt', [], 3, false],
+  ['landing', ['frontpage'], 3, true], ['landing', [], 3, false],
+  ['renamed_format', ['custom-skin'], 2, false], ['renamed_format', ['custom-skin'], 1, false]
 ]) {
-  test(`${format} opening ${openingSkin || 'absent'}, v${version}: capability and version gate the treatment without losing saved input`, async () => {
+  test(`${format} opening ${openingSkins.join(', ') || 'absent'}, v${version}: capability and version gate the treatment without losing saved input`, async () => {
     const e = await editor(format, {
-      openingSkin,
+      openingSkins,
       sections: { renamed_hero: { label: 'Hero', supports: ['treatment'], default_treatment: 'hero.normal', treatments: [
         { slug: 'hero.normal', label: 'Normal' },
         { slug: 'hero.opening', label: 'Opening', role: 'opening', min_version: 3 }
@@ -1179,24 +1179,26 @@ for (const [format, openingSkin, version, visible] of [
   });
 }
 
-test('Workspace opening guidance follows its owner and invalid opening remains visible after reorder', async () => {
-  const options = workspaceOptions(); options.isFrontPage = true; options.openingSkin = 'frontpage';
-  options.document.skin = 'frontpage'; options.skins = [{slug:'frontpage',label:'Startseite'}];
-  options.document.sections[0].treatment = 'feature.opening'; options.document.sections[0].media_refs = [{id:1}];
-  options.sections.feature.treatments.push({slug:'feature.opening',label:'Seitenauftakt',schematic:'opening',role:'opening',min_version:3});
-  const e = await editor('landing', options);
-  try {
-    assert.match(e.root.querySelector('.iss-editorial-opening-note').textContent, /ersetzt den Auftakt/);
-    e.root.querySelectorAll('.iss-editorial-outline__select')[1].click();
-    assert.equal(e.root.querySelector('.iss-editorial-opening-note').hidden, true, 'Section 2 never claims to replace the template opening');
-    e.root.querySelectorAll('.iss-editorial-outline__select')[0].click();
-    const handle=e.root.querySelector('[data-section-index="0"] .iss-editorial-card__drag-handle');
-    handle.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
-    assert.match(e.root.querySelector('.iss-editorial-opening-note').textContent, /Seitenauftakt prüfen/);
-    assert.equal(e.root.querySelector('.iss-editorial-opening-note').hidden, false, 'Invalid opening does not lose its warning');
-    assert.match(e.root.querySelector('.iss-editorial-studio__position').selectedOptions[0].textContent, /^Abschnitt 2 von 2 · /);
-  } finally { e.dom.window.close(); }
-});
+for (const openingSkin of ['frontpage', 'dossier', 'typografisch']) {
+  test(`Workspace ${openingSkin} opening guidance survives reorder`, async () => {
+    const options = workspaceOptions(); options.isFrontPage = openingSkin === 'frontpage'; options.openingSkins = ['frontpage', 'dossier', 'typografisch'];
+    options.document.skin = openingSkin; options.skins = [{slug:openingSkin,label:openingSkin}];
+    options.document.sections[0].treatment = 'feature.opening'; options.document.sections[0].media_refs = [{id:1}];
+    options.sections.feature.treatments.push({slug:'feature.opening',label:'Seitenauftakt',schematic:'opening',role:'opening',min_version:3});
+    const e = await editor('landing', options);
+    try {
+      assert.match(e.root.querySelector('.iss-editorial-opening-note').textContent, /ersetzt den Auftakt/);
+      e.root.querySelectorAll('.iss-editorial-outline__select')[1].click();
+      assert.equal(e.root.querySelector('.iss-editorial-opening-note').hidden, true, 'Section 2 never claims to replace the template opening');
+      e.root.querySelectorAll('.iss-editorial-outline__select')[0].click();
+      const handle=e.root.querySelector('[data-section-index="0"] .iss-editorial-card__drag-handle');
+      handle.dispatchEvent(new e.window.KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true}));
+      assert.match(e.root.querySelector('.iss-editorial-opening-note').textContent, /Seitenauftakt prüfen/);
+      assert.equal(e.root.querySelector('.iss-editorial-opening-note').hidden, false, 'Invalid opening does not lose its warning');
+      assert.match(e.root.querySelector('.iss-editorial-studio__position').selectedOptions[0].textContent, /^Abschnitt 2 von 2 · /);
+    } finally { e.dom.window.close(); }
+  });
+}
 
 test('Workspace trash undo restores its own section and leaving restores native status and scrolling', async () => {
   const e = await editor('landing', workspaceOptions());
@@ -1880,5 +1882,27 @@ test('Canonical gallery treatment controls the media picker without a legacy fie
     grid.checked=true; grid.dispatchEvent(new e.window.Event('change',{bubbles:true}));
     assert.doesNotMatch(e.root.textContent,/Vollbild verwendet genau ein 16:9-Bild/);
     assert.equal(e.value().sections[0].gallery_layout,'grid');
+  } finally { e.dom.window.close(); }
+});
+
+test('Source settings retain choices across switching and autosave', async () => {
+  const settings = {limit:{label:'Anzahl',type:'integer',default:4,min:1,max:24}};
+  const e = await editor('landing', {sections:{dynamic_slot:{label:'Automatische Inhalte',supports:['treatment','slot_key','slot_settings'],slots:{calendar:{label:'Kalender',treatment:'slot.calendar',settings},projects:{label:'Projekte',treatment:'slot.projects',settings}},treatments:[{slug:'slot.calendar',label:'Kalender'},{slug:'slot.projects',label:'Projekte'}]}},document:{schema_version:3,sections:[{type:'dynamic_slot',slot_key:'calendar',treatment:'slot.calendar'}]}});
+  try {
+    e.root.querySelector('.iss-editorial-outline__select').click(); e.button('Darstellung').click();
+    let input = e.root.querySelector('.iss-editorial-source-settings input');
+    assert.equal(input.value, '4'); assert.equal(input.labels[0].textContent, 'Anzahl');
+    input.value = '8'; input.dispatchEvent(new e.window.Event('input',{bubbles:true}));
+    let select = e.root.querySelector('.iss-editorial-field--slot-key > select');
+    select.value = 'projects'; select.dispatchEvent(new e.window.Event('change',{bubbles:true}));
+    input = e.root.querySelector('.iss-editorial-source-settings input'); assert.equal(input.value, '4');
+    input.value = '3'; input.dispatchEvent(new e.window.Event('input',{bubbles:true}));
+    select = e.root.querySelector('.iss-editorial-field--slot-key > select');
+    select.value = 'calendar'; select.dispatchEvent(new e.window.Event('change',{bubbles:true}));
+    assert.equal(e.root.querySelector('.iss-editorial-source-settings input').value, '8');
+    e.button('Fertig').click(); await e.settle();
+    const saved = JSON.parse(e.requests.at(-1).get('document')).sections[0];
+    assert.deepEqual(saved.slot_settings, {calendar:{limit:8},projects:{limit:3}});
+    assert.equal(saved.slot_key, 'calendar');
   } finally { e.dom.window.close(); }
 });

@@ -21,6 +21,16 @@
   gap: clamp(1.5rem, 3vw, 2.75rem);
 }
 
+.iss-landing-opening-text {
+  padding-block: calc(var(--iss-header-height) + var(--iss-space-2xl)) var(--iss-space-2xl);
+}
+
+/* Central contact fields are compact rows within the ordered document. */
+.iss-landing-section--treatment-slot-institution-field {
+  padding-block: var(--iss-space-sm);
+  border-top: 0;
+}
+
 .iss-landing-section__copy {
   container-type: inline-size;
   display: grid;
@@ -46,10 +56,12 @@
 }
 
 .iss-landing-section__body {
+  min-width: 0;
   max-width: 46rem;
   color: var(--iss-landing-muted);
   font-size: clamp(1rem, 0.35vw + 0.96rem, 1.16rem);
   line-height: 1.72;
+  overflow-wrap: anywhere;
 }
 
 .iss-landing-section__body > :first-child {

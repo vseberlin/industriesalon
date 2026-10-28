@@ -147,7 +147,7 @@ function iss_editorial_get_registered_formats(): array
             'default_variant' => sanitize_key((string) ($format['default_variant'] ?? 'standard')),
             'post_eligibility_callback' => is_callable($format['post_eligibility_callback'] ?? null) ? $format['post_eligibility_callback'] : null,
             'route_stations_callback' => is_callable($format['route_stations_callback'] ?? null) ? $format['route_stations_callback'] : null,
-            'opening_skin' => sanitize_key((string) ($format['opening_skin'] ?? '')),
+            'opening_skins' => array_values(array_unique(array_filter(array_map('sanitize_key', (array) ($format['opening_skins'] ?? []))))),
             'opening_eligibility_callback' => is_callable($format['opening_eligibility_callback'] ?? null) ? $format['opening_eligibility_callback'] : null,
             'skin_meta_key' => sanitize_key((string) ($format['skin_meta_key'] ?? '')),
             'storage_meta_key' => sanitize_key((string) ($format['storage_meta_key'] ?? '')),
@@ -234,7 +234,7 @@ function iss_editorial_registry_errors(): array
         if (!in_array($format['default_skin'], array_column(iss_editorial_get_format_skins($slug), 'slug'), true)) {
             $errors[] = "$slug: missing default skin";
         }
-        if ($format['opening_skin'] !== '' && !in_array($format['opening_skin'], array_column(iss_editorial_get_format_skins($slug), 'slug'), true)) {
+        if (array_diff($format['opening_skins'], array_column(iss_editorial_get_format_skins($slug), 'slug'))) {
             $errors[] = "$slug: unknown opening skin";
         }
         if (isset($raw[$slug]['opening_eligibility_callback']) && !is_callable($raw[$slug]['opening_eligibility_callback'])) {
@@ -369,15 +369,15 @@ function iss_editorial_format_is_post_eligible(array $format, WP_Post $post): bo
 }
 
 /** Resolve the editor capability per post; cached definitions never freeze eligibility. */
-function iss_editorial_get_opening_skin(array $format, WP_Post $post): string
+function iss_editorial_get_opening_skins(array $format, WP_Post $post): array
 {
-    $skin = (string) ($format['opening_skin'] ?? '');
+    $skins = (array) ($format['opening_skins'] ?? []);
     $callback = $format['opening_eligibility_callback'] ?? null;
-    if ($skin !== '' && is_callable($callback) && !call_user_func($callback, $post, $format)) {
-        return '';
+    if ($skins && is_callable($callback) && !call_user_func($callback, $post, $format)) {
+        return [];
     }
 
-    return $skin;
+    return $skins;
 }
 
 function iss_editorial_get_format_for_post($post): array

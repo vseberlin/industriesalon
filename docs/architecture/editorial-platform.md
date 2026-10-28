@@ -116,20 +116,68 @@ ownership, and the stored scalar field/schema is unchanged.
 `tests/e2e/bin/editorial-media-layout.php` covers all current declarations,
 renamed consumers, defaults independent of choice order and invalid values.
 
-Formats declare the editor's optional `opening_skin` in this same registry;
+Formats declare the editor's optional `opening_skins` list in the same registry;
 empty means no opening treatment is offered. An optional
 `opening_eligibility_callback(WP_Post, array $format): bool` restricts the
-capability per post. The shared resolver runs this callback when preparing the
-editor settings, outside the cached definition build. `iss-content` declares
-`buehne` for projects and `frontpage` for landing pages, with the latter limited
-to the current `page_on_front`. Ordinary landings and articles retain no opening
-capability. Registry diagnostics flag unknown skins and invalid callbacks.
-This is an editor capability, not a replacement for document validation:
-the existing owner validator still enforces version, skin, first position,
-title and image requirements. Shared JS consumes the existing `openingSkin`
-setting and treatment `role`/`min_version`; no stored schema or renderer changes.
-`tests/e2e/bin/editorial-opening-skin.php` covers renamed formats, declarations
-overriding historical names and live eligibility with cached definitions.
+capability per post, resolved outside the cached definition build. Projects
+retain `buehne`; the theme opts landing pages into every registered landing skin.
+Articles retain no opening capability. Registry diagnostics reject unknown skins
+and invalid callbacks. The admin payload exposes `openingSkins`; shared JS uses
+that list with treatment `role`/`min_version`. The owner validator checks the
+same list, v3, first position and title. `feature.opening` also requires an image;
+`feature.opening-text` is the shared text-only alternative. Projects retain the
+image opening. All WordPress pages are eligible for the landing format; the
+article format continues to own posts and other narrative records.
+
+For an enabled non-home landing with a valid explicit v3 opening, the
+native `page_template_hierarchy` selects `page-editorial-landing.html`: shared
+header/footer, one main region and one complete document render. This deliberately
+makes JSON the authority for the whole page, including its H1, rather than adding
+a second hero above legacy template content. The editor explains that all page
+content must be present in the sections before adoption. Home retains its current
+template and fallback suppression. Disabled documents and pages without a valid
+opening retain their existing templates; v1 and v2 are not silently migrated.
+
+`tests/e2e/bin/editorial-opening-skin.php` covers all landing skins, invalid
+openings, native template resolution, single-H1 rendering, legacy behavior and
+live owner eligibility without persistent fixtures. The editor DOM suite covers
+capability/version gating and retained input. Homepage ID 12257 is the current
+local ten-section v3 reference, resolved in code through `page_on_front` rather
+than a hardcoded ID. New-page starters offer an opening plus overview, or an
+opening plus calendar and visitor information.
+
+Automatic sections keep `slot_key` and an optional
+`slot_settings: {source_key: {field: value}}` map. The existing source registry
+owns labels, typed settings, defaults, limits and choices. The inspector uses
+that declaration; switching sources retains each source's settings. Unknown
+sources, fields, invalid types, out-of-range numbers and lossy text are rejected.
+No arbitrary block name, HTML, shortcode or query arguments can be supplied by
+the document. Domain plugins still own their data and behavior. The theme's
+`includes/landing-sources.php` composes their registered blocks and shared native
+patterns; assets follow selected sources, including in previews and on other
+pages. The newsletter management source preserves the existing plugin's fixed
+confirmation/profile/unsubscribe entrypoint, while the form source is signup-only.
+
+Sources cover the existing homepage modules, full calendar, programme, past
+events, exhibitions, publication browser/feature, archive search, video library,
+project index, central contact fields, notices and newsletter. Heading, image,
+body, links, media and navigation remain ordinary shared gestures. Existing
+slug templates remain compatibility fallbacks for disabled/unmigrated documents;
+enabled complete documents select the shared template. Publication-browser and
+project-query markup are shared native patterns rather than duplicated renderers.
+
+`tests/e2e/bin/editorial-landing-normalization.php` checks eligibility, text
+openings, typed options and domain adapters; the DOM suite covers source
+switching and autosave. `ops/migrations/2026-10-28-landing-normalization.php`
+provides guarded dry-run/apply/revise/verify/rollback through the owner API.
+A revision requires the previous artifact and exact current documents, retaining
+the original before-images and an input-hash history. Its private,
+target-specific artifact contains exact before-images, complete reviewed v3
+documents and attachment hashes. A verified non-autoload receipt precedes writes;
+post fields, private drafts and unrelated metadata are preserved. Code and content
+must travel together; rebuild/verify the artifact against staging before release,
+and never place it in Git. Existing uploads are reused, subject to identity/hash
+verification. Roll back content before reverting the capability code.
 
 The existing format `editor` map declares optional `rail_control: true` for
 the document rail settings. `iss-content` enables it for projects; the shared
@@ -923,11 +971,18 @@ Hero content belongs to JSON; appearance belongs to the existing theme hero
 pattern. The homepage opening renders native Cover/Buttons with `iss-front-hero`
 and its homepage modifier, shared with the template fallback. Optional lead/body
 appear beneath the image. There is no separate opening typography/layout family.
+On v3 landings, an automatic `notice` section immediately following an image
+opening renders in the existing `iss-front-banner-slot` inside the hero. The
+notice retains its own source index, anchor and editor selection; notice content,
+scheduling and scope remain owned by `industriesalon-notices`. Inactive notices
+leave no empty slot. Moving the notice later, using a text-only opening, or
+rendering the two sections in separate template partitions keeps normal flow.
 Other landing templates retain their current hero content until explicitly
 migrated; migrations must preserve their design and leave only one active owner.
 
-Version 3 registers **Seitenauftakt** (`feature.opening`) explicitly. It requires
-first position, `frontpage` skin, title and an image. Incomplete or moved openings
+Version 3 registers **Seitenauftakt** (`feature.opening`) and the text-only
+`feature.opening-text` explicitly. They require first position, an owner-declared
+opening skin and a title; the image opening also requires an image. Incomplete or moved openings
 remain recoverable drafts but fail preview/publication validation; the editor
 keeps the last valid preview and explains what needs fixing. Cards show the role,
 and a notice explains when the template opening is active. Version-2 public
@@ -940,10 +995,10 @@ through the storage prose allowlist, including the existing map-note placement.
 
 Deploy the version registry, editor, sanitizer and theme together before saving
 version-3 content. Keep the version-3 reader/sanitizer/renderer if reverting the
-new UI afterward. The front-page pilot is an author's private autosave using
-existing media, so these code changes require no database migration or uploads
-artifact. Moving the accepted composition to another site is a separate content
-delivery with destination/media mapping. See the
+new UI afterward. The original front-page pilot used a private autosave and
+existing media. The current all-page rollout requires the paired, target-specific
+content migration described above; verify destination URLs and attachment records
+and files together. The original proposal remains in the
 [front-page pilot plan and review](../project/editorial-rich-text-preview-plan.md).
 
 ## Rollout

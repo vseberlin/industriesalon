@@ -4,6 +4,41 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-10-28 — Shared JSON editing for every landing page
+
+- Restored the notice banner inside image heroes when its automatic-content
+  section immediately follows the opening. Reuses the existing hero/banner
+  layout and notice owner, with independent editor selection and no duplicate
+  output. Later notices and text-only openings retain normal document order.
+  Corrected the homepage notice-area key in the source chooser.
+- Every WordPress page uses the landing format and shared gesture vocabulary.
+  Added text-only openings alongside image/title openings across all landing
+  skins. Enabled complete documents select one native template with one H1;
+  the homepage remains the ten-section reference. Projects retain their existing
+  Bühne restriction. New-page starters use the same composition contract.
+- Automatic sources now have registry-owned typed settings, live autosave,
+  validation and retained settings when switching sources. Calendars, programme,
+  visitor info, projects, publications, archive, videos, notices, contact fields
+  and newsletter reuse existing domain blocks and shared native patterns. Source
+  assets load on any page. The newsletter management entrypoint is preserved.
+- Migrated 18 published local pages through the owner API; all 19 published pages
+  now have complete JSON compositions. Retained authored copy, media references,
+  destination links and anchors. Kept exact private before-images and 70 verified
+  attachment hashes. The guarded migration supports verification, reviewed
+  revisions and rollback without changing post fields or private drafts.
+- Fixed nested legacy video transcripts to run content filters in their own post
+  context, preventing parent-landing recursion. The video library remains one
+  complete owner component. Shared prose handles long unbroken form blanks on
+  narrow screens; template-specific hero rules were not added.
+- Verified all 19 routes and 38 desktop/phone layouts, editor title/source edits,
+  private recovery, source switching, native draft save/reload, calendar navigation,
+  video transcript controls and privacy-settings access. Automated contract,
+  registry, storage and DOM checks pass. Existing video PHPCS findings are unchanged.
+- Committed locally on `release/landing-normalization-20261028`; not deployed.
+  Updated the board capability catalog with the shared page editor and sources.
+  Release requires the paired private content artifact and target media
+  verification; no new uploads or full SQL import.
+
 ## 2026-10-27 — Responsive heading sizing and word wrapping
 
 - Shared heading tokens now limit large type by available copy-column width.

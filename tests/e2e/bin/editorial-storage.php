@@ -302,46 +302,47 @@ try {
 
     // Every article CPT must carry JSON through the native save hooks without taking over its source fields.
     foreach (iss_editorial_get_format('article')['post_types'] as $post_type) {
+        $workflow_format = $post_type === 'page' ? 'landing' : 'article';
         $_POST = [];
         $source = '<!-- wp:paragraph --><p>Native source for ' . $post_type . '.</p><!-- /wp:paragraph -->';
         $id = wp_insert_post(['post_type' => $post_type, 'post_status' => 'draft', 'post_title' => 'Article workflow fixture', 'post_content' => $source, 'post_excerpt' => 'Native summary', 'menu_order' => 37, 'post_author' => $admin->ID], true);
         $assert(!is_wp_error($id), $post_type . ': create article fixture');
         $fixtures[] = $id;
         foreach (iss_content_editorial_sets_service()->get_links_for_context($post_type, $id) as $link) { $fixture_sets[] = (int) $link['set_id']; }
-        $assert(iss_editorial_get_format_for_post($id)['slug'] === 'article', $post_type . ': article owns the document');
+        $assert(iss_editorial_get_format_for_post($id)['slug'] === $workflow_format, $post_type . ': article owns the document');
         if ($post_type === 'video') {
             update_post_meta($id, 'iss_video_url', 'https://example.invalid/workflow.mp4');
             update_post_meta($id, 'iss_video_year', '2026');
         }
-        $document = iss_editorial_get_empty_document('article');
+        $document = iss_editorial_get_empty_document($workflow_format);
         $document['sections'] = [['type' => 'kapitel', 'title' => 'Original', 'body' => '<p>Original text</p>']];
-        $assert(iss_editorial_save_document($id, 'article', $document), $post_type . ': save canonical article');
-        iss_editorial_set_document_enabled($id, 'article', true);
-        $document = iss_editorial_get_document($id, 'article');
-        $base = iss_editorial_saved_token($id, 'article');
+        $assert(iss_editorial_save_document($id, $workflow_format, $document), $post_type . ': save canonical article');
+        iss_editorial_set_document_enabled($id, $workflow_format, true);
+        $document = iss_editorial_get_document($id, $workflow_format);
+        $base = iss_editorial_saved_token($id, $workflow_format);
         $draft_doc = $document;
         $draft_doc['sections'][0]['title'] = 'Recovered chapter';
         $draft_doc['sections'][0]['body'] = '<p>Clipboard <strong>bold</strong> and <em>italic</em> with <a href="https://example.invalid/reference">a reference</a>.</p><ul><li>First item</li><li>Second item</li></ul>';
-        $draft = iss_editorial_save_draft($id, 'article', $draft_doc, true);
-        $assert(!is_wp_error($draft) && iss_editorial_get_draft($id, 'article')['document'] === $draft_doc, $post_type . ': recovery retains formatted text');
-        $assert(iss_editorial_get_document($id, 'article', false) === $document, $post_type . ': recovery leaves canonical JSON unchanged');
+        $draft = iss_editorial_save_draft($id, $workflow_format, $draft_doc, true);
+        $assert(!is_wp_error($draft) && iss_editorial_get_draft($id, $workflow_format)['document'] === $draft_doc, $post_type . ': recovery retains formatted text');
+        $assert(iss_editorial_get_document($id, $workflow_format, false) === $document, $post_type . ': recovery leaves canonical JSON unchanged');
 
         $invalid = $draft_doc;
         $invalid['sections'][] = ['type' => 'unknown_future_gesture', 'body' => 'Must survive'];
-        $_POST = wp_slash(['post_ID' => $id, 'iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => ['article' => ['document' => iss_editorial_encode_document($invalid), 'base' => $base, 'draft_token' => $draft['token'], 'enabled' => '1']]]);
+        $_POST = wp_slash(['post_ID' => $id, 'iss_editorial_nonce' => wp_create_nonce('iss_editorial_save_document'), 'iss_editorial' => [$workflow_format => ['document' => iss_editorial_encode_document($invalid), 'base' => $base, 'draft_token' => $draft['token'], 'enabled' => '1']]]);
         $rejected = false;
         try {
             wp_update_post(['ID' => $id, 'post_title' => 'Must not be written']);
         } catch (RuntimeException $error) {
             $rejected = str_starts_with($error->getMessage(), 'Rejected:');
         }
-        $assert($rejected && get_post($id)->post_title === 'Article workflow fixture' && iss_editorial_get_document($id, 'article', false) === $document, $post_type . ': invalid JSON rejects the whole native save');
-        $assert(iss_editorial_get_draft($id, 'article')['document'] === $draft_doc, $post_type . ': rejected save retains recovery');
+        $assert($rejected && get_post($id)->post_title === 'Article workflow fixture' && iss_editorial_get_document($id, $workflow_format, false) === $document, $post_type . ': invalid JSON rejects the whole native save');
+        $assert(iss_editorial_get_draft($id, $workflow_format)['document'] === $draft_doc, $post_type . ': rejected save retains recovery');
 
-        $_POST['iss_editorial']['article']['document'] = wp_slash(iss_editorial_encode_document($draft_doc));
+        $_POST['iss_editorial'][$workflow_format]['document'] = wp_slash(iss_editorial_encode_document($draft_doc));
         $saved = wp_update_post(['ID' => $id, 'post_title' => 'Saved article workflow'], true);
-        $assert(!is_wp_error($saved) && iss_editorial_get_document($id, 'article', false) === $draft_doc, $post_type . ': native save preserves the full recovered document');
-        $assert(iss_editorial_document_is_enabled($id, 'article') && iss_editorial_get_draft($id, 'article') === [], $post_type . ': native save keeps canvas enabled and clears recovery');
+        $assert(!is_wp_error($saved) && iss_editorial_get_document($id, $workflow_format, false) === $draft_doc, $post_type . ': native save preserves the full recovered document');
+        $assert(iss_editorial_document_is_enabled($id, $workflow_format) && iss_editorial_get_draft($id, $workflow_format) === [], $post_type . ': native save keeps canvas enabled and clears recovery');
         $post = get_post($id);
         $assert($post->post_status === 'draft' && $post->post_title === 'Saved article workflow' && $post->post_content === $source && $post->post_excerpt === 'Native summary' && (int) $post->menu_order === 37, $post_type . ': native source, summary, order and draft status survive');
         if ($post_type === 'video') {
@@ -502,8 +503,8 @@ try {
     }
     $bad = $opening; array_unshift($bad['sections'], $v3['sections'][0]);
     $assert(is_wp_error(iss_editorial_validate_document($bad, 'landing')), 'Moving the opening away from the first position is diagnosed');
-    $bad = $opening; $bad['skin'] = 'standard';
-    $assert(is_wp_error(iss_editorial_validate_document($bad, 'landing')), 'Opening requires its registered frontpage context');
+    $bad = $opening; $bad['skin'] = 'unknown';
+    $assert(is_wp_error(iss_editorial_validate_document($bad, 'landing')), 'Opening rejects an unregistered skin');
     $copy = $opening['sections'][0]; $copy['_text_version'] = 3;
     $prose = industriesalon_render_editorial_landing_copy($copy);
     $assert(str_contains($prose, 'class="iss-landing-section__lead"><p>Lead</p>') && str_contains($prose, 'class="iss-landing-section__body"><p>Body</p>'), 'Lead and body retain separate rendering hooks');

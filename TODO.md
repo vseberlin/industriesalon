@@ -75,13 +75,12 @@ Immediate executable work only. Larger future programs live in `docs/project/bac
   and enable `Tools > ISS Anfragen` notification email only for an approved
   recipient. Publication orders now share the native request dialog locally; include this
   changed presentation in staff acceptance after deployment.
-- Native page JSON landing UAT: code, content and media were included in the
-  full 16 October staging refresh. Browser-check `/`, `/about/`, `/verein/`,
-  `/salon-vermietung/`, and `/sammlungen/`; disabled or empty JSON must keep the
-  existing template/post-content output. UAT gesture reordering, click/gap
-  insertion from the compact chooser, keyboard controls and the switching
-  inspector before client handover. Restrict landing treatment controls to
-  admins before client handover.
+- Landing normalization release/UAT: all 19 pages and 38 desktop/phone layouts
+  pass locally. Release the code together with the target-verified private JSON
+  migration and attachment manifest; see `handoff_CURRENT.md`. Keep legacy
+  template fallbacks for disabled/unmigrated content. Repeat operator acceptance
+  under the current editorial capabilities and the complete consent browser cycle
+  on staging after release; local UI checks do not replace that target receipt.
 - SuperSaaS/timeline follow-up: local occurrence/timeline code and data are now
   on staging. Verify current drift and `supersaas-audit` before scheduling any
   source refresh; do not replay older SQL over the full 16 October snapshot.

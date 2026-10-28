@@ -101,7 +101,20 @@ function iss_content_model_get_video_transcript_html(int $post_id): string
     if (function_exists('iss_editorial_document_is_enabled') && iss_editorial_document_is_enabled($post_id, 'article')) {
         return '';
     }
-    $content_html = apply_filters('the_content', (string) get_post_field('post_content', $post_id));
+    // Embedded transcripts must run content filters in the video's context.
+    // Otherwise an enabled parent landing replaces the transcript with itself.
+    global $post;
+    $video = get_post($post_id);
+    if (!$video instanceof WP_Post) { return ''; }
+    $previous_post = $post;
+    try {
+        $post = $video;
+        setup_postdata($post);
+        $content_html = apply_filters('the_content', (string) $video->post_content);
+    } finally {
+        $post = $previous_post;
+        if ($post instanceof WP_Post) { setup_postdata($post); }
+    }
     return trim(wp_strip_all_tags($content_html)) === '' ? '' : $content_html;
 }
 

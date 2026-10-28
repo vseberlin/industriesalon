@@ -982,7 +982,7 @@
         render();
         scheduleAutosave();
       });
-      if (config.isFrontPage && documentState.schema_version >= 3) { var opening = createElement('p', 'iss-editorial-opening-note', openingNote(section)); opening.hidden = !opening.textContent; contentPanel.body.appendChild(opening); }
+      if ((config.openingSkins || []).length && documentState.schema_version >= 3) { var opening = createElement('p', 'iss-editorial-opening-note', openingNote(section)); opening.hidden = !opening.textContent; contentPanel.body.appendChild(opening); }
       contentPanel.body.appendChild(titleField);
       var titleContext = sectionEditor(type).title_context;
       if (titleContext) {
@@ -1293,7 +1293,7 @@
     function treatmentChoices(type) {
       var context = (sectionConfig(type).treatment_contexts || {})[currentSkin()] || {};
       return (sectionConfig(type).treatments || []).filter(function (item) {
-        return item && item.slug && (!context.allowed || context.allowed.indexOf(item.slug) !== -1) && (item.min_version || 1) <= documentState.schema_version && (item.role !== 'opening' || config.openingSkin);
+        return item && item.slug && (!context.allowed || context.allowed.indexOf(item.slug) !== -1) && (item.min_version || 1) <= documentState.schema_version && (item.role !== 'opening' || (config.openingSkins || []).length);
       });
     }
 
@@ -1338,15 +1338,15 @@
     }
 
     function openingNote(selectedSection) {
-      if (selectedSection && selectedSection.treatment !== 'feature.opening') { return ''; }
-      if (!config.openingSkin || documentState.schema_version < 3) { return ''; }
-      var opening = selectedSection ? documentState.sections.indexOf(selectedSection) : documentState.sections.findIndex(function (section) { return section.treatment === 'feature.opening'; });
+      if (selectedSection && !/^feature\.opening(?:-text)?$/.test(selectedSection.treatment)) { return ''; }
+      if (!(config.openingSkins || []).length || documentState.schema_version < 3) { return ''; }
+      var opening = selectedSection ? documentState.sections.indexOf(selectedSection) : documentState.sections.findIndex(function (section) { return /^feature\.opening(?:-text)?$/.test(section.treatment); });
       if (opening === -1) { return 'Vorlagenauftakt aktiv. Für einen eigenen Auftakt im ersten hervorgehobenen Inhalt „Seitenauftakt“ wählen.'; }
       var section = documentState.sections[opening];
-      if (opening !== 0 || currentSkin() !== config.openingSkin || !(section.title || '').trim() || !(section.media_refs || []).length) {
-        return 'Seitenauftakt prüfen: erster Abschnitt, passender Seitenstil (Startseite oder Bühne), Titel und Bild erforderlich. Die Vorschau bleibt bei der letzten gültigen Fassung.';
+      if (opening !== 0 || config.openingSkins.indexOf(currentSkin()) === -1 || !(section.title || '').trim() || (section.treatment === 'feature.opening' && !(section.media_refs || []).length)) {
+        return 'Seitenauftakt prüfen: erster Abschnitt, freigegebener Seitenstil und Titel erforderlich. Der Bildauftakt benötigt zusätzlich ein Bild. Die Vorschau bleibt bei der letzten gültigen Fassung.';
       }
-      return 'Seitenauftakt: Dieser erste Abschnitt ersetzt den Auftakt der Vorlage. Titel und Bild sind erforderlich.';
+      return 'Seitenauftakt: Dieser erste Abschnitt ersetzt den Auftakt der Vorlage. Die Seite wird vollständig aus ihren Abschnitten aufgebaut. ' + (section.treatment === 'feature.opening-text' ? 'Ein Titel ist erforderlich.' : 'Titel und Bild sind erforderlich.');
     }
 
     function renderTreatmentControl(section, body) {
@@ -1447,6 +1447,45 @@
       });
 
       wrapper.append(label, select, hint);
+      var settings = createElement('div', 'iss-editorial-source-settings');
+      function renderSettings() {
+        settings.replaceChildren();
+        var definition = (sectionConfig(type).slots || {})[section.slot_key] || {};
+        Object.keys(definition.settings || {}).forEach(function (key) {
+          var rule = definition.settings[key];
+          var values = (section.slot_settings || {})[section.slot_key] || {};
+          var value = Object.prototype.hasOwnProperty.call(values, key) ? values[key] : rule.default;
+          var field = createElement('div', 'iss-editorial-field');
+          var control = document.createElement(rule.choices ? 'select' : 'input');
+          control.id = select.id + '-setting-' + key;
+          var fieldLabel = createElement('label', '', rule.label); fieldLabel.htmlFor = control.id;
+          if (rule.choices) {
+            Object.keys(rule.choices).forEach(function (choice) {
+              var option = document.createElement('option'); option.value = choice; option.textContent = rule.choices[choice];
+              option.selected = choice === value; control.appendChild(option);
+            });
+          } else if (rule.type === 'boolean') {
+            control.type = 'checkbox'; control.checked = value;
+          } else {
+            control.type = rule.type === 'integer' ? 'number' : 'text'; control.value = value;
+            if (rule.type === 'integer') { control.min = rule.min; control.max = rule.max; control.step = 1; control.required = true; }
+            else { control.maxLength = 2000; }
+          }
+          function saveSetting() {
+            var next = rule.type === 'boolean' ? control.checked : (rule.type === 'integer' && control.value !== '' ? Number(control.value) : control.value);
+            section.slot_settings = section.slot_settings || {};
+            section.slot_settings[section.slot_key] = section.slot_settings[section.slot_key] || {};
+            if (section.slot_settings[section.slot_key][key] === next) { return; }
+            section.slot_settings[section.slot_key][key] = next;
+            render(); scheduleAutosave();
+          }
+          control.addEventListener('input', saveSetting);
+          control.addEventListener('change', saveSetting);
+          field.append(fieldLabel, control); settings.appendChild(field);
+        });
+      }
+      select.addEventListener('change', renderSettings);
+      renderSettings(); wrapper.appendChild(settings);
       body.appendChild(wrapper);
     }
 
