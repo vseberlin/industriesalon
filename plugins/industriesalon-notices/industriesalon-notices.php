@@ -3,7 +3,7 @@
  * Plugin Name: Industriesalon Notices
  * Description: Zentrale Hinweise für Startseiten-Banner, Website-Hinweise und Admin-Hinweise.
  * Version: 0.1.2
- * Author: OpenAI
+ * Author: Industriesalon
  * Text Domain: industriesalon-notices
  */
 

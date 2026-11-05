@@ -3,7 +3,7 @@
  * Plugin Name: Industriesalon Steuerung
  * Description: Zentrale Seiteneinstellungen für Industriesalon: Öffnungszeiten, Bürozeiten, Kontakt, Adresse und Barrierefreiheit mit wiederverwendbarer Ausgabe per PHP und Gutenberg-Blöcke.
  * Version: 0.3.1
- * Author: OpenAI
+ * Author: Industriesalon
  * Text Domain: industriesalon-steuerung
  */
 
