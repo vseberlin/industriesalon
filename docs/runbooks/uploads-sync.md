@@ -1,5 +1,7 @@
 # Uploads Sync Runbook
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 ## Scope
 
 Use this when syncing, restoring, archiving, or debugging WordPress uploads across local, staging, or production.

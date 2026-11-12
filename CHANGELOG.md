@@ -4,6 +4,17 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-11-12 — Staging retirement and handover status
+
+- Added `docs/infrastructure/hosting-status.md` as the canonical operating status:
+  industriesalon.de and touchtable run on the Verein's Strato hosting; the staging
+  VPS is being retired and is no longer a deployment, sync or recovery target.
+  Functionality beyond core WordPress and commercial plugins is the Verein's own
+  decision and implementation; this repository is GPL reference code without support.
+- Added status sections to README, AGENTS, Vorstand README, handoff, TODO, current
+  state and decisions, and a status banner to every doc and skill that refers to
+  staging. Historical entries and dated audits keep their original content.
+
 ## 2026-11-12 — Touchtable moved to Strato
 
 - `touchtable.industriesalon.de` now runs on the Verein's Strato hosting; the DNS

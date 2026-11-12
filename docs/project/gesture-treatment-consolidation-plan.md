@@ -1,5 +1,7 @@
 # Gesture treatments and CSS consolidation
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 Date: 2026-10-17
 
 ## Status and scope

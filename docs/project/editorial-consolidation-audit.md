@@ -1,5 +1,7 @@
 # Editorial consolidation audit — 2026-09-22
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 Authority: website checkout `/home/vladimir/wp-website`, based on `3a385a8`,
 the running local WordPress database and effective templates. Compared against
 the supplied `iss-editorial-composer-audit (2).md` dated 2026-09-21, including its

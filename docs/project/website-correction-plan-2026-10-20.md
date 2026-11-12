@@ -1,5 +1,7 @@
 # Korrekturplan für die Industriesalon Website
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 Stand 20. Oktober 2026. Zusammenführung der beiden Websiteaudits mit Gegenprüfung auf [Staging](https://staging.industriesalon.info/).
 
 **Zuerst müssen öffentliche Arbeitsnotizen, widersprüchliche Besuchsangaben und der horizontale Seitenüberlauf beseitigt werden. Danach folgen vollständige, verständliche Texte und gezielte Verbesserungen der gemeinsamen Gestaltung.** Ein umfassender Neuentwurf ist dafür nicht erforderlich.

@@ -1,5 +1,7 @@
 # JSON Editor Audit (2026-10-16)
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 Scope: `plugins/iss-editorial` at `d9c4d79` (about 12.1k LOC) plus the contract
 edges it shares with `iss-content` and the theme renderers. Criteria:
 inconsistencies, dead code, longevity, security, performance.

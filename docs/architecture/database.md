@@ -1,5 +1,7 @@
 # Database And Query Architecture
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 WordPress posts, post meta, terms, and `WP_Query` are the default model for normal editorial content and template loops. Custom tables are preferred when the data is not naturally post-shaped or needs stable indexed lookup paths.
 
 ## Existing Custom Table Owners

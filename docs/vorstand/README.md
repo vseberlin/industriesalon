@@ -1,5 +1,18 @@
 # Für den Vorstand: Was ist dieses System?
 
+## Aktueller Stand (12. November 2026)
+
+- Die Vereinswebsite **industriesalon.de** und **touchtable.industriesalon.de**
+  laufen beim Webhosting des Vereins (Strato) und werden vom Verein betrieben.
+- Die Entwicklungsumgebung **staging.industriesalon.info** wird stillgelegt und
+  nicht übergeben.
+- Was über WordPress-Grundfunktionen und handelsübliche Plugins hinausgeht
+  (Sammlung, Archiv, Ortsregister, Verknüpfungen, Suche, Buchung mit Gutscheinen
+  usw.), entscheidet und setzt der Verein selbstständig um. Die unten
+  beschriebenen Erweiterungen können dafür als Referenz dienen; es gibt keine
+  Unterstützung oder Wartung.
+- Verbindlich: [Hosting- und Betriebsstatus](../infrastructure/hosting-status.md).
+
 Kurzüberblick über die Website und digitale Sammlung des Industriesalon
 Schöneweide e.V. für Vorstandsmitglieder ohne Programmierkenntnisse.
 

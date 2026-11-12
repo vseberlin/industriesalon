@@ -1,5 +1,7 @@
 # WordPress booking ledger and legacy voucher redemption plan
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 Date: 22 October 2026. Status: implemented and accepted on staging; real inventory, voucher cutover and staff-mail delivery retain the activation gates below.
 
 WordPress will own departure capacity, seat reservations, bookings, voucher

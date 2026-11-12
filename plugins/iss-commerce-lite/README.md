@@ -1,5 +1,7 @@
 # ISS Commerce Lite
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../../docs/infrastructure/hosting-status.md).
+
 WordPress owns bookings, capacity, legacy voucher redemption and the operational
 ledger. `iss-occurrences` supplies schedules; imported SuperSaaS capacity does not
 control sales. The theme retains public presentation. No booking CPT, external

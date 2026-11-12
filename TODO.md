@@ -1,5 +1,10 @@
 # Project TODO
 
+> **Status 12 November 2026:** staging is being retired. The items below
+> describe the last staging work state and are no longer active tasks. Further
+> development is the Verein's own decision; see
+> [hosting-status.md](docs/infrastructure/hosting-status.md).
+
 Immediate executable work only. Larger future programs live in `docs/project/backlog.md`; UAT-dependent work lives in `docs/project/uat.md`.
 
 ## Next

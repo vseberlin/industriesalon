@@ -1,5 +1,7 @@
 # Roadmap
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 Use `TODO.md` for active next actions, `backlog.md` for large future work, and `uat.md` for editor/UAT-dependent work. This file is for stable roadmap themes only.
 
 ## Themes

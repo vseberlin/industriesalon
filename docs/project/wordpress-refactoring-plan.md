@@ -1,5 +1,7 @@
 # WordPress refactoring plan
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 Proposed on 2026-10-07. This plan targets stability, maintainability, database
 integrity and efficient public requests using PHP, JavaScript, CSS and native
 WordPress APIs. Implementation and deployment are separate steps.

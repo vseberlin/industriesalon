@@ -1,5 +1,7 @@
 # Universal Occurrence Calendar And Intake Plan
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 Status: native frontend migration and availability/programme month views
 implemented locally on 2026-10-11; staging and staff acceptance remain separate.
 Part of the [WordPress refactoring plan](wordpress-refactoring-plan.md).

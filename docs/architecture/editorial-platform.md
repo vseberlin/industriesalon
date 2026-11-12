@@ -1,5 +1,7 @@
 # Editorial Platform
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 This is the implementation checkpoint for the SOW in
 `/home/vladimir/Downloads/editor-sow.md`.
 

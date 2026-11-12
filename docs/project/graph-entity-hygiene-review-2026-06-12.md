@@ -1,5 +1,7 @@
 # Graph Entity Hygiene Review - 2026-06-12
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 Status: local read-only review.
 
 This review uses the committed `wp iss-graph entity-hygiene-audit` command and

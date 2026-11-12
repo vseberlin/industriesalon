@@ -1,5 +1,7 @@
 # Handoff: Event Drop One-Off Intake/Bridge (Staging)
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](docs/infrastructure/hosting-status.md).
+
 ## Context and Status
 - Objective: quick one-off implementation for collecting participant photos/videos for an event and exposing approved media on the event page.
 - Scope completed: minimal operational workflow (Uppy intake frontend + moderation endpoint + immediate bridge sync on accept + editable event gallery output).

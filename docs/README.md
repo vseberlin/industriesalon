@@ -1,5 +1,10 @@
 # Documentation Index
 
+> **Status 12 November 2026:** staging is being retired; operation of
+> industriesalon.de and touchtable is with the Verein on Strato. Canonical status:
+> [hosting-status.md](infrastructure/hosting-status.md). Staging references in
+> these documents are historical.
+
 This directory is the repo-owned source for durable project, agent, architecture, infrastructure, and runbook knowledge. Root files stay small by design.
 
 ## Document Roles

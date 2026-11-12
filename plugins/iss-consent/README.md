@@ -1,5 +1,7 @@
 # ISS Consent
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../../docs/infrastructure/hosting-status.md).
+
 Consent decisions and external-media gating belong here; the theme owns the
 notices, native dialog, footer link and privacy text. There was no existing
 consent owner. WordPress Site Health and ISS Core Operations own the maintenance

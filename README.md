@@ -1,5 +1,12 @@
 # Industriesalon Schöneweide – Website und digitale Sammlung
 
+> **Status (12. November 2026):** industriesalon.de und touchtable.industriesalon.de
+> laufen beim Webhosting des Vereins (Strato). Die Entwicklungsumgebung
+> staging.industriesalon.info wird stillgelegt. Funktionen über
+> WordPress-Grundfunktionen und handelsübliche Plugins hinaus entscheidet und
+> setzt der Verein selbstständig um; dieser Code dient dafür als Referenz, ohne
+> Unterstützung oder Wartung. Details: [Hosting- und Betriebsstatus](docs/infrastructure/hosting-status.md).
+
 WordPress-Plattform des Industriesalon Schöneweide e.V. (Berlin): Website,
 Programm, Buchungen, Publikationen, Ortsregister und rund 11.000
 Sammlungsobjekte aus einer gemeinsamen Datenbasis.

@@ -1,5 +1,17 @@
 # Current handoff — 28 October 2026
 
+## Status — 12 November 2026 (supersedes everything below)
+
+- The staging VPS (`staging.industriesalon.info`, Hetzner) is being retired. No
+  further deployments, syncs or migrations go there. Everything below describes
+  the last staging state and is historical.
+- industriesalon.de and touchtable.industriesalon.de run on the Verein's Strato
+  hosting and are operated by the Verein.
+- Functionality beyond core WordPress and commercial plugins is the Verein's own
+  decision and implementation. This repository is reference code under GPL,
+  without support or maintenance.
+- Canonical status: [hosting-status.md](docs/infrastructure/hosting-status.md).
+
 ## Landing editor normalization — deployed to staging, 28 October 2026
 
 Code `7748e7c` is on GitHub main and staging. The paired owner/API migration

@@ -10,4 +10,5 @@ Use `handoff_CURRENT.md` for the live operational checkpoint. This file describe
 - SQL/data transfer is explicit through repo artifacts, not hidden migration behavior.
 - Agent rules are repo-owned under `AGENTS.md` and `docs/`, with current state in `handoff_CURRENT.md`.
 - Root `TODO.md` is limited to immediate executable work; broader future work lives in `backlog.md` and UAT-dependent work in `uat.md`.
-- Cross-machine deployment/sync/service knowledge is repo-owned so local and staging agents share the same procedures.
+- Cross-machine deployment/sync/service knowledge was repo-owned so local and staging agents shared the same procedures. Since 12 November 2026 staging is being retired; see [hosting status](../infrastructure/hosting-status.md).
+- Functionality beyond core WordPress and commercial plugins is the Verein's own decision and implementation; this repository is reference code without support.

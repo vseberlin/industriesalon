@@ -1,5 +1,7 @@
 # Agent Guide
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 This directory is the repo-owned, shareable agent guidance for the local checkout and staging server. Keep `AGENTS.md` as the small default entrypoint and place detailed rules here only when they are durable across machines.
 
 ## Files

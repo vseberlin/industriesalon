@@ -1,9 +1,11 @@
 ---
 name: uploads-sync
-description: Use for this repo when syncing, restoring, archiving, transferring, or debugging WordPress uploads between local, staging, and production.
+description: Use for this repo when syncing, restoring, archiving, transferring, or debugging WordPress uploads between local, staging, and production. Staging is being retired since 2026-11-12; read docs/infrastructure/hosting-status.md first.
 ---
 
 # Uploads Sync
+
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../../docs/infrastructure/hosting-status.md).
 
 Canonical docs:
 

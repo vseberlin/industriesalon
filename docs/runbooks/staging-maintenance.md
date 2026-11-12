@@ -1,5 +1,7 @@
 # Staging maintenance
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 Repository implementation is prepared and tested locally. Installation changes
 the target scheduler, backups and PHP limits and belongs to an authorized release.
 Use the existing Compose services and owner jobs; no daemon or extra queue.

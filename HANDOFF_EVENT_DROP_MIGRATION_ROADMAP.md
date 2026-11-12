@@ -1,5 +1,7 @@
 # Handoff: Event Drop Durable Migration Roadmap
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](docs/infrastructure/hosting-status.md).
+
 ## Business goal
 Move from the current one-off event media collection flow to a durable, low-friction, admin-manageable ingestion pipeline while preserving staging behaviour and avoiding disruption.
 

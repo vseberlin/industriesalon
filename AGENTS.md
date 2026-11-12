@@ -1,5 +1,13 @@
 # AGENTS.md
 
+> **Status 12 November 2026 — read first.** The staging VPS
+> (`staging.industriesalon.info`, Hetzner) is being retired. It is no longer a
+> deployment, sync or recovery target; all staging procedures in this repository
+> are historical. industriesalon.de and touchtable run on the Verein's Strato
+> hosting, operated by the Verein. Functionality beyond core WordPress and
+> commercial plugins is the Verein's own decision and implementation; this code is
+> reference only, without support or maintenance. See [docs/infrastructure/hosting-status.md](docs/infrastructure/hosting-status.md).
+
 This is the compact entrypoint for agents working in this repository. Keep it small enough to load by default. Detailed, shareable project rules live in `docs/agent/`.
 
 ## Load Order

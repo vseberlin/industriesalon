@@ -4,12 +4,13 @@ Record durable architectural decisions here when they should outlive a single ha
 
 ## Current Decisions
 
+- 2026-11-12: Staging (`staging.industriesalon.info`, Hetzner VPS) is being retired and is no longer a deployment, sync or recovery target. industriesalon.de and touchtable run on the Verein's Strato hosting, operated by the Verein. Functionality beyond core WordPress and commercial plugins is the Verein's own decision and implementation; this repository is GPL reference code without support. See [hosting status](../infrastructure/hosting-status.md).
 - Documentation model established on 2026-06-05: root docs stay small, deeper docs are task-loaded, runbooks are canonical procedures, and repo skills are triggers only.
 - Keep root `AGENTS.md` compact and load deeper `docs/` files only by task.
 - Keep session history out of repo memory folders; use `CHANGELOG.md`, `handoff_CURRENT.md`, and `TODO.md`.
 - Use `WP_Query` for editorial post loops, and plugin-owned custom tables plus prepared SQL for projection/search/graph/archive/reporting data.
 - Keep public UI in the theme and data/contracts in plugins unless an existing plugin explicitly owns a renderer.
-- Use GitHub `main` as the exchange point between local and staging agents; prefer fast-forward-only pulls on clean trees.
+- (Historical, until 2026-11-12) Use GitHub `main` as the exchange point between local and staging agents; prefer fast-forward-only pulls on clean trees.
 - Model the public refactor around `Entity / Relation / Occurrence / View`: entities identify things, relations connect them, occurrences carry dated programme rows, and views render public/editor surfaces.
 - Keep calendar/programme projection occurrence-only. Exhibition overview visibility is separate from programme projection.
 - Keep editors in parent WordPress objects. Do not add an editor-visible occurrence/calendar/programme CPT.

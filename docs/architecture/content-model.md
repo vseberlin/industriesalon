@@ -1,5 +1,7 @@
 # Content Model
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 Exhibition visitor facts use the existing `iss_location` venue metadata, exposed
 in the native and ACF editors. The `iss/content-meta` renderer reads central
 museum address, hours, exceptions, admission and access through

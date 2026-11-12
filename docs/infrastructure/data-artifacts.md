@@ -1,5 +1,7 @@
 # Data Artifacts
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](hosting-status.md).
+
 Use explicit private artifacts for data transfer and review. GitHub carries
 code, migration programs and documentation; it does not carry SQL dumps,
 content snapshot JSON, uploaded media, or transfer archives.

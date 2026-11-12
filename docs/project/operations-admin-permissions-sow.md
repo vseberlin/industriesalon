@@ -1,5 +1,7 @@
 # Operations Admin Permissions SOW
 
+> **Status 12 November 2026:** the staging VPS (`staging.industriesalon.info`) is being retired and is no longer a deployment, sync or recovery target. Staging references below are historical. See [hosting status](../infrastructure/hosting-status.md).
+
 This SOW defines the reusable permission model for custom WordPress admin
 screens before more operations screens are added.
 
