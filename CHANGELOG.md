@@ -4,6 +4,11 @@ This file records durable project changes. Keep it compact: current state belong
 `handoff_CURRENT.md`, active follow-up in `TODO.md`, and detailed investigation can
 be recovered from Git history.
 
+## 2026-11-12 — Touchtable moved to Strato
+
+- `touchtable.industriesalon.de` now runs on the Verein's Strato hosting; the DNS
+  A record was updated. The touchtable stack on the staging VPS is retired.
+
 ## 2026-10-28 — Shared JSON editing for every landing page
 
 - Restored the notice banner inside image heroes when its automatic-content

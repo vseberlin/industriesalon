@@ -132,7 +132,7 @@ because content and code can change.
   stories.
 - `register_source_item` contains 184 private TouchTable snapshots:
   182 `new`, two `ignored`, and none `linked`.
-- The live TouchTable installation remains available on the server and can be
+- The live TouchTable installation (hosted at Strato since 12 November 2026) can be
   recovered from live data or SQL backup. Therefore the crawler, snapshot
   pipeline, Elementor parser, and review UI are obsolete runtime, not canonical
   preservation.

@@ -391,7 +391,8 @@ the unrestricted SQL importer stays disabled. Follow
 sessions or authentication backups.
 Project UAT retains its existing picker permissions.
 
-Staging/touchtable PHP 8.3.36 emergency images remain active. Their separately
+Touchtable moved to Strato on 12 November 2026 and no longer runs on the VPS.
+The staging PHP 8.3.36 emergency image remains active. Their separately
 scoped maintenance is replacement with a verified patched official image under
 [the runtime procedure](docs/infrastructure/staging.md#php-runtime-security-update).
 Final staging routes, containers, worker and PHP log checks passed. Git deployment must

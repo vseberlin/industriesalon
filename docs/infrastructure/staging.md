@@ -68,6 +68,13 @@ Mailpit is running, but default WordPress mail has no SMTP route to it and the
 configured sendmail executable is absent. Configure/verify mail routing in the
 mail-testing task before sending notifications; no user invitation was sent.
 
+## Touchtable hosting
+
+As of 12 November 2026, `touchtable.industriesalon.de` is hosted at Strato under
+the Verein's own hosting; its DNS A record points there. The former
+`/srv/industriesalon/touchtable` stack on this VPS is retired and is no longer a
+recovery source. References to touchtable below describe the October 2026 state.
+
 ## PHP runtime security update
 
 On 21 October 2026, the user authorized patching staging and the separate
