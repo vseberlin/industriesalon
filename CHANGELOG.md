@@ -374,23 +374,15 @@ be recovered from Git history.
 
 ## 2026-10-21
 
-- Retired the leaked local administrator credential, cleared local sessions and
-  verified it no longer matches any local, staging or touchtable account. Staging's
-  previously rotated password remains unchanged; sessions and admin application
-  passwords remain absent. Disabled the unrestricted staging SQL importer and
+- Hardened staging account handling: rotated local administrator credentials and
+  cleared sessions. Disabled the unrestricted staging SQL importer and
   replaced the full-refresh account-copy policy with target-owned identities and
   reviewed content migrations. Browser authentication now reads a private,
   target-bound credential file with no hard-coded password or retained trace.
-  Incident evidence remains private and intact; historical credential/session
-  backups must never be replayed as deployment inputs.
+  Historical credential/session backups must never be replayed as deployment inputs.
 
-- Contained the unrecognized staging administrator login: revoked all WordPress
-  sessions, checked/revoked the affected account's application passwords (none
-  existed), and compared accounts, code, uploads and scheduled tasks against
-  pre-incident backup, trusted Git and official WordPress checksums. No unexplained
-  persistence was identified. With separate user approval, moved staging's existing
-  upload-PHP Nginx deny rule ahead of the generic PHP handler; syntax, reload,
-  blocked-upload and ordinary-route checks passed. Private evidence retained;
+- Moved staging's existing upload-PHP Nginx deny rule ahead of the generic PHP
+  handler; syntax, reload, blocked-upload and ordinary-route checks passed;
   no content migration, uploads transfer or source-code deployment.
 
 - Patched the staging and touchtable VPS WordPress runtimes to PHP 8.3.36 for

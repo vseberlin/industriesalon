@@ -60,7 +60,5 @@ that target identity and security state remain unchanged.
    dump must stay offline until credentials are rotated and sessions/application
    passwords revoked; it is not a deployment procedure.
 
-The 16 October 2026 full refresh copied the local admin credential into staging.
-Offline checks confirmed this on 21 October. The above account boundary replaces
-the old instruction to import all tables/users. Incident backups and Git history
-remain preserved evidence; access is revoked by retiring the credential.
+The above account boundary replaces the old instruction to import all
+tables/users.

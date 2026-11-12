@@ -388,7 +388,7 @@ The latest verified full staging backup is
 (124 tables, all seven artifacts verified). Target accounts remain target-owned;
 the unrestricted SQL importer stays disabled. Follow
 [content sync](docs/infrastructure/sync.md). Never replay retired credentials,
-sessions or authentication backups. Private incident evidence remains retained.
+sessions or authentication backups.
 Project UAT retains its existing picker permissions.
 
 Staging/touchtable PHP 8.3.36 emergency images remain active. Their separately

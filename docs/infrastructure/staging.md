@@ -103,7 +103,7 @@ No source-code deployment, database migration or uploads transfer was required.
 Replace the emergency image with an official image during subsequent runtime
 maintenance only after verifying PHP 8.3.36 or later and repeating these checks.
 
-## Upload PHP protection and incident evidence
+## Upload PHP protection
 
 The active staging vhost is `/etc/nginx/sites-available/stage.industriesalon.info`.
 Its existing uploads/files PHP deny location must precede the generic PHP
@@ -112,12 +112,4 @@ was corrected with user approval on 21 October 2026. `nginx -t` and reload
 passed; both legacy WPForms upload PHP guards return 403, while ordinary media,
 home, login, theme CSS and Event Drop remain available. Preserve this order in
 future vhost changes.
-
-Private containment evidence and exact pre-change vhost backup:
-`/srv/industriesalon/stage/backups/incident-20261021/`.
-The workstation review is `var/login-investigation-20261021/impact-review.json`.
-All WordPress sessions were revoked; the affected admin had no application
-passwords. Account/code/upload/task comparisons found no unexplained retained
-access, but cannot exclude data access during the confirmed login. Do not restore
-old session/credential rows from incident evidence. No content migration or
-uploads transfer accompanied containment or the vhost correction.
+Do not restore old session or credential rows from backups.
