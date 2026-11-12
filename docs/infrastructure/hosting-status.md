@@ -12,6 +12,14 @@ früheren Stand.
 - **touchtable.industriesalon.de** läuft seit dem 12. November 2026 ebenfalls
   bei Strato; der DNS-A-Eintrag wurde umgestellt.
 
+## Empfehlung zum Hosting
+
+Alle Websites des Vereins laufen jetzt bei Strato. Es wird dringend empfohlen,
+die Vereinswebsite dort zu belassen. Strato bietet integriertes WordPress,
+Sicherheitsupdates und Support aus einer Hand; der Betrieb hängt damit nicht an
+einer einzelnen Person. Im ungünstigsten Fall kann Strato die technische
+Betreuung gegen Gebühr vollständig übernehmen.
+
 ## Staging wird stillgelegt
 
 - **staging.industriesalon.info** und der zugehörige Hetzner-Server sind eine
