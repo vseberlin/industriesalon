@@ -5,6 +5,7 @@
 # Keep this ignore file.
 !.gitignore
 !/*.md
+!/LICENSE
 !/package.json
 !/package-lock.json
 !/composer.json

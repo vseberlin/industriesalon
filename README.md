@@ -22,3 +22,7 @@ Dateigröße. Unter `plugins/` liegen auch Fremd-Plugins
 (`media-library-assistant`, `newsletter`, `query-monitor`,
 `webp-converter-for-media`, `classic-editor-and-classic-widgets`); Eigenentwicklung
 sind `iss-*`, `industriesalon-*` und `themes/industriesalon`.
+
+## Lizenz
+
+Eigenentwicklung (`iss-*`, `industriesalon-*`, `themes/industriesalon`, `tools/`, `ops/`, `tests/`) steht unter der GNU GPL, Version 2 oder später – siehe [LICENSE](LICENSE). Mitgelieferte Fremd-Plugins behalten ihre eigenen Lizenzen. Der Code wird ohne Gewährleistung, Unterstützung oder Wartung bereitgestellt.
